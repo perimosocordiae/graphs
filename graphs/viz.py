@@ -3,6 +3,8 @@ from matplotlib import pyplot
 from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
+__all__ = ['plot']
+
 
 def plot(G, coordinates, undirected=False, unweighted=False, fig=None, ax=None,
          edge_style=None, vertex_style=None):

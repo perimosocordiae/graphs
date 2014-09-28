@@ -7,6 +7,11 @@ from sklearn.decomposition import KernelPCA
 
 from analysis import shortest_path, laplacian
 
+__all__ = [
+    'isomap', 'laplacian_eigenmaps', 'locality_preserving_projections',
+    'laplacian_pca'
+]
+
 
 def isomap(G, num_vecs=None, directed=True):
   directed = directed and G.is_directed()
