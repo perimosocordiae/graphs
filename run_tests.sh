@@ -1,3 +1,4 @@
 #!/bin/sh
 
-nosetests graphs
+nosetests --with-cov --cov-report html --cov=graphs/
+

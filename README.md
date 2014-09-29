@@ -26,3 +26,9 @@ Requires recent versions of:
   * scipy
   * scikit-learn
   * matplotlib
+
+Testing requires:
+
+  * nose
+  * nose-cov
+
