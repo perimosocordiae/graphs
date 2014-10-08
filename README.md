@@ -7,7 +7,6 @@ with associated visualization, analysis, and embedding functions.
 
 ## TODO list
 
-  * Write setup.py
   * Get test coverage up to 100%
   * Provide specialized graph types for undirected graphs
   * Add a weighted variant of EdgePairGraph
