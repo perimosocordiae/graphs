@@ -1,13 +1,14 @@
 import numpy as np
 from matplotlib import pyplot
+from matplotlib.axes import mlines, mcolors
 from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
-__all__ = ['plot']
+__all__ = ['plot_graph']
 
 
-def plot(G, coordinates, undirected=False, unweighted=False, fig=None, ax=None,
-         edge_style=None, vertex_style=None):
+def plot_graph(G, coordinates, undirected=False, unweighted=False, fig=None,
+               ax=None, edge_style=None, vertex_style=None):
   X = np.atleast_2d(coordinates)
   assert X.shape[1] in (2,3), 'can only plot graph for 2d or 3d coordinates'
   is_3d = (X.shape[1] == 3)
@@ -16,8 +17,12 @@ def plot(G, coordinates, undirected=False, unweighted=False, fig=None, ax=None,
   edge_kwargs = dict(colors='r', linestyles='-', zorder=1)
   vertex_kwargs = dict(marker='o', c='k', s=20, edgecolor='none', zorder=2)
   if edge_style:
+    if isinstance(edge_style, basestring):
+      edge_style = _parse_fmt(edge_style, color_key='colors')
     edge_kwargs.update(edge_style)
   if vertex_style:
+    if isinstance(vertex_style, basestring):
+      vertex_style = _parse_fmt(vertex_style, color_key='c')
     vertex_kwargs.update(vertex_style)
   if not unweighted and G.is_weighted():
     edge_kwargs['array'] = G.edge_weights()
@@ -28,6 +33,52 @@ def plot(G, coordinates, undirected=False, unweighted=False, fig=None, ax=None,
   ax.scatter(*X.T, **vertex_kwargs)
   ax.autoscale_view()
   return ax
+
+
+def _parse_fmt(fmt, color_key='colors', ls_key='linestyles', marker_key='marker'):
+  '''Modified from matplotlib's _process_plot_format function.'''
+  try:  # Is fmt just a colorspec?
+    color = mcolors.colorConverter.to_rgb(fmt)
+    # We need to differentiate grayscale '1.0' from tri_down marker '1'
+    try:
+      fmtint = str(int(fmt))
+    except ValueError:
+      return {color_key:color}
+    else:
+      if fmt != fmtint:
+        # user definitely doesn't want tri_down marker
+        return {color_key:color}
+  except ValueError:
+    pass  # No, not just a color.
+
+  result = dict()
+  # handle the multi char special cases and strip them from the string
+  if fmt.find('--') >= 0:
+    result[ls_key] = '--'
+    fmt = fmt.replace('--', '')
+  if fmt.find('-.') >= 0:
+    result[ls_key] = '-.'
+    fmt = fmt.replace('-.', '')
+  if fmt.find(' ') >= 0:
+    result[ls_key] = 'None'
+    fmt = fmt.replace(' ', '')
+
+  for c in list(fmt):
+    if c in mlines.lineStyles:
+      if ls_key in result:
+        raise ValueError('Illegal format string; two linestyle symbols')
+      result[ls_key] = c
+    elif c in mlines.lineMarkers:
+      if marker_key in result:
+        raise ValueError('Illegal format string; two marker symbols')
+      result[marker_key] = c
+    elif c in mcolors.colorConverter.colors:
+      if color_key in result:
+        raise ValueError('Illegal format string; two color symbols')
+      result[color_key] = c
+    else:
+      raise ValueError('Unrecognized character %c in format string' % c)
+  return result
 
 
 def _directed_edges(G, X, ax, is_3d, edge_style):
