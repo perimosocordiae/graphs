@@ -2,7 +2,8 @@ import numpy as np
 import scipy.sparse as ss
 
 __all__ = [
-    'EdgePairGraph', 'DenseAdjacencyMatrixGraph', 'SparseAdjacencyMatrixGraph'
+    'Graph', 'EdgePairGraph', 'DenseAdjacencyMatrixGraph',
+    'SparseAdjacencyMatrixGraph'
 ]
 
 
