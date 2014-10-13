@@ -8,6 +8,13 @@ setup(
     author='CJ Carey',
     author_email='perimosocordiae@gmail.com',
     description='All things graph.',
+    url='http://github.com/perimosocordiae/graphs',
     license='MIT',
     packages=['graphs'],
+    install_requires=[
+        'numpy >= 1.8',
+        'scipy >= 0.14',
+        'scikit-learn >= 0.15',
+        'matplotlib >= 1.3.1',
+    ],
 )
