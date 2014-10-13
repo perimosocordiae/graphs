@@ -49,6 +49,17 @@ class Graph(object):
       S = (A + A.T) / 2
     return Graph(matrix=S)
 
+  @staticmethod
+  def from_edge_pairs(pairs, num_vertices=None):
+    return EdgePairGraph(pairs, num_vertices=num_vertices)
+
+  @staticmethod
+  def from_adj_matrix(adj, weighted=True):
+    assert weighted, 'Unweighted graphs are NYI'
+    if ss.issparse(adj):
+      return SparseAdjacencyMatrixGraph(adj)
+    return DenseAdjacencyMatrixGraph(adj)
+
 
 class EdgePairGraph(Graph):
   def __init__(self, pairs, num_vertices=None):
