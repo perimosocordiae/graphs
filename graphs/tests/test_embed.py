@@ -18,7 +18,6 @@ class TestEmbeddings(unittest.TestCase):
     self.assertEqual(Y.shape, (5, 1))
     assert_array_almost_equal(Y[:,0], expected)
 
-
   def test_laplacian_eigenmaps(self):
     # Test a simple chain graph
     expected = np.array([0.5, 0.5, 0., -0.5, -0.5])
@@ -26,7 +25,6 @@ class TestEmbeddings(unittest.TestCase):
     Y = embed.laplacian_eigenmaps(Graph.from_adj_matrix(W), num_vecs=1)
     self.assertEqual(Y.shape, (5, 1))
     assert_array_almost_equal(Y[:,0], expected)
-
 
   def test_locality_preserving_projections(self):
     X = np.array([[1,2],[2,1],[3,1.5],[4,0.5],[5,1]])
@@ -50,7 +48,6 @@ class TestEmbeddings(unittest.TestCase):
     expected = PCA(n_components=1).fit_transform(mX)
     actual = embed.laplacian_pca(G, mX, num_vecs=1, beta=0)[:,:1]
     self.assertTrue(np.abs(expected - actual).sum() < 0.5)
-
 
 
 if __name__ == '__main__':
