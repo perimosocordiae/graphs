@@ -45,20 +45,18 @@ class TestEdgePairGraph(unittest.TestCase):
     self.assert_(P is not PAIRS)
     assert_array_equal(P, PAIRS)
 
-  def test_epg_asmatrix(self):
-    M = self.epg.asmatrix()
+  def test_epg_matrix(self):
+    M = self.epg.matrix()
     assert_array_equal(M.toarray(), ADJ)
-    M = self.epg.asmatrix(dense=True)
+    M = self.epg.matrix(dense=True)
     assert_array_equal(M, ADJ)
-    M = self.epg.asmatrix(csr=True)
+    M = self.epg.matrix(csr=True)
     self.assertEqual(M.format, 'csr')
     assert_array_equal(M.toarray(), ADJ)
 
 
-
 if __name__ == '__main__':
   unittest.main()
-
 
 
 
