@@ -66,7 +66,7 @@ if __name__ == '__main__':
   #   m = self.corr.matrix()
   #   self.assertEqual(len(m.shape), 2)
   #   self.assertEqual(m.shape[0], m.shape[1])
-  #   d = self.corr.matrix(force_dense=True)
+  #   d = self.corr.matrix(dense=True)
   #   assert_array_equal(d, self.m)
 
   # def test_identity(self):
