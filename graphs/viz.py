@@ -35,7 +35,8 @@ def plot_graph(G, coordinates, undirected=False, unweighted=False, fig=None,
   return ax
 
 
-def _parse_fmt(fmt, color_key='colors', ls_key='linestyles', marker_key='marker'):
+def _parse_fmt(fmt, color_key='colors', ls_key='linestyles',
+               marker_key='marker'):
   '''Modified from matplotlib's _process_plot_format function.'''
   try:  # Is fmt just a colorspec?
     color = mcolors.colorConverter.to_rgb(fmt)
