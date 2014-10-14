@@ -24,6 +24,9 @@ class Graph(object):
   def num_vertices(self):
     raise NotImplementedError()
 
+  def add_self_edges(self, weight=None):
+    raise NotImplementedError()
+
   def is_weighted(self):
     return False
 
