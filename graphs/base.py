@@ -36,7 +36,7 @@ class Graph(object):
   def adj_list(self):
     '''Generates a sequence of lists of neighbor indices:
         an adjacency list representation.'''
-    adj = self.asmatrix(dense=True, csr=True)
+    adj = self.matrix(dense=True, csr=True)
     for row in adj:
       yield row.nonzero()[-1]
 
@@ -44,7 +44,7 @@ class Graph(object):
     '''Symmetrizes with the given method. {sum,max,avg}
     Returns a copy if overwrite=False.'''
     assert not overwrite
-    A = self.asmatrix(dense=True, csr=True)
+    A = self.matrix(dense=True, csr=True)
     if method == 'sum':
       S = A + A.T
     elif method == 'max':
