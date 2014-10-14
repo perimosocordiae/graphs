@@ -12,15 +12,15 @@ __all__ = [
 
 # scipy.sparse.csgraph wrappers
 def connected_components(G, **kwargs):
-  return ssc.connected_components(G.asmatrix(), **kwargs)
+  return ssc.connected_components(G.matrix(), **kwargs)
 
 
 def laplacian(G, **kwargs):
-  return ssc.laplacian(G.asmatrix(), **kwargs)
+  return ssc.laplacian(G.matrix(), **kwargs)
 
 
 def shortest_path(G, **kwargs):
-  return ssc.shortest_path(G.asmatrix(), **kwargs)
+  return ssc.shortest_path(G.matrix(), **kwargs)
 
 
 def greedy_coloring(G):
@@ -39,7 +39,7 @@ def greedy_coloring(G):
 def ave_laplacian(G):
   '''Another kind of laplacian normalization, used in the matlab PVF code.
   Uses the formula: L = I - D^{-1} * W'''
-  W = G.asmatrix(dense=True)
+  W = G.matrix(dense=True)
   # calculate -inv(D)
   Dinv = W.sum(axis=0)
   mask = Dinv!=0
@@ -60,7 +60,7 @@ def directed_laplacian(G, D=None, eta=0.99, tol=1e-12, max_iter=500):
   eta: probability of not teleporting (see the paper)
   tol, max_iter: convergence params for Perron vector calculation
   '''
-  W = G.asmatrix(dense=True)
+  W = G.matrix(dense=True)
   n = W.shape[0]
   if D is None:
     D = W.sum(axis=1)
@@ -83,7 +83,7 @@ def directed_laplacian(G, D=None, eta=0.99, tol=1e-12, max_iter=500):
 
 
 def edge_traffic(G, directed=False):
-  adj = G.asmatrix()
+  adj = G.matrix()
   D, pred = ssc.shortest_path(adj, return_predecessors=True, directed=directed)
   counts = np.zeros_like(D, dtype=int)
   n = D.shape[0]

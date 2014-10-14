@@ -12,7 +12,7 @@ class Graph(object):
   def pairs(self, copy=False):
     raise NotImplementedError()
 
-  def asmatrix(self, copy=False, **kwargs):
+  def matrix(self, copy=False, **kwargs):
     raise NotImplementedError()
 
   def edge_weights(self, copy=False):
@@ -75,7 +75,7 @@ class EdgePairGraph(Graph):
       return self._pairs.copy()
     return self._pairs
 
-  def asmatrix(self, copy=False, **kwargs):
+  def matrix(self, copy=False, **kwargs):
     n = self._num_vertices
     row,col = self._pairs.T
     data = np.ones(len(row), dtype=int)
@@ -122,7 +122,7 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     self._adj = np.atleast_2d(adj)
     assert self._adj.shape[0] == self._adj.shape[1]
 
-  def asmatrix(self, copy=False, **kwargs):
+  def matrix(self, copy=False, **kwargs):
     if not kwargs or 'dense' in kwargs:
       if copy:
         return self._adj.copy()
@@ -152,7 +152,7 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     self._adj = adj
     assert self._adj.shape[0] == self._adj.shape[1]
 
-  def asmatrix(self, copy=False, **kwargs):
+  def matrix(self, copy=False, **kwargs):
     if not kwargs or self._adj.format in kwargs:
       if copy:
         return self._adj.copy()
