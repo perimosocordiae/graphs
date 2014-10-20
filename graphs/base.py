@@ -9,6 +9,9 @@ __all__ = [
 
 class Graph(object):
 
+  def __init__(self, *args, **kwargs):
+    raise NotImplementedError('Graph should not be instantiated directly')
+
   def pairs(self, copy=False):
     raise NotImplementedError()
 
@@ -27,6 +30,9 @@ class Graph(object):
   def add_self_edges(self, weight=None):
     raise NotImplementedError()
 
+  def symmetrize(self, overwrite=True, method='sum'):
+    raise NotImplementedError()
+
   def is_weighted(self):
     return False
 
@@ -39,19 +45,6 @@ class Graph(object):
     adj = self.matrix(dense=True, csr=True)
     for row in adj:
       yield row.nonzero()[-1]
-
-  def symmetrize(self, overwrite=True, method='sum'):
-    '''Symmetrizes with the given method. {sum,max,avg}
-    Returns a copy if overwrite=False.'''
-    assert not overwrite
-    A = self.matrix(dense=True, csr=True)
-    if method == 'sum':
-      S = A + A.T
-    elif method == 'max':
-      S = np.maximum(A, A.T)
-    else:
-      S = (A + A.T) / 2
-    return Graph(matrix=S)
 
   @staticmethod
   def from_edge_pairs(pairs, num_vertices=None):
@@ -107,6 +100,15 @@ class EdgePairGraph(Graph):
       self._pairs = np.vstack((self._pairs, np.tile(to_add, (2,1)).T))
     return self
 
+  def symmetrize(self, overwrite=True, method='sum'):
+    '''Symmetrizes with the given method. {sum,max,avg}
+    Returns a copy if overwrite=False.'''
+    S = _symmetrize(self.matrix(dense=True, csr=True), method)
+    if overwrite:
+      self._pairs = S.pairs()
+      return self
+    return SparseAdjacencyMatrixGraph(S)
+
 
 class AdjacencyMatrixGraph(Graph):
 
@@ -148,6 +150,15 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     np.fill_diagonal(self._adj, weight)
     return self
 
+  def symmetrize(self, overwrite=True, method='sum'):
+    '''Symmetrizes with the given method. {sum,max,avg}
+    Returns a copy if overwrite=False.'''
+    S = _symmetrize(self._adj, method)
+    if overwrite:
+      S.toarray(out=self._adj)
+      return self
+    return SparseAdjacencyMatrixGraph(S)
+
 
 class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
   def __init__(self, adj):
@@ -180,3 +191,22 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     '''Adds all i->i edges, in-place.'''
     self._adj.setdiag(weight)
     return self
+
+  def symmetrize(self, overwrite=True, method='sum'):
+    '''Symmetrizes with the given method. {sum,max,avg}
+    Returns a copy if overwrite=False.'''
+    S = _symmetrize(self._adj.tocsr(), method)
+    if overwrite:
+      self._adj = S
+      return self
+    return SparseAdjacencyMatrixGraph(S)
+
+
+def _symmetrize(A, method):
+  if method == 'sum':
+    S = A + A.T
+  elif method == 'max':
+    S = np.maximum(A, A.T)
+  else:
+    S = (A + A.T) / 2
+  return S
