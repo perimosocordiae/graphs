@@ -8,7 +8,7 @@ __all__ = ['plot_graph']
 
 
 def plot_graph(G, coordinates, undirected=False, unweighted=False, fig=None,
-               ax=None, edge_style=None, vertex_style=None):
+               ax=None, edge_style=None, vertex_style=None, title=None):
   X = np.atleast_2d(coordinates)
   assert X.shape[1] in (2,3), 'can only plot graph for 2d or 3d coordinates'
   is_3d = (X.shape[1] == 3)
@@ -32,6 +32,8 @@ def plot_graph(G, coordinates, undirected=False, unweighted=False, fig=None,
     _undirected_edges(G, X, ax, is_3d, edge_kwargs)
   ax.scatter(*X.T, **vertex_kwargs)
   ax.autoscale_view()
+  if title:
+    ax.set_title(title)
   return ax
 
 
