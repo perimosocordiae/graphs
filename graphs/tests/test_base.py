@@ -36,10 +36,6 @@ class TestEdgePairGraph(unittest.TestCase):
   def setUp(self):
     self.epg = EdgePairGraph(PAIRS)
 
-  def test_epg_simple(self):
-    self.assertEqual(self.epg.num_edges(), 4)
-    self.assertEqual(self.epg.num_vertices(), 5)
-
   def test_epg_pairs(self):
     self.assert_(self.epg.pairs(copy=False) is PAIRS)
     P = self.epg.pairs(copy=True)
@@ -56,6 +52,28 @@ class TestEdgePairGraph(unittest.TestCase):
     assert_array_equal(M.toarray(), ADJ)
 
 
+class TestAdjacencyMatrixGraphs(unittest.TestCase):
+  def setUp(self):
+    self.G = DenseAdjacencyMatrixGraph(ADJ)
+    self.S = SparseAdjacencyMatrixGraph(csr_matrix(ADJ))
+
+  def test_pairs(self):
+    assert_array_equal(self.G.pairs(), PAIRS)
+    assert_array_equal(self.S.pairs(), PAIRS)
+
+  def test_matrix(self):
+    M = self.G.matrix()
+    assert_array_equal(M, ADJ)
+    M = self.G.matrix(csr=True)
+    self.assertEqual(M.format, 'csr')
+    assert_array_equal(M.toarray(), ADJ)
+    M = self.S.matrix()
+    self.assertEqual(M.format, 'csr')
+    assert_array_equal(M.toarray(), ADJ)
+    M = self.G.matrix(dense=True)
+    assert_array_equal(M, ADJ)
+
+
 class TestGenericMembers(unittest.TestCase):
   def setUp(self):
     self.graphs = [
@@ -63,6 +81,11 @@ class TestGenericMembers(unittest.TestCase):
         DenseAdjacencyMatrixGraph(ADJ),
         SparseAdjacencyMatrixGraph(coo_matrix(ADJ)),
     ]
+
+  def test_properties(self):
+    for G in self.graphs:
+      self.assertEqual(G.num_edges(), 4, 'num_edges (%s)' % type(G))
+      self.assertEqual(G.num_vertices(), 5, 'num_vertices (%s)' % type(G))
 
   def test_adj_list(self):
     expected = [[1,2],[2],[],[4],[]]
