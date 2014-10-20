@@ -3,7 +3,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from scipy.sparse import csr_matrix
 
-from graphs.base import Graph, EdgePairGraph
+from graphs.base import Graph, EdgePairGraph, DenseAdjacencyMatrixGraph
 
 PAIRS = np.array([[0,1],[0,2],[1,2],[3,4]])
 ADJ = [[0,1,1,0,0],
@@ -53,6 +53,32 @@ class TestEdgePairGraph(unittest.TestCase):
     M = self.epg.matrix(csr=True)
     self.assertEqual(M.format, 'csr')
     assert_array_equal(M.toarray(), ADJ)
+
+
+class TestGenericMembers(unittest.TestCase):
+  def setUp(self):
+    self.graphs = [
+        EdgePairGraph(PAIRS),
+        DenseAdjacencyMatrixGraph(ADJ),
+    ]
+
+  def test_adj_list(self):
+    expected = [[1,2],[2],[],[4],[]]
+    for G in self.graphs:
+      adj_list = G.adj_list()
+      for a,e in zip(adj_list, expected):
+        assert_array_equal(a, e)
+
+  def test_add_self_edges(self):
+    expected = np.array(ADJ) + np.eye(len(ADJ))
+    for G in self.graphs:
+      gg = G.add_self_edges()
+      assert_array_equal(gg.matrix(dense=True), expected, 'unweighted (%s)' % type(G))
+    expected = np.array(ADJ) + 0.5 * np.eye(len(ADJ))
+    for G in self.graphs:
+      if G.is_weighted():
+        gg = G.add_self_edges(weight=0.5)
+        assert_array_equal(gg.matrix(dense=True), expected, 'weighted (%s)' % type(G))
 
 
 if __name__ == '__main__':

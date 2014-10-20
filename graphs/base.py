@@ -147,6 +147,10 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
 
   def add_self_edges(self, weight=1):
     '''Adds all i->i edges, in-place.'''
+    # Do some dtype checking shenanigans.
+    self._adj[0,0] = weight
+    if self._adj[0,0] != weight:
+      self._adj = self._adj.astype(float)
     np.fill_diagonal(self._adj, weight)
     return self
 
