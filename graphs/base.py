@@ -137,7 +137,8 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     raise NotImplementedError('Unknown matrix type(s): %s' % kwargs.keys())
 
   def edge_weights(self, copy=False):
-    W = self._adj[self.pairs()]
+    ii,jj = self.pairs().T
+    W = self._adj[ii,jj]
     if copy:
       return W.copy()
     return W

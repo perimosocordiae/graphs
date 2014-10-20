@@ -105,6 +105,13 @@ class TestGenericMembers(unittest.TestCase):
       assert_array_equal(sym.matrix(dense=True), expected,
                          'max symmetrize (%s)' % type(G))
 
+  def test_edge_weights(self):
+    expected = np.ones(4)
+    for G in self.graphs:
+      if G.is_weighted():
+        ew = G.edge_weights()
+        assert_array_equal(ew, expected, 'edge weights (%s)' % type(G))
+
 if __name__ == '__main__':
   unittest.main()
 
