@@ -83,7 +83,8 @@ def _parse_fmt(fmt, color_key='colors', ls_key='linestyles',
 
 
 def _directed_edges(G, X, ax, is_3d, edge_style):
-  start,stop = X[G.pairs()].T
+  ii, jj = G.pairs().T
+  start, stop = X[ii].T, X[jj].T
   dirs = stop - start
   if is_3d:
     x,y,z = start
