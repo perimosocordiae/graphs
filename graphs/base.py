@@ -105,7 +105,7 @@ class EdgePairGraph(Graph):
     Returns a copy if overwrite=False.'''
     S = _symmetrize(self.matrix(dense=True, csr=True), method)
     if overwrite:
-      self._pairs = S.pairs()
+      self._pairs = np.transpose(np.nonzero(S))
       return self
     return Graph.from_adj_matrix(S)
 
@@ -159,7 +159,7 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     Returns a copy if overwrite=False.'''
     S = _symmetrize(self._adj, method)
     if overwrite:
-      S.toarray(out=self._adj)
+      self._adj = S
       return self
     return DenseAdjacencyMatrixGraph(S)
 
@@ -171,6 +171,7 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     assert self._adj.shape[0] == self._adj.shape[1]
 
   def matrix(self, copy=False, **kwargs):
+    assert ss.issparse(self._adj), 'SparseAdjacencyMatrixGraph must be sparse'
     if not kwargs or self._adj.format in kwargs:
       if copy:
         return self._adj.copy()

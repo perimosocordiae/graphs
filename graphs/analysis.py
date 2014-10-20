@@ -83,7 +83,7 @@ def directed_laplacian(G, D=None, eta=0.99, tol=1e-12, max_iter=500):
 
 
 def edge_traffic(G, directed=False):
-  adj = G.matrix()
+  adj = G.matrix(dense=True, lil=True, csr=True, csc=True)
   D, pred = ssc.shortest_path(adj, return_predecessors=True, directed=directed)
   counts = np.zeros_like(D, dtype=int)
   n = D.shape[0]
@@ -108,5 +108,5 @@ def bottlenecks(G, n=1, directed=False, counts=None):
   if counts is None:
     counts = edge_traffic(G, directed=directed)
   edges = ss.dok_matrix(counts)
-  top_k = np.argpartition(edges.values(), n-1)[:n]
+  top_k = np.argpartition(np.array(edges.values()), n-1)[:n]
   return np.array(edges.keys())[top_k]
