@@ -107,7 +107,7 @@ class EdgePairGraph(Graph):
     if overwrite:
       self._pairs = S.pairs()
       return self
-    return SparseAdjacencyMatrixGraph(S)
+    return Graph.from_adj_matrix(S)
 
 
 class AdjacencyMatrixGraph(Graph):
@@ -148,8 +148,7 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
   def add_self_edges(self, weight=1):
     '''Adds all i->i edges, in-place.'''
     # Do some dtype checking shenanigans.
-    self._adj[0,0] = weight
-    if self._adj[0,0] != weight:
+    if not isinstance(weight, int):
       self._adj = self._adj.astype(float)
     np.fill_diagonal(self._adj, weight)
     return self
@@ -161,12 +160,12 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     if overwrite:
       S.toarray(out=self._adj)
       return self
-    return SparseAdjacencyMatrixGraph(S)
+    return DenseAdjacencyMatrixGraph(S)
 
 
 class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
   def __init__(self, adj):
-    assert ss.issparse(adj)
+    assert ss.issparse(adj), 'SparseAdjacencyMatrixGraph input must be sparse'
     self._adj = adj
     assert self._adj.shape[0] == self._adj.shape[1]
 
@@ -193,6 +192,9 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
 
   def add_self_edges(self, weight=1):
     '''Adds all i->i edges, in-place.'''
+    # Do some dtype checking shenanigans.
+    if not isinstance(weight, int):
+      self._adj = self._adj.astype(float)
     self._adj.setdiag(weight)
     return self
 
@@ -212,5 +214,5 @@ def _symmetrize(A, method):
   elif method == 'max':
     S = np.maximum(A, A.T)
   else:
-    S = (A + A.T) / 2
+    S = (A + A.T) / 2.0
   return S

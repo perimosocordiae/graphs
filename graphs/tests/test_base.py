@@ -1,9 +1,10 @@
 import unittest
 import numpy as np
 from numpy.testing import assert_array_equal
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, coo_matrix
 
-from graphs.base import Graph, EdgePairGraph, DenseAdjacencyMatrixGraph
+from graphs.base import (
+    Graph, EdgePairGraph, DenseAdjacencyMatrixGraph, SparseAdjacencyMatrixGraph)
 
 PAIRS = np.array([[0,1],[0,2],[1,2],[3,4]])
 ADJ = [[0,1,1,0,0],
@@ -60,6 +61,7 @@ class TestGenericMembers(unittest.TestCase):
     self.graphs = [
         EdgePairGraph(PAIRS),
         DenseAdjacencyMatrixGraph(ADJ),
+        SparseAdjacencyMatrixGraph(coo_matrix(ADJ)),
     ]
 
   def test_adj_list(self):
@@ -73,13 +75,35 @@ class TestGenericMembers(unittest.TestCase):
     expected = np.array(ADJ) + np.eye(len(ADJ))
     for G in self.graphs:
       gg = G.add_self_edges()
-      assert_array_equal(gg.matrix(dense=True), expected, 'unweighted (%s)' % type(G))
+      assert_array_equal(gg.matrix(dense=True), expected,
+                         'unweighted (%s)' % type(G))
     expected = np.array(ADJ) + 0.5 * np.eye(len(ADJ))
     for G in self.graphs:
       if G.is_weighted():
         gg = G.add_self_edges(weight=0.5)
-        assert_array_equal(gg.matrix(dense=True), expected, 'weighted (%s)' % type(G))
+        assert_array_equal(gg.matrix(dense=True), expected,
+                           'weighted (%s)' % type(G))
 
+  def test_symmetrize(self):
+    expected = np.array(ADJ)
+    # sum
+    expected += expected.T
+    for G in self.graphs:
+      sym = G.symmetrize(overwrite=False, method='sum')
+      assert_array_equal(sym.matrix(dense=True), expected,
+                         'sum symmetrize (%s)' % type(G))
+    # avg
+    expected = expected.astype(float) / 2
+    for G in self.graphs:
+      sym = G.symmetrize(overwrite=False, method='avg')
+      assert_array_equal(sym.matrix(dense=True), expected,
+                         'avg symmetrize (%s)' % type(G))
+    # max
+    expected = np.maximum(np.array(ADJ), np.array(ADJ).T)
+    for G in self.graphs:
+      sym = G.symmetrize(overwrite=False, method='max')
+      assert_array_equal(sym.matrix(dense=True), expected,
+                         'max symmetrize (%s)' % type(G))
 
 if __name__ == '__main__':
   unittest.main()
