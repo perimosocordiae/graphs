@@ -34,7 +34,7 @@ def plot_graph(G, coordinates, undirected=False, unweighted=False, fig=None,
   ax.autoscale_view()
   if title:
     ax.set_title(title)
-  return ax
+  return pyplot.show
 
 
 def _parse_fmt(fmt, color_key='colors', ls_key='linestyles',
