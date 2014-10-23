@@ -16,12 +16,14 @@ def perturbed_mst(X, num_perturbations=20, metric='euclidean',
   if jitter is None:
     jitter = np.percentile(D[D>0], 5)
   W = minimum_spanning_tree(D)
+  W = W + W.T
   W.data[:] = 1.0  # binarize
   for i in xrange(num_perturbations):
     if plot:
       plot_graph(Graph.from_adj_matrix(W), X, title='%d edges' % W.nnz)()
     pX = X + np.random.normal(scale=jitter, size=X.shape)
     pW = minimum_spanning_tree(pairwise_distances(pX, metric=metric))
+    pW = pW + pW.T
     pW.data[:] = 1.0
     W = W + pW
   # final graph is the average over all pertubed MSTs + the original
@@ -38,10 +40,12 @@ def disjoint_mst(X, num_spanning_trees=3, metric='euclidean', plot=False):
   W = mst.copy()
   for i in xrange(1, num_spanning_trees):
     if plot:
-      plot_graph(Graph.from_adj_matrix(W), X, title='%d edges' % W.nnz)()
+      plot_graph(Graph.from_adj_matrix(W), X, title='%d edges' % W.nnz,
+                 undirected=True)()
     ii,jj = mst.nonzero()
     D[ii,jj] = np.inf
     D[jj,ii] = np.inf
     mst = minimum_spanning_tree(D)
     W = W + mst
-  return Graph.from_adj_matrix(W)
+  # MSTs are all one-sided, so we symmetrize here
+  return Graph.from_adj_matrix(W + W.T)
