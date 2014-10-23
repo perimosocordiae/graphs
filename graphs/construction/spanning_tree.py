@@ -1,13 +1,12 @@
 import numpy as np
 from scipy.sparse.csgraph import minimum_spanning_tree
 from sklearn.metrics.pairwise import pairwise_distances
-from graphs import Graph, plot_graph
+from graphs import Graph
 
 __all__ = ['perturbed_mst', 'disjoint_mst']
 
 
-def perturbed_mst(X, num_perturbations=20, metric='euclidean',
-                  jitter=None, plot=False):
+def perturbed_mst(X, num_perturbations=20, metric='euclidean', jitter=None):
   '''Builds a graph as the union of several MSTs on perturbed data.
   Reference: http://ecovision.mit.edu/~sloop/shao.pdf, page 8
   jitter refers to the scale of the gaussian noise added for each perturbation.
@@ -19,8 +18,6 @@ def perturbed_mst(X, num_perturbations=20, metric='euclidean',
   W = W + W.T
   W.data[:] = 1.0  # binarize
   for i in xrange(num_perturbations):
-    if plot:
-      plot_graph(Graph.from_adj_matrix(W), X, title='%d edges' % W.nnz)()
     pX = X + np.random.normal(scale=jitter, size=X.shape)
     pW = minimum_spanning_tree(pairwise_distances(pX, metric=metric))
     pW = pW + pW.T
@@ -31,7 +28,7 @@ def perturbed_mst(X, num_perturbations=20, metric='euclidean',
   return Graph.from_adj_matrix(W)
 
 
-def disjoint_mst(X, num_spanning_trees=3, metric='euclidean', plot=False):
+def disjoint_mst(X, num_spanning_trees=3, metric='euclidean'):
   '''Builds a graph as the union of several spanning trees,
   each time removing any edges present in previously-built trees.
   Reference: http://ecovision.mit.edu/~sloop/shao.pdf, page 9.'''
@@ -39,9 +36,6 @@ def disjoint_mst(X, num_spanning_trees=3, metric='euclidean', plot=False):
   mst = minimum_spanning_tree(D)
   W = mst.copy()
   for i in xrange(1, num_spanning_trees):
-    if plot:
-      plot_graph(Graph.from_adj_matrix(W), X, title='%d edges' % W.nnz,
-                 undirected=True)()
     ii,jj = mst.nonzero()
     D[ii,jj] = np.inf
     D[jj,ii] = np.inf
