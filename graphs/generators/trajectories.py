@@ -1,6 +1,8 @@
 import numpy as np
 from graphs import Graph
 
+__all__ = ['chunk_up', 'concat_trajectories']
+
 
 def chunk_up(trajectories, chunk_size=None, directed=False):
   if chunk_size is None:

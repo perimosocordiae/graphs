@@ -5,6 +5,8 @@ from graphs import Graph, plot_graph
 
 from common.distance import SquaredL2
 
+__all__ = ['delaunay_graph', 'gabriel_graph', 'relative_neighborhood_graph']
+
 
 def delaunay_graph(X):
   tri = Delaunay(X)

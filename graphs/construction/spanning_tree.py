@@ -4,6 +4,8 @@ from graphs import Graph, plot_graph
 
 from common.distance import SquaredL2
 
+__all__ = ['perturbed_mst', 'disjoint_mst']
+
 
 def perturbed_mst(X, num_perturbations=20, metric=SquaredL2,
                   jitter=None, plot=False):

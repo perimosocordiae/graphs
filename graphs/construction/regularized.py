@@ -3,6 +3,7 @@ from sklearn import linear_model
 from graphs import Graph, plot_graph
 from common.util import Progress
 
+__all__ = ['sparse_regularized_graph']
 
 # TODO: implement NNLRS next
 # http://www.cis.pku.edu.cn/faculty/vision/zlin/Publications/2012-CVPR-NNLRS.pdf

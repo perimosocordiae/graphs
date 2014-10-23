@@ -5,6 +5,8 @@ from common import util
 from common.neighborhood import neighbor_graph
 from common.viz import plot
 
+__all__ = ['swiss_roll', 'error_ratio']
+
 
 def swiss_roll(radians, num_points, radius=1.0,
                theta_noise=0.1, radius_noise=0.01,

@@ -1,5 +1,7 @@
 import numpy as np
 
+__all__ = ['MobiusStrip', 'FigureEight', 'SCurve']
+
 
 class ParameterizedShape(object):
   def __init__(self, **param_info):
