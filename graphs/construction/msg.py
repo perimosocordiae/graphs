@@ -2,10 +2,10 @@ import numpy as np
 from scipy.sparse import issparse
 from scipy.sparse.csgraph import dijkstra
 from sklearn.decomposition import PCA
+from sklearn.metrics.pairwise import pairwise_distances
 from graphs import Graph, plot_graph, connected_components
 
-from common.neighborhood import neighbor_graph, nearest_neighbors
-from common.distance import SquaredL2
+from neighbors import neighbor_graph, nearest_neighbors
 
 
 def manifold_spanning_graph(X, embed_dim, num_ccs=1, verbose=False, plot=False):
@@ -45,7 +45,7 @@ def flesh_out(X, W, embed_dim, CC_labels, dist_mult=2.0, angle_thresh=0.2,
   '''Given a connected graph adj matrix (W), add edges to flesh it out.'''
   W = W.astype(bool)
   assert np.all(W == W.T), 'graph given to flesh_out must be symmetric'
-  D = SquaredL2.within(X)
+  D = pairwise_distances(X, metric='sqeuclidean')
 
   # compute average edge lengths for each point
   avg_edge_length = np.empty(X.shape[0])
@@ -177,7 +177,7 @@ def _connect_meta_edges(X, G, CC_planes, CC_labels, CC_ninds,
     ii, = np.where(CC_labels==p)
     jj, = np.where(CC_labels==q)
     # Compute the distance between all points in P and Q
-    Dc = SquaredL2.between(X[ii], X[jj])
+    Dc = pairwise_distances(X[ii], X[jj], metric='sqeuclidean')
     Dmask = Dc <= dist_thresh
     if CC_planes is not None and np.any(Dmask):
       # Compute the direction of all potential edges between P and Q
@@ -249,9 +249,9 @@ def cluster_subspaces(X, subspace_dim, num_clusters, cluster_labels):
   return subspaces, means
 
 
-def _inter_cluster_distance(X, num_clusters, cluster_labels, metric=SquaredL2):
+def _inter_cluster_distance(X, num_clusters, cluster_labels):
   # compute shortest distances between clusters
-  Dx = metric.within(X)
+  Dx = pairwise_distancesn(X, metric='sqeuclidean')
   Dc = np.zeros((num_clusters,num_clusters))
   edges = np.zeros((num_clusters,num_clusters,2), dtype=int)
   index_array = np.arange(X.shape[0])

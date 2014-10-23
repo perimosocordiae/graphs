@@ -1,9 +1,8 @@
 import numpy as np
 from scipy.spatial import Delaunay
 from scipy.sparse import coo_matrix
+from sklearn.metrics.pairwise import pairwise_distances, paired_distances
 from graphs import Graph, plot_graph
-
-from common.distance import SquaredL2
 
 __all__ = ['delaunay_graph', 'gabriel_graph', 'relative_neighborhood_graph']
 
@@ -27,21 +26,21 @@ def delaunay_graph(X):
   return Graph.from_adj_matrix(adj)
 
 
-def gabriel_graph(X, metric=SquaredL2):
+def gabriel_graph(X, metric='euclidean'):
   a,b = np.triu_indices(X.shape[0], k=1)
   midpoints = (X[a] - X[b]) / 2
-  Dmid = metric.between(midpoints, X)
-  Dedge = metric.pairwise(X[a], X[b])
+  Dmid = pairwise_distances(midpoints, X, metric=metric)
+  Dedge = paired_distances(X[a], X[b], metric=metric)
   mask = np.all(Dedge[:,None] <= Dmid, axis=1)
   pairs = np.transpose((a[mask],b[mask]))
   return Graph.from_edge_pairs(np.vstack((pairs,pairs[:,::-1])))
 
 
-def relative_neighborhood_graph(X, metric=SquaredL2):
+def relative_neighborhood_graph(X, metric='euclidean'):
   a,b = np.triu_indices(X.shape[0], k=1)
-  Da = metric.between(X[a], X)
-  Db = metric.between(X[b], X)
-  Dedge = metric.pairwise(X[a], X[b])
+  Da = pairwise_distances(X[a], X, metric=metric)
+  Db = pairwise_distances(X[b], X, metric=metric)
+  Dedge = paired_distances(X[a], X[b], metric=metric)
   mask = np.all((Dedge[:,None] <= Da) | (Dedge[:,None] <= Db), axis=1)
   pairs = np.transpose((a[mask],b[mask]))
   return Graph.from_edge_pairs(np.vstack((pairs,pairs[:,::-1])))

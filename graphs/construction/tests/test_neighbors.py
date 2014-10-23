@@ -50,6 +50,13 @@ class TestNeighbors(unittest.TestCase):
     actual = ngraph(D, precomputed=True, k=2)
     assert_array_almost_equal(actual, expected, decimal=4)
 
+  def test_nearest_neighbors(self):
+    nns = neighbors.nearest_neighbors
+    pt = np.zeros(2)
+    self.assertRaises(AssertionError, nns, pt, self.pts)
+    assert_array_equal(nns(pt, self.pts, k=2), [[0,3]])
+    assert_array_equal(nns(pt, self.pts, epsilon=2), [[0,3]])
+
 
 if __name__ == '__main__':
   unittest.main()

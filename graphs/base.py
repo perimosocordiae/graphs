@@ -197,7 +197,13 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     # Do some dtype checking shenanigans.
     if not isinstance(weight, int):
       self._adj = self._adj.astype(float)
-    self._adj.setdiag(weight)
+    # TODO: Special case for weight == 0?
+    try:
+      self._adj.setdiag(weight)
+    except TypeError:
+      # Older scipy doesn't support setdiag on everything.
+      self._adj = self._adj.tocsr()
+      self._adj.setdiag(weight)
     return self
 
   def symmetrize(self, overwrite=True, method='sum'):
@@ -214,7 +220,10 @@ def _symmetrize(A, method):
   if method == 'sum':
     S = A + A.T
   elif method == 'max':
-    S = np.maximum(A, A.T)
+    if ss.issparse(A):
+      S = A.maximum(A.T)
+    else:
+      S = np.maximum(A, A.T)
   else:
     S = (A + A.T) / 2.0
   return S

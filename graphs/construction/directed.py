@@ -1,16 +1,15 @@
 import numpy as np
+from sklearn.metrics.pairwise import pairwise_distances
 from graphs import Graph, plot_graph
-from common.distance import SquaredL2, Cosine
-from common.neighborhood import neighbor_graph
+from neighbors import neighbor_graph
 
 
-def jeff_graph(trajectories, k=5, metric=SquaredL2,
-               verbose=False, pruning_thresh=0):
+def jeff_graph(trajectories, k=5, verbose=False, pruning_thresh=0):
   '''Directed graph construction alg. from Johns & Mahadevan, ICML '07.
   trajectories: list of NxD arrays of ordered states
   '''
   X = np.vstack(trajectories)
-  W = neighbor_graph(X, k=k, metric=metric, symmetrize=False)
+  W = neighbor_graph(X, k=k, symmetrize=False)
   if pruning_thresh > 0:
     jeff_prune_edges(X, W, map(len, trajectories), pruning_thresh,
                      copy=False, verbose=verbose)
@@ -27,7 +26,7 @@ def jeff_prune_edges(X, G, traj_lengths, pruning_thresh=0.1, verbose=False):
     s = s + i
     v = X[t] - X[s]
     v_a = np.diff(X[i:i+n], axis=0)
-    theta = Cosine.pairwise(v, v_a)
+    theta = pairwise_distances(v, v_a, 'cosine')
     bad_edges = theta > pruning_thresh
     W[s[bad_edges],t[bad_edges]] = 0
     if verbose:
@@ -39,9 +38,9 @@ def jeff_prune_edges(X, G, traj_lengths, pruning_thresh=0.1, verbose=False):
 
 
 def demo_mcar(num_traj=100):
-  from common.viz import pyplot
+  from matplotlib import pyplot
   from downsample import downsample_trajectories
-  from utils import sample_mcar_trajectories
+  from graphs.generators.mountain_car import sample_mcar_trajectories
 
   trajectories = sample_mcar_trajectories(num_traj, min_length=1)
   print sum(map(len, trajectories)), 'total samples'

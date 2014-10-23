@@ -1,9 +1,4 @@
 import numpy as np
-from matplotlib import pyplot
-from graphs import plot_graph, connected_components
-from common import util
-from common.neighborhood import neighbor_graph
-from common.viz import plot
 
 __all__ = ['swiss_roll', 'error_ratio']
 
@@ -34,13 +29,3 @@ def error_ratio(G, GT_points, max_delta_theta=0.1, return_tuple=False):
   if return_tuple:
     return err_edges, tot_edges
   return err_edges / float(tot_edges)
-
-
-def main():
-  X, theta = swiss_roll(18, 400, radius=4.8, return_theta=True,
-                        theta_noise=0, radius_noise=0)
-  GT = np.hstack((theta[:,None], X[:,1:2]))
-
-
-if __name__ == '__main__':
-  main()

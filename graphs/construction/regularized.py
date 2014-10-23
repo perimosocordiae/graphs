@@ -1,7 +1,6 @@
 import numpy as np
 from sklearn import linear_model
 from graphs import Graph, plot_graph
-from common.util import Progress
 
 __all__ = ['sparse_regularized_graph']
 
@@ -33,7 +32,6 @@ def sparse_regularized_graph(X, positive=False):
   # Solve for each row of W
   # TODO: use a sparse vstack to assemble rows
   W = np.zeros((n,n))
-  spinner = Progress(total=n)
   for i in xrange(n):
     x = X[i]
     B = np.vstack((X[:i], X[i+1:], I)).T
@@ -44,14 +42,12 @@ def sparse_regularized_graph(X, positive=False):
     # Assign edges
     W[i,:i] = a[:i]
     W[i,i+1:] = a[i:]
-    spinner.update()
-  spinner.finish()
   return Graph.from_adj_matrix(W)
 
 
 def demo():
   from matplotlib.pyplot import subplots, set_cmap
-  from common.neighborhood import neighbor_graph
+  from neighbors import neighbor_graph
   from common.synthetic_data import gaussian_clusters
 
   X = gaussian_clusters(5, 100, 20)

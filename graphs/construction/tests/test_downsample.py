@@ -13,10 +13,10 @@ class TestDownsample(unittest.TestCase):
 
   def test_downsample(self):
     pts = np.array([[0,0],[1,2],[3,2],[-1,0]])
-    sample = downsample(pts, 3)
+    sample = downsample(pts, 1.7)
     self.assertTupleEqual(tuple(sample), (0,1,2))
     traj = [pts[:2], pts[2:]]
-    sample = downsample_trajectories(traj, 3)
+    sample = downsample_trajectories(traj, 1.7)
     assert_array_equal(sample[0], pts[:2])
     assert_array_equal(sample[1], pts[2:3])
 
