@@ -60,6 +60,14 @@ class TestAnalysis(unittest.TestCase):
       b = analysis.bottlenecks(G, directed=True)
       assert_array_equal(b, [[4,3]])
 
+  def test_bandwidth(self):
+    for G in self.graphs:
+      self.assertEqual(analysis.bandwidth(G), 2)
+
+  def test_profile(self):
+    for G in self.graphs:
+      self.assertEqual(analysis.profile(G), 1)
+
 
 if __name__ == '__main__':
   unittest.main()

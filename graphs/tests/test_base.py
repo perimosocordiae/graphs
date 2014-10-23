@@ -90,6 +90,13 @@ class TestGenericMembers(unittest.TestCase):
       self.assertEqual(G.num_edges(), 4, 'num_edges (%s)' % type(G))
       self.assertEqual(G.num_vertices(), 5, 'num_vertices (%s)' % type(G))
 
+  def test_degree(self):
+    for G in self.graphs:
+      in_degree = G.degree('in')
+      out_degree = G.degree('out')
+      assert_array_equal(in_degree, [2, 1, 0, 1, 0])
+      assert_array_equal(out_degree, [0, 1, 2, 0, 1])
+
   def test_adj_list(self):
     expected = [[1,2],[2],[],[4],[]]
     for G in self.graphs:

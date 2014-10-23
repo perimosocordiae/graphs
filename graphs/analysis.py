@@ -110,3 +110,15 @@ def bottlenecks(G, n=1, directed=False, counts=None):
   edges = ss.dok_matrix(counts)
   top_k = np.argpartition(np.array(edges.values()), n-1)[:n]
   return np.array(edges.keys())[top_k]
+
+
+def bandwidth(G):
+  """Computes the 'bandwidth' of a graph."""
+  r,c = np.nonzero(G.matrix())
+  return np.abs(r - c).max()
+
+
+def profile(G):
+  """Measure of bandedness, also known as 'envelope size'."""
+  leftmost_idx = np.argmax(G.matrix(dense=True).astype(bool), axis=0)
+  return (np.arange(G.num_vertices()) - leftmost_idx).sum()

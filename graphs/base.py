@@ -46,6 +46,11 @@ class Graph(object):
     for row in adj:
       yield row.nonzero()[-1]
 
+  def degree(self, kind='out'):
+    axis = 0 if kind == 'out' else 1
+    adj = self.matrix(dense=True, csr=1-axis, csc=axis)
+    return np.asarray(adj.sum(axis=axis)).ravel()
+
   @staticmethod
   def from_edge_pairs(pairs, num_vertices=None):
     return EdgePairGraph(pairs, num_vertices=num_vertices)
