@@ -56,6 +56,24 @@ class TestNeighbors(unittest.TestCase):
     self.assertRaises(AssertionError, nns, pt, self.pts)
     assert_array_equal(nns(pt, self.pts, k=2), [[0,3]])
     assert_array_equal(nns(pt, self.pts, epsilon=2), [[0,3]])
+    assert_array_equal(nns(pt, self.pts, k=2, epsilon=10), [[0,3]])
+    # Check return_dists
+    dists, inds = nns(pt, self.pts, k=2, return_dists=True)
+    assert_array_equal(inds, [[0,3]])
+    assert_array_almost_equal(dists, [[0, 1]])
+    dists, inds = nns(pt, self.pts, epsilon=2, return_dists=True)
+    assert_array_equal(inds, [[0,3]])
+    assert_array_almost_equal(dists, [[0, 1]])
+    # Check precomputed
+    D = pairwise_distances(pt, self.pts, metric='l1')
+    self.assertRaises(AssertionError, nns, pt, self.pts, precomputed=True, k=2)
+    assert_array_equal(nns(D, precomputed=True, k=2), [[0,3]])
+    # Check 2d query shape
+    pt = [[0,0]]
+    assert_array_equal(nns(pt, self.pts, k=2), [[0,3]])
+    # Check all-pairs mode
+    assert_array_equal(nns(self.pts, k=2), [[0,3],[1,2],[2,1],[3,0]])
+
 
 
 if __name__ == '__main__':
