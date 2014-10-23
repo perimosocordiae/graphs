@@ -6,7 +6,8 @@ import scipy.sparse as ss
 
 __all__ = [
     'connected_components', 'laplacian', 'shortest_path', 'greedy_coloring',
-    'ave_laplacian', 'directed_laplacian', 'edge_traffic', 'bottlenecks'
+    'ave_laplacian', 'directed_laplacian', 'edge_traffic', 'bottlenecks',
+    'bandwidth', 'profile'
 ]
 
 

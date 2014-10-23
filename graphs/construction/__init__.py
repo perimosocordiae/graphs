@@ -5,5 +5,4 @@ from geometric import *
 from msg import *
 from neighbors import *
 from regularized import *
-from reorder import *
 from spanning_tree import *
