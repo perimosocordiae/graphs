@@ -79,10 +79,12 @@ class TestAdjacencyMatrixGraphs(unittest.TestCase):
 
 class TestGenericMembers(unittest.TestCase):
   def setUp(self):
+    spadj = csr_matrix(ADJ)
+    spadj[0,0] = 0  # Add an explicit zero
     self.graphs = [
         EdgePairGraph(PAIRS),
         DenseAdjacencyMatrixGraph(ADJ),
-        SparseAdjacencyMatrixGraph(coo_matrix(ADJ))
+        SparseAdjacencyMatrixGraph(spadj)
     ]
     self.weighted = DenseAdjacencyMatrixGraph(np.array(ADJ)*np.arange(5)[None])
 

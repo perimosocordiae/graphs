@@ -180,6 +180,9 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     assert ss.issparse(adj), 'SparseAdjacencyMatrixGraph input must be sparse'
     self._adj = adj
     assert self._adj.shape[0] == self._adj.shape[1]
+    # Things go wrong if we have explicit zeros in the graph.
+    if adj.format in ('csr', 'csc'):
+      self._adj.eliminate_zeros()
 
   def matrix(self, copy=False, **kwargs):
     assert ss.issparse(self._adj), 'SparseAdjacencyMatrixGraph must be sparse'
@@ -196,6 +199,7 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
 
   def edge_weights(self, copy=False):
     W = self._adj.data.ravel()  # assumes correct internal ordering
+    # Also assumes no explicit zeros
     if copy:
       return W.copy()
     return W
@@ -208,13 +212,17 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     # Do some dtype checking shenanigans.
     if not isinstance(weight, int):
       self._adj = self._adj.astype(float)
-    # TODO: Special case for weight == 0?
     try:
       self._adj.setdiag(weight)
     except TypeError:
       # Older scipy doesn't support setdiag on everything.
       self._adj = self._adj.tocsr()
       self._adj.setdiag(weight)
+    if weight == 0:
+      # TODO: be smarter about avoiding writing explicit zeros
+      # We changed the sparsity structure, possibly.
+      assert hasattr(self._adj, 'eliminate_zeros'), 'Other formats NYI'
+      self._adj.eliminate_zeros()
     return self
 
   def symmetrize(self, overwrite=True, method='sum'):
