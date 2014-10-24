@@ -7,6 +7,8 @@ from graphs import Graph, plot_graph, connected_components
 
 from neighbors import neighbor_graph, nearest_neighbors
 
+__all__ = ['manifold_spanning_graph']
+
 
 def manifold_spanning_graph(X, embed_dim, num_ccs=1, verbose=False, plot=False):
   G = neighbor_graph(X, k=1, symmetrize=True)
@@ -19,7 +21,7 @@ def manifold_spanning_graph(X, embed_dim, num_ccs=1, verbose=False, plot=False):
   CC_labels, angle_thresh = join_CCs(X, G, embed_dim, num_ccs=num_ccs,
                                      verbose=verbose, plot=plot)
 
-  adj = G.matrix()
+  adj = G.matrix(dense=True)
   if num_ccs == 1:
     G = flesh_out(X, adj, embed_dim, CC_labels, angle_thresh=angle_thresh,
                   min_shortcircuit=embed_dim+1, verbose=verbose)
@@ -110,7 +112,9 @@ def grow_trees(X, G, embed_dim, verbose=False, plot=False):
     if plot:
       plot_graph(G, X, title='%d CCs' % n)()
     # modify G to connect edges between nearby CCs
-    assert _connect_meta_edges(X,G,None,labels,ninds,dist_thresh=dist_thresh)[0]
+    G, num_added = _connect_meta_edges(X, G, None, labels, ninds,
+                                       dist_thresh=dist_thresh)[:2]
+    assert num_added > 0
   return G
 
 
@@ -140,11 +144,10 @@ def join_CCs(X, G, embed_dim, num_ccs=1, max_angle=0.3, verbose=False,
     while True:
       if verbose:
         print 'DT:', dist_thresh, 'AT:', angle_thresh
-      done, minD, minF = _connect_meta_edges(X, G, CC_planes,
-                                             CC_labels, CC_ninds,
-                                             dist_thresh=dist_thresh,
-                                             angle_thresh=angle_thresh)
-      if done:
+      G, num_added, minD, minF = _connect_meta_edges(
+          X, G, CC_planes, CC_labels, CC_ninds,
+          dist_thresh=dist_thresh, angle_thresh=angle_thresh)
+      if num_added > 0:
         break
       elif angle_thresh < minF <= max_angle:
         angle_thresh = minF
@@ -170,8 +173,7 @@ def _connect_meta_edges(X, G, CC_planes, CC_labels, CC_ninds,
   # For each "meta-edge" (from cluster P to Q)
   min_F = 1.0
   min_D = np.inf
-  W = G._matrix
-  G._pairs = None  # We're mucking with Graph internals, so reset cached pairs.
+  W = G.matrix(dense=True, coo=True)
   to_add = []
   for p,q in CC_ninds:
     ii, = np.where(CC_labels==p)
@@ -219,7 +221,7 @@ def _connect_meta_edges(X, G, CC_planes, CC_labels, CC_ninds,
     else:
       W[ii,jj] = 1
       W[jj,ii] = 1
-  return len(to_add) > 0, min_D, min_F
+  return Graph.from_adj_matrix(W), len(to_add), min_D, min_F
 
 
 def edge_cluster_angle(edge_dirs, subspaces1, subspaces2):
@@ -251,7 +253,7 @@ def cluster_subspaces(X, subspace_dim, num_clusters, cluster_labels):
 
 def _inter_cluster_distance(X, num_clusters, cluster_labels):
   # compute shortest distances between clusters
-  Dx = pairwise_distancesn(X, metric='sqeuclidean')
+  Dx = pairwise_distances(X, metric='sqeuclidean')
   Dc = np.zeros((num_clusters,num_clusters))
   edges = np.zeros((num_clusters,num_clusters,2), dtype=int)
   index_array = np.arange(X.shape[0])
