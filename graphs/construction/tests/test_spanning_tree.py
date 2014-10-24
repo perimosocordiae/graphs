@@ -5,7 +5,6 @@ import numpy as np
 import unittest
 from numpy.testing import assert_array_almost_equal
 
-from graphs import plot_graph
 from graphs.construction import perturbed_mst, disjoint_mst
 
 

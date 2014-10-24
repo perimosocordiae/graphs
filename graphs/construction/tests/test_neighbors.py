@@ -4,7 +4,6 @@ matplotlib.use('template')
 import unittest
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-from scipy import sparse
 from sklearn.metrics.pairwise import pairwise_distances
 
 from graphs.construction import neighbors
@@ -73,7 +72,6 @@ class TestNeighbors(unittest.TestCase):
     assert_array_equal(nns(pt, self.pts, k=2), [[0,3]])
     # Check all-pairs mode
     assert_array_equal(nns(self.pts, k=2), [[0,3],[1,2],[2,1],[3,0]])
-
 
 
 if __name__ == '__main__':

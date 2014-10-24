@@ -1,5 +1,4 @@
 import numpy as np
-import scipy.sparse
 from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics.pairwise import pairwise_distances
 
@@ -79,7 +78,6 @@ def nearest_neighbors(query_pts, target_pts=None, precomputed=False,
     nn_dists = dists[row_inds, nns]
     return nn_dists, nns
   return nns
-
 
 
 def _slow_neighbor_graph(X, precomputed, k, epsilon, symmetrize, weighting):

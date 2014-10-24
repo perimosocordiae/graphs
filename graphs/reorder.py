@@ -1,6 +1,5 @@
 from collections import deque
 import numpy as np
-from scipy.sparse import csr_matrix
 import scipy.sparse.csgraph as ssc
 from graphs import Graph, laplacian, bandwidth
 

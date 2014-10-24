@@ -4,7 +4,7 @@ matplotlib.use('template')
 import unittest
 import numpy as np
 from numpy.testing import assert_array_equal
-from scipy.sparse import csr_matrix, coo_matrix
+from scipy.sparse import csr_matrix
 
 from graphs.base import (
     Graph, EdgePairGraph, DenseAdjacencyMatrixGraph, SparseAdjacencyMatrixGraph)

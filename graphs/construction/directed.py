@@ -1,10 +1,11 @@
 import numpy as np
 from sklearn.metrics.pairwise import paired_distances
-from graphs import Graph, plot_graph
+from graphs import Graph
 from neighbors import neighbor_graph
 
 
-def jeff_graph(trajectories, k=5, verbose=False, pruning_thresh=0, return_coords=False):
+def jeff_graph(trajectories, k=5, verbose=False, pruning_thresh=0,
+               return_coords=False):
   '''Directed graph construction alg. from Johns & Mahadevan, ICML '07.
   trajectories: list of NxD arrays of ordered states
   '''
