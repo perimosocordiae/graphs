@@ -82,8 +82,9 @@ class TestGenericMembers(unittest.TestCase):
     self.graphs = [
         EdgePairGraph(PAIRS),
         DenseAdjacencyMatrixGraph(ADJ),
-        SparseAdjacencyMatrixGraph(coo_matrix(ADJ)),
+        SparseAdjacencyMatrixGraph(coo_matrix(ADJ))
     ]
+    self.weighted = DenseAdjacencyMatrixGraph(np.array(ADJ)*np.arange(5)[None])
 
   def test_properties(self):
     for G in self.graphs:
@@ -92,10 +93,16 @@ class TestGenericMembers(unittest.TestCase):
 
   def test_degree(self):
     for G in self.graphs:
-      in_degree = G.degree('in')
-      out_degree = G.degree('out')
-      assert_array_equal(in_degree, [2, 1, 0, 1, 0])
-      assert_array_equal(out_degree, [0, 1, 2, 0, 1])
+      in_degree = G.degree('in', unweighted=True)
+      out_degree = G.degree('out', unweighted=True)
+      assert_array_equal(in_degree, [0, 1, 2, 0, 1])
+      assert_array_equal(out_degree, [2, 1, 0, 1, 0])
+
+  def test_degree_weighted(self):
+    in_degree = self.weighted.degree(kind='in', unweighted=False)
+    out_degree = self.weighted.degree(kind='out', unweighted=False)
+    assert_array_equal(in_degree, [0, 1, 4, 0, 4])
+    assert_array_equal(out_degree, [3, 2, 0, 4, 0])
 
   def test_adj_list(self):
     expected = [[1,2],[2],[],[4],[]]
@@ -144,6 +151,8 @@ class TestGenericMembers(unittest.TestCase):
       if G.is_weighted():
         ew = G.edge_weights()
         assert_array_equal(ew, expected, 'edge weights (%s)' % type(G))
+    expected = [1,2,2,4]
+    assert_array_equal(self.weighted.edge_weights(), expected)
 
 if __name__ == '__main__':
   unittest.main()

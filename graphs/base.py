@@ -46,10 +46,16 @@ class Graph(object):
     for row in adj:
       yield row.nonzero()[-1]
 
-  def degree(self, kind='out'):
-    axis = 0 if kind == 'out' else 1
+  def degree(self, kind='out', unweighted=False):
+    axis = 1 if kind == 'out' else 0
     adj = self.matrix(dense=True, csr=1-axis, csc=axis)
-    return np.asarray(adj.sum(axis=axis)).ravel()
+    if unweighted and self.is_weighted():
+      # With recent numpy and a dense matrix, could do:
+      # d = np.count_nonzero(adj, axis=axis)
+      d = (adj!=0).sum(axis=axis)
+    else:
+      d = adj.sum(axis=axis)
+    return np.asarray(d).ravel()
 
   @staticmethod
   def from_edge_pairs(pairs, num_vertices=None):
