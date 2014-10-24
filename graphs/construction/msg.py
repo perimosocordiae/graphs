@@ -3,23 +3,20 @@ from scipy.sparse import issparse
 from scipy.sparse.csgraph import dijkstra
 from sklearn.decomposition import PCA
 from sklearn.metrics.pairwise import pairwise_distances
-from graphs import Graph, plot_graph, connected_components
+from graphs import Graph, connected_components
 
 from neighbors import neighbor_graph, nearest_neighbors
 
 __all__ = ['manifold_spanning_graph']
 
 
-def manifold_spanning_graph(X, embed_dim, num_ccs=1, verbose=False, plot=False):
+def manifold_spanning_graph(X, embed_dim, num_ccs=1, verbose=False):
   G = neighbor_graph(X, k=1, symmetrize=True)
-  if plot:
-    n = connected_components(G, return_labels=False)
-    plot_graph(G, X, title='%d CCs' % n)()
 
-  G = grow_trees(X, G, embed_dim, verbose=verbose, plot=plot)
+  G = grow_trees(X, G, embed_dim, verbose=verbose)
 
   CC_labels, angle_thresh = join_CCs(X, G, embed_dim, num_ccs=num_ccs,
-                                     verbose=verbose, plot=plot)
+                                     verbose=verbose)
 
   adj = G.matrix(dense=True)
   if num_ccs == 1:
@@ -37,8 +34,6 @@ def manifold_spanning_graph(X, embed_dim, num_ccs=1, verbose=False, plot=False):
                            min_shortcircuit=embed_dim+1,
                            verbose=verbose).matrix()
     G = Graph.from_adj_matrix(adj)
-  if plot:
-    plot_graph(G, X, title='Final: %d CCs' % n)()
   return G
 
 
@@ -94,7 +89,7 @@ def flesh_out(X, W, embed_dim, CC_labels, dist_mult=2.0, angle_thresh=0.2,
   return Graph.from_adj_matrix(W.astype(int))
 
 
-def grow_trees(X, G, embed_dim, verbose=False, plot=False):
+def grow_trees(X, G, embed_dim, verbose=False):
   dist_thresh = 0
   while True:
     n, labels = connected_components(G, return_labels=True)
@@ -109,8 +104,6 @@ def grow_trees(X, G, embed_dim, verbose=False, plot=False):
     dist_thresh = max(dist_thresh, np.max(meta_edge_lengths))
     if verbose:
       print n, 'CCs. dist thresh:', dist_thresh
-    if plot:
-      plot_graph(G, X, title='%d CCs' % n)()
     # modify G to connect edges between nearby CCs
     G, num_added = _connect_meta_edges(X, G, None, labels, ninds,
                                        dist_thresh=dist_thresh)[:2]
@@ -118,8 +111,7 @@ def grow_trees(X, G, embed_dim, verbose=False, plot=False):
   return G
 
 
-def join_CCs(X, G, embed_dim, num_ccs=1, max_angle=0.3, verbose=False,
-             plot=False):
+def join_CCs(X, G, embed_dim, num_ccs=1, max_angle=0.3, verbose=False):
   n, labels = connected_components(G, return_labels=True)
   # compute linear subspaces for each connected component
   #  (assumed to be local+linear)
@@ -136,8 +128,6 @@ def join_CCs(X, G, embed_dim, num_ccs=1, max_angle=0.3, verbose=False,
     dist_thresh = np.median(meta_edge_lengths)
     if verbose:
       print n, 'CCs'
-    if plot:
-      plot_graph(G, X, title='%d CCs' % n)()
     # convert ninds to CC_ninds (back to the CC_labels space, via W-space)
     CC_ninds = CC_labels[min_edge_idxs[ninds[:,0],ninds[:,1]]]
     # modify G to connect edges between nearby CCs
@@ -155,7 +145,8 @@ def join_CCs(X, G, embed_dim, num_ccs=1, max_angle=0.3, verbose=False,
         if np.isinf(minD):
           max_angle += 0.1  # XXX: hack
           angle_thresh = min(minF, max_angle)
-          print 'Warning, increasing max_angle to', max_angle
+          if verbose:
+            print 'Increasing max_angle to', max_angle
         else:
           dist_thresh = minD
       else:
