@@ -1,6 +1,8 @@
 import numpy as np
 from neighbors import nearest_neighbors
 
+__all__ = ['downsample', 'downsample_trajectories']
+
 
 def downsample_trajectories(trajectories, close_distance):
   '''Downsamples all the points together,

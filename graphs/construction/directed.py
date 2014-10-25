@@ -3,6 +3,8 @@ from sklearn.metrics.pairwise import paired_distances
 from graphs import Graph
 from neighbors import neighbor_graph
 
+__all__ = ['jeff_graph', 'jeff_prune_edges']
+
 
 def jeff_graph(trajectories, k=5, verbose=False, pruning_thresh=0,
                return_coords=False):
