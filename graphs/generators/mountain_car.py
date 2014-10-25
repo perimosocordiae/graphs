@@ -21,8 +21,8 @@ def plot_mcar_basis(G, X, title='Mountain Car graph'):
   pad_y = 0.05 * -np.subtract.reduce(y_range)
   grid_x = np.linspace(x_range[0] - pad_x, x_range[1] + pad_x, 100)
   grid_y = np.linspace(y_range[0] - pad_y, y_range[1] + pad_y, 100)
-  for i,ax in enumerate(axes.flat[1:]):
-    grid_z = griddata((x, y), emb[:,i], (grid_x[None], grid_y[:,None]),
+  for i,(ax,z) in enumerate(zip(axes.flat[1:], emb.T)):
+    grid_z = griddata((x, y), z, (grid_x[None], grid_y[:,None]),
                       method='nearest')
     ax.contourf(grid_x, grid_y, grid_z)
     ax.plot(x, y, 'k,')
