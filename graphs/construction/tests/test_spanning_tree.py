@@ -5,12 +5,20 @@ import numpy as np
 import unittest
 from numpy.testing import assert_array_almost_equal
 
-from graphs.construction import perturbed_mst, disjoint_mst
+from graphs.construction import mst, perturbed_mst, disjoint_mst
 
 
 class TestSpanningTree(unittest.TestCase):
   def setUp(self):
     self.pts = np.array([[0,0],[1,2],[3,2],[-1,0]])
+
+  def test_mst(self):
+    expected = [[0,    2.236,0, 1],
+                [2.236,0,    2, 0],
+                [0,    2,    0, 0],
+                [1,    0,    0, 0]]
+    G = mst(self.pts)
+    assert_array_almost_equal(G.matrix(dense=True), expected, decimal=3)
 
   def test_perturbed_mst(self):
     np.random.seed(1234)

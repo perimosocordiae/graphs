@@ -3,7 +3,13 @@ from scipy.sparse.csgraph import minimum_spanning_tree
 from sklearn.metrics.pairwise import pairwise_distances
 from graphs import Graph
 
-__all__ = ['perturbed_mst', 'disjoint_mst']
+__all__ = ['mst', 'perturbed_mst', 'disjoint_mst']
+
+
+def mst(X, metric='euclidean'):
+  D = pairwise_distances(X, metric=metric)
+  mst = minimum_spanning_tree(D)
+  return Graph.from_adj_matrix(mst + mst.T)
 
 
 def perturbed_mst(X, num_perturbations=20, metric='euclidean', jitter=None):
