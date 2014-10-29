@@ -5,10 +5,7 @@ import unittest
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.sparse import coo_matrix
-from graphs import (
-    analysis, EdgePairGraph, DenseAdjacencyMatrixGraph,
-    SparseAdjacencyMatrixGraph
-)
+from graphs import analysis, Graph
 
 PAIRS = np.array([[0,1],[0,2],[1,2],[2,0],[3,4],[4,3]])
 ADJ = [[0,1,1,0,0],
@@ -21,9 +18,9 @@ ADJ = [[0,1,1,0,0],
 class TestAnalysis(unittest.TestCase):
   def setUp(self):
     self.graphs = [
-        EdgePairGraph(PAIRS),
-        DenseAdjacencyMatrixGraph(ADJ),
-        SparseAdjacencyMatrixGraph(coo_matrix(ADJ)),
+        Graph.from_edge_pairs(PAIRS),
+        Graph.from_adj_matrix(ADJ),
+        Graph.from_adj_matrix(coo_matrix(ADJ)),
     ]
 
   def test_connected_components(self):
@@ -37,7 +34,7 @@ class TestAnalysis(unittest.TestCase):
       assert_array_equal([1,2,3,1,2], analysis.greedy_coloring(G.symmetrize()))
 
   def test_ave_laplacian(self):
-    g = DenseAdjacencyMatrixGraph([[0,1,2],[1,0,0],[2,0,0]])
+    g = Graph.from_adj_matrix([[0,1,2],[1,0,0],[2,0,0]])
     expected = np.array([[1,-0.5,0],[-0.5,1,0],[0,0,1]])
     assert_array_almost_equal(analysis.ave_laplacian(g), expected)
 

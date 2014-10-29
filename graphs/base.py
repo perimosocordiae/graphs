@@ -1,10 +1,7 @@
 import numpy as np
 import scipy.sparse as ss
 
-__all__ = [
-    'Graph', 'EdgePairGraph', 'DenseAdjacencyMatrixGraph',
-    'SparseAdjacencyMatrixGraph'
-]
+__all__ = ['Graph']
 
 
 class Graph(object):

@@ -5,9 +5,7 @@ import unittest
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from graphs.base import (
-    EdgePairGraph, DenseAdjacencyMatrixGraph, SparseAdjacencyMatrixGraph)
-from graphs.viz import plot_graph
+from graphs import Graph, plot_graph
 
 
 class TestPlot(unittest.TestCase):
@@ -19,9 +17,9 @@ class TestPlot(unittest.TestCase):
            [0,0,0,0,4],
            [0,0,0,0,0]]
     self.graphs = [
-        EdgePairGraph(pairs),
-        DenseAdjacencyMatrixGraph(adj),
-        SparseAdjacencyMatrixGraph(csr_matrix(adj))
+        Graph.from_edge_pairs(pairs),
+        Graph.from_adj_matrix(adj),
+        Graph.from_adj_matrix(csr_matrix(adj)),
     ]
     self.coords = np.random.random((5, 3))
 
