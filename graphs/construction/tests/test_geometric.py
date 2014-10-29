@@ -11,8 +11,9 @@ from graphs.construction import (
 
 class TestGeometric(unittest.TestCase):
   def setUp(self):
-    np.random.seed(1234)
-    self.pts = np.random.random((10,2))
+    self.pts = np.array([
+        [0.192,0.622],[0.438,0.785],[0.780,0.273],[0.276,0.802],[0.958,0.876],
+        [0.358,0.501],[0.683,0.713],[0.370,0.561],[0.503,0.014],[0.773,0.883]])
 
   def test_delaunay(self):
     expected = [
