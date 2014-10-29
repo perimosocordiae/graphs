@@ -11,22 +11,38 @@ from graphs.construction import (
 
 class TestGeometric(unittest.TestCase):
   def setUp(self):
-    self.pts = np.array([[0,0],[1.1,2],[3.3,2],[-0.9,0],[0.5,1]])
+    np.random.seed(1234)
+    self.pts = np.random.random((10,2))
 
   def test_delaunay(self):
-    expected = [[0,0,1,1,1],[0,0,1,1,1],[1,1,0,0,1],[1,1,0,0,1],[1,1,1,1,0]]
+    expected = [
+        [0, 0, 0, 1, 0, 1, 0, 1, 1, 0],
+        [0, 0, 0, 1, 0, 0, 1, 1, 0, 1],
+        [0, 0, 0, 0, 1, 1, 1, 0, 1, 0],
+        [1, 1, 0, 0, 0, 0, 0, 1, 0, 1],
+        [0, 0, 1, 0, 0, 0, 1, 0, 0, 1],
+        [1, 0, 1, 0, 0, 0, 1, 1, 1, 0],
+        [0, 1, 1, 0, 1, 1, 0, 1, 0, 1],
+        [1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
+        [1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+        [0, 1, 0, 1, 1, 0, 1, 0, 0, 0]]
     G = delaunay_graph(self.pts)
     assert_array_equal(G.matrix(dense=True), expected)
 
   def test_gabriel(self):
-    expected = [[0,0,0,1,1],[0,0,1,0,1],[0,1,0,0,0],[1,0,0,0,0],[1,1,0,0,0]]
+    expected = np.array([
+        [0,3], [0,7], [1,3], [1,6], [1,7], [2,5], [2,6], [2,8], [3,7], [4,9],
+        [5,7], [5,8], [6,9]])
+    expected = np.vstack((expected, expected[:,::-1]))
     G = gabriel_graph(self.pts)
-    assert_array_equal(G.matrix(dense=True), expected)
+    assert_array_equal(G.pairs(), expected)
 
   def test_relative_neighborhood(self):
-    expected = [[0,0,0,1,1],[0,0,1,0,1],[0,1,0,0,0],[1,0,0,0,0],[1,1,0,0,0]]
+    expected = np.array([
+        [0,3], [0,7], [1,3], [1,6], [1,7], [2,6], [2,8], [4,9], [5,7], [6,9]])
+    expected = np.vstack((expected, expected[:,::-1]))
     G = relative_neighborhood_graph(self.pts)
-    assert_array_equal(G.matrix(dense=True), expected)
+    assert_array_equal(G.pairs(), expected)
 
 if __name__ == '__main__':
   unittest.main()

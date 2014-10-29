@@ -38,11 +38,20 @@ def gabriel_graph(X, metric='euclidean'):
 
 
 def relative_neighborhood_graph(X, metric='euclidean'):
-  a,b = np.triu_indices(X.shape[0], k=1)
-  Da = pairwise_distances(X[a], X, metric=metric)
-  Db = pairwise_distances(X[b], X, metric=metric)
-  Dedge = paired_distances(X[a], X[b], metric=metric)
-  mask = np.all((Dedge[:,None] <= Da) | (Dedge[:,None] <= Db), axis=1)
-  pairs = np.transpose((a[mask],b[mask]))
+  n = X.shape[0]
+  a,b = np.triu_indices(n, k=1)
+  D = pairwise_distances(X, metric=metric)
+  # Naive algorithm, but it's generic to any D (doesn't depend on delaunay).
+  pairs = []
+  for pair in zip(a,b):
+    d = D[pair]
+    for i in xrange(n):
+      if i in pair:
+        continue
+      if (D[pair,i] < d).all():
+        break  # Point in lune, this is not an edge
+    else:
+      pairs.append(pair)
+  pairs = np.array(pairs, dtype=int)
   pairs = np.vstack((pairs,pairs[:,::-1]))
   return Graph.from_edge_pairs(pairs, X.shape[0])
