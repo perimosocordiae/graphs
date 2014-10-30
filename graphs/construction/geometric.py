@@ -33,8 +33,7 @@ def gabriel_graph(X, metric='euclidean'):
   Dedge = paired_distances(X[a], X[b], metric=metric)
   mask = (Dedge - Dmid * 2) < 1e-10
   pairs = np.transpose((a[mask],b[mask]))
-  pairs = np.vstack((pairs,pairs[:,::-1]))
-  return Graph.from_edge_pairs(pairs, X.shape[0])
+  return Graph.from_edge_pairs(pairs, num_vertices=X.shape[0], symmetric=True)
 
 
 def relative_neighborhood_graph(X, metric='euclidean'):
@@ -52,6 +51,4 @@ def relative_neighborhood_graph(X, metric='euclidean'):
         break  # Point in lune, this is not an edge
     else:
       pairs.append(pair)
-  pairs = np.array(pairs, dtype=int)
-  pairs = np.vstack((pairs,pairs[:,::-1]))
-  return Graph.from_edge_pairs(pairs, X.shape[0])
+  return Graph.from_edge_pairs(pairs, num_vertices=X.shape[0], symmetric=True)
