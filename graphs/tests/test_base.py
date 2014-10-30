@@ -127,25 +127,26 @@ class TestGenericMembers(unittest.TestCase):
                            'weighted (%s)' % type(G))
 
   def test_symmetrize(self):
-    expected = np.array(ADJ)
+    adj = np.array(ADJ)
+    bool_expected = np.logical_or(adj, adj.T)
+    # max
+    expected = np.maximum(adj, adj.T)
+    self._help_test_symmetrize(expected, bool_expected, 'max')
     # sum
-    expected += expected.T
-    for G in self.graphs:
-      sym = G.symmetrize(overwrite=False, method='sum')
-      assert_array_equal(sym.matrix(dense=True), expected,
-                         'sum symmetrize (%s)' % type(G))
+    expected = adj + adj.T
+    self._help_test_symmetrize(expected, bool_expected, 'sum')
     # avg
     expected = expected.astype(float) / 2
+    self._help_test_symmetrize(expected, bool_expected, 'avg')
+
+  def _help_test_symmetrize(self, expected, bool_expected, method):
     for G in self.graphs:
-      sym = G.symmetrize(overwrite=False, method='avg')
-      assert_array_equal(sym.matrix(dense=True), expected,
-                         'avg symmetrize (%s)' % type(G))
-    # max
-    expected = np.maximum(np.array(ADJ), np.array(ADJ).T)
-    for G in self.graphs:
-      sym = G.symmetrize(overwrite=False, method='max')
-      assert_array_equal(sym.matrix(dense=True), expected,
-                         'max symmetrize (%s)' % type(G))
+      sym = G.symmetrize(overwrite=False, method=method).matrix(dense=True)
+      msg = '%s symmetrize (%s)' % (method, type(G))
+      if G.is_weighted():
+        assert_array_equal(sym, expected, msg)
+      else:
+        assert_array_equal(sym, bool_expected, msg)
 
   def test_edge_weights(self):
     expected = np.ones(4)
