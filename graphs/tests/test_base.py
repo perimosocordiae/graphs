@@ -9,30 +9,29 @@ from scipy.sparse import csr_matrix
 from graphs.base import (
     Graph, EdgePairGraph, DenseAdjacencyMatrixGraph, SparseAdjacencyMatrixGraph)
 
-PAIRS = np.array([[0,1],[0,2],[1,2],[3,4]])
-ADJ = [[0,1,1,0,0],
-       [0,0,1,0,0],
-       [0,0,0,0,0],
-       [0,0,0,0,1],
-       [0,0,0,0,0]]
+PAIRS = np.array([[0,1],[0,2],[1,1],[2,1],[3,3]])
+ADJ = [[0,1,1,0],
+       [0,1,0,0],
+       [0,1,0,0],
+       [0,0,0,1]]
 
 
 class TestStaticConstructors(unittest.TestCase):
   def test_from_pairs(self):
     epg = Graph.from_edge_pairs(PAIRS)
-    self.assertEqual(epg.num_edges(), 4)
-    self.assertEqual(epg.num_vertices(), 5)
+    self.assertEqual(epg.num_edges(), 5)
+    self.assertEqual(epg.num_vertices(), 4)
     epg = Graph.from_edge_pairs(PAIRS, num_vertices=10)
-    self.assertEqual(epg.num_edges(), 4)
+    self.assertEqual(epg.num_edges(), 5)
     self.assertEqual(epg.num_vertices(), 10)
 
   def test_from_adj(self):
     m = Graph.from_adj_matrix(ADJ)
-    self.assertEqual(m.num_edges(), 4)
-    self.assertEqual(m.num_vertices(), 5)
+    self.assertEqual(m.num_edges(), 5)
+    self.assertEqual(m.num_vertices(), 4)
     m = Graph.from_adj_matrix(csr_matrix(ADJ))
-    self.assertEqual(m.num_edges(), 4)
-    self.assertEqual(m.num_vertices(), 5)
+    self.assertEqual(m.num_edges(), 5)
+    self.assertEqual(m.num_vertices(), 4)
 
 
 class TestEdgePairGraph(unittest.TestCase):
@@ -86,40 +85,41 @@ class TestGenericMembers(unittest.TestCase):
         DenseAdjacencyMatrixGraph(ADJ),
         SparseAdjacencyMatrixGraph(spadj)
     ]
-    self.weighted = DenseAdjacencyMatrixGraph(np.array(ADJ)*np.arange(5)[None])
+    self.weighted = DenseAdjacencyMatrixGraph(np.array(ADJ)*np.arange(4)[None])
 
   def test_properties(self):
     for G in self.graphs:
-      self.assertEqual(G.num_edges(), 4, 'num_edges (%s)' % type(G))
-      self.assertEqual(G.num_vertices(), 5, 'num_vertices (%s)' % type(G))
+      self.assertEqual(G.num_edges(), 5, 'num_edges (%s)' % type(G))
+      self.assertEqual(G.num_vertices(), 4, 'num_vertices (%s)' % type(G))
 
   def test_degree(self):
     for G in self.graphs:
       in_degree = G.degree('in', unweighted=True)
       out_degree = G.degree('out', unweighted=True)
-      assert_array_equal(in_degree, [0, 1, 2, 0, 1])
-      assert_array_equal(out_degree, [2, 1, 0, 1, 0])
+      assert_array_equal(in_degree, [0, 3, 1, 1])
+      assert_array_equal(out_degree, [2, 1, 1, 1])
 
   def test_degree_weighted(self):
     in_degree = self.weighted.degree(kind='in', unweighted=False)
     out_degree = self.weighted.degree(kind='out', unweighted=False)
-    assert_array_equal(in_degree, [0, 1, 4, 0, 4])
-    assert_array_equal(out_degree, [3, 2, 0, 4, 0])
+    assert_array_equal(in_degree, [0, 3, 2, 3])
+    assert_array_equal(out_degree, [3, 1, 1, 3])
 
   def test_adj_list(self):
-    expected = [[1,2],[2],[],[4],[]]
+    expected = [[1,2],[1],[1],[3]]
     for G in self.graphs:
       adj_list = G.adj_list()
       for a,e in zip(adj_list, expected):
         assert_array_equal(a, e)
 
   def test_add_self_edges(self):
-    expected = np.array(ADJ) + np.eye(len(ADJ))
+    expected = (np.array(ADJ) + np.eye(len(ADJ))).astype(bool).astype(int)
     for G in self.graphs:
       gg = G.add_self_edges()
       assert_array_equal(gg.matrix(dense=True), expected,
                          'unweighted (%s)' % type(G))
-    expected = np.array(ADJ) + 0.5 * np.eye(len(ADJ))
+    expected = np.array(ADJ, dtype=float)
+    np.fill_diagonal(expected, 0.5)
     for G in self.graphs:
       if G.is_weighted():
         gg = G.add_self_edges(weight=0.5)
@@ -149,12 +149,12 @@ class TestGenericMembers(unittest.TestCase):
         assert_array_equal(sym, bool_expected, msg)
 
   def test_edge_weights(self):
-    expected = np.ones(4)
+    expected = np.ones(5)
     for G in self.graphs:
       if G.is_weighted():
         ew = G.edge_weights()
         assert_array_equal(ew, expected, 'edge weights (%s)' % type(G))
-    expected = [1,2,2,4]
+    expected = [1,2,1,1,3]
     assert_array_equal(self.weighted.edge_weights(), expected)
 
 if __name__ == '__main__':
