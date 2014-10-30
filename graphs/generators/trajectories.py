@@ -18,16 +18,15 @@ def concat_trajectories(traj_lengths, directed=False):
   P = []
   last_idx = 0
   for tl in traj_lengths:
-    P.append(last_idx + _traj_pair_idxs(tl, directed=directed))
+    P.append(last_idx + _traj_pair_idxs(tl))
     last_idx += tl
-  return Graph.from_edge_pairs(np.vstack(P))
+  return Graph.from_edge_pairs(np.vstack(P), num_vertices=last_idx,
+                               symmetric=(not directed))
 
 
-def _traj_pair_idxs(traj_len, directed=False):
+def _traj_pair_idxs(traj_len):
   ii = np.arange(traj_len)
   pairs = np.transpose((ii[:-1], ii[1:]))
-  if not directed:
-    return np.vstack((pairs, pairs[:,::-1]))
   return pairs
 
 
