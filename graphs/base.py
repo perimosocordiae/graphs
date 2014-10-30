@@ -55,7 +55,9 @@ class Graph(object):
     return np.asarray(d).ravel()
 
   @staticmethod
-  def from_edge_pairs(pairs, num_vertices=None):
+  def from_edge_pairs(pairs, num_vertices=None, symmetric=False):
+    if symmetric:
+      return SymmEdgePairGraph(pairs, num_vertices=num_vertices)
     return EdgePairGraph(pairs, num_vertices=num_vertices)
 
   @staticmethod
@@ -81,7 +83,7 @@ class EdgePairGraph(Graph):
 
   def matrix(self, copy=False, **kwargs):
     n = self._num_vertices
-    row,col = self._pairs.T
+    row,col = self.pairs().T
     data = np.ones(len(row), dtype=int)
     M = ss.coo_matrix((data, (row,col)), shape=(n,n))
     if not kwargs:
@@ -111,11 +113,32 @@ class EdgePairGraph(Graph):
   def symmetrize(self, overwrite=True, method='sum'):
     '''Symmetrizes with the given method. {sum,max,avg}
     Returns a copy if overwrite=False.'''
+    # TODO: be smarter about this and return a SymmEdgePairGraph
     S = _symmetrize(self.matrix(dense=True, csr=True), method)
+    P = np.transpose(np.nonzero(S))
     if overwrite:
-      self._pairs = np.transpose(np.nonzero(S))
+      self._pairs = P
       return self
-    return Graph.from_adj_matrix(S)
+    return EdgePairGraph(P, num_vertices=self._num_vertices)
+
+
+class SymmEdgePairGraph(EdgePairGraph):
+  def __init__(self, pairs, num_vertices=None):
+    EdgePairGraph.__init__(self, pairs, num_vertices=num_vertices)
+    self._pairs.sort()  # push all edges to upper triangle
+    self._offdiag_mask = ~np.equal(*self._pairs.T)
+
+  def pairs(self, copy=False):
+    return np.vstack((self._pairs[self._offdiag_mask], self._pairs[:,::-1]))
+
+  def num_edges(self):
+    num_offdiag_edges = np.count_nonzero(self._offdiag_mask)
+    return len(self._pairs) + num_offdiag_edges
+
+  def symmetrize(self, overwrite=True, method='sum'):
+    if overwrite:
+      return self
+    return SymmEdgePairGraph(self._pairs, num_vertices=self._num_vertices)
 
 
 class AdjacencyMatrixGraph(Graph):
