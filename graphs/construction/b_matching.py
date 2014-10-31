@@ -43,18 +43,12 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
     # check for convergence
     if n_iter % INTERVAL == 0:
       # track changes
-      cbuff[cbuffpos] = 0
-      for i in xrange(N):
-        cbuff[cbuffpos] += abs(B[i,0])
-
-      for i,c in enumerate(cbuff):
-        if i != cbuffpos and abs(c-cbuff[cbuffpos]) < conv_thresh:
-          oscillation -= 1
-          break
-
-      cbuffpos += 1
-      if cbuffpos >= len(cbuff):
-        cbuffpos = 0
+      c = np.abs(B[:,0]).sum()
+      dc = np.abs(c - cbuff)
+      if np.any(np.abs(c - cbuff) < conv_thresh):
+        oscillation -= 1
+      cbuff[cbuffpos] = c
+      cbuffpos = (cbuffpos + 1) % len(cbuff)
 
       expB = np.exp(B)
       expB[np.isinf(expB)] = 0
@@ -64,19 +58,16 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
       oldrowsums = expOldB.sum(axis=1)
 
       change = 0
+      rowsums[rowsums==0] = 1
+      oldrowsums[oldrowsums==0] = 1
       for i in xrange(N):
-        if rowsums[i] == 0:
-          rowsums[i] = 1
-        if oldrowsums[i] == 0:
-          oldrowsums[i] = 1
-        for j in xrange(N-1):
-          if ((expOldB[i,j] == 0 and expB[i,j] != 0) or
-              (expOldB[i,j] != 0 and expB[i,j] == 0)):
-            change += 1
-          elif expOldB[i,j] == 0 and expB[i,j] == 0:
-            change = change
-          else:
-            change += abs(expOldB[i,j]/oldrowsums[i]- expB[i,j]/rowsums[i])
+        row = expB[i]
+        oldrow = expOldB[i]
+        rmask = row == 0
+        ormask = oldrow == 0
+        change += np.count_nonzero(np.logical_xor(rmask, ormask))
+        mask = ~np.logical_and(rmask, ormask)
+        change += np.abs(oldrow[mask]/oldrowsums[i] - row[mask]/rowsums[i]).sum()
       if np.isnan(change):
         print "change is NaN! BP will quit but solution",
         print "could be invalid. Problem may be infeasible."
@@ -97,25 +88,17 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
   # recover result from B
   thresholds = np.zeros(N)
   for i,k in enumerate(degrees):
-    poscount = np.count_nonzero(B[i] > 0)
-    if degrees[i] >= N - 1:
+    Brow = B[i]
+    poscount = np.count_nonzero(Brow > 0)
+    if k >= N - 1:
       thresholds[i] = -np.inf
     elif k < 1:
       thresholds[i] = np.inf
-    elif poscount >= k:
-      thresholds[i] = B[i][quickselect(B[i],k-1)]
-    elif poscount <= k:
-      if k == 0:
-        thresholds[i] = np.inf
-      else:
-        thresholds[i] = B[i][quickselect(B[i],k-1)]
     else:
-        thresholds[i] = B[i][quickselect(B[i],poscount-1)]
+      thresholds[i] = Brow[quickselect(Brow,k-1)]
 
   ii,jj = np.where(B >= thresholds[:,None])
-  adj = np.zeros_like(D, dtype=bool)
-  adj[ii,inds[ii,jj]] = True
-  return Graph.from_adj_matrix(adj)
+  return Graph.from_edge_pairs(np.column_stack((ii, inds[ii,jj])), num_vertices=N)
 
 
 def quickselect(B_row, *ks):
@@ -128,44 +111,24 @@ def quickselect(B_row, *ks):
 def updateB(oldB, B, W, degrees, damping, inds, backinds):
   '''belief update function.'''
   N = len(degrees)
-  for j in xrange(N):
-    poscount = np.count_nonzero(B[j] > 0)
+  for j,d in enumerate(degrees):
+    if d == 0:
+      B[inds[j],backinds[j]] = -np.inf
+      continue
 
-    if degrees[j] == 0:
-      for i in xrange(N-1):
-        k = inds[j,i]
-        B[k,backinds[j,i]] = -np.inf
-    elif ((degrees[j]<poscount and poscount<degrees[j]) or (degrees[j]==0 and poscount==0)):
-      for i in xrange(N-1):
-        k = inds[j,i]
-        B[k,backinds[j,i]] = W[k,backinds[j,i]] + W[j,i]
-    else:
-      bth,bplus = quickselect(oldB[j], degrees[j]-1, degrees[j])
+    oldBj = oldB[j]
+    bth,bplus = quickselect(oldBj, d-1, d)
 
-      for i in xrange(N-1):
-        k = inds[j,i]
-        bkji = backinds[j,i]
+    for i in xrange(N-1):
+      k = inds[j,i]
+      bkji = backinds[j,i]
 
-        if poscount <= degrees[j]:
-          if oldB[j,i] >= oldB[j,bth]:
-            if bplus < 0:
-              B[k,bkji] = np.inf
-            else:
-              B[k,bkji] = W[k,bkji] + W[j,i] - oldB[j,bplus]
-          else:
-            B[k,bkji] = W[k,bkji] + W[j,i] - oldB[j,bth]
-        elif poscount == degrees[j]:
-          if oldB[j,i] >= oldB[j,bth]:
-            B[k,bkji] = W[k,bkji] + W[j,i]
-          else:
-            B[k,bkji] = W[k,bkji] + W[j,i] - oldB[j,bth]
-        elif poscount > degrees[j]:
-          if oldB[j,i] >= oldB[j,bth]:
-            if bplus < 0:
-              B[k,bkji] = np.inf
-            else:
-              B[k,bkji] = W[k,bkji] + W[j,i] - oldB[j,bplus]
-          else:
-              B[k,bkji] = W[k,bkji] + W[j,i] - oldB[j,bth]
+      if oldBj[i] >= oldBj[bth]:
+        if bplus < 0:
+          B[k,bkji] = np.inf
+        else:
+          B[k,bkji] = W[k,bkji] + W[j,i] - oldBj[bplus]
+      else:
+        B[k,bkji] = W[k,bkji] + W[j,i] - oldBj[bth]
 
-        B[k,bkji] = damping*B[k,bkji] + (1-damping)*oldB[k,bkji]
+      B[k,bkji] = damping*B[k,bkji] + (1-damping)*oldB[k,bkji]
