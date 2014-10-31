@@ -89,7 +89,6 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
   thresholds = np.zeros(N)
   for i,k in enumerate(degrees):
     Brow = B[i]
-    poscount = np.count_nonzero(Brow > 0)
     if k >= N - 1:
       thresholds[i] = -np.inf
     elif k < 1:
