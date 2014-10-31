@@ -6,15 +6,15 @@ import numpy as np
 cimport numpy as np
 cimport cython
 from libcpp cimport bool
-from common.distance import SquaredL2
+from sklearn.metric import pairwise_distances
 
 IDX_DTYPE = np.intp
 ctypedef Py_ssize_t IDX_DTYPE_t
 
 
-def inter_cluster_distance(X, num_clusters, cluster_labels, metric=SquaredL2):
+def inter_cluster_distance(X, num_clusters, cluster_labels):
   # compute shortest distances between clusters
-  Dx = metric.within(X)
+  Dx = pairwise_distances(X, metric='sqeuclidean')
   Dc = np.zeros((num_clusters,num_clusters), dtype=np.float64)
   edges = np.zeros((num_clusters,num_clusters,2), dtype=IDX_DTYPE)
   _fill_Dc_edges(num_clusters, cluster_labels, Dx, Dc, edges)
