@@ -49,25 +49,7 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
       cbuff[cbuffpos] = c
       cbuffpos = (cbuffpos + 1) % len(cbuff)
 
-      expB = np.exp(B)
-      expB[np.isinf(expB)] = 0
-      rowsums = expB.sum(axis=1)
-      expOldB = np.exp(oldB)
-      expOldB[np.isinf(expOldB)] = 0
-      oldrowsums = expOldB.sum(axis=1)
-
-      change = 0
-      rowsums[rowsums==0] = 1
-      oldrowsums[oldrowsums==0] = 1
-      for i in xrange(N):
-        row = expB[i]
-        oldrow = expOldB[i]
-        rmask = row == 0
-        ormask = oldrow == 0
-        change += np.count_nonzero(np.logical_xor(rmask, ormask))
-        mask = ~np.logical_and(rmask, ormask)
-        change += np.abs(oldrow[mask]/oldrowsums[i] -
-                         row[mask]/rowsums[i]).sum()
+      change = update_change(B, oldB)
       if np.isnan(change):
         print "change is NaN! BP will quit but solution",
         print "could be invalid. Problem may be infeasible."
@@ -101,16 +83,38 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
   return Graph.from_edge_pairs(pairs, num_vertices=N)
 
 
-def quickselect(B_row, *ks):
+def _update_change(B, oldB):
+  expB = np.exp(B)
+  expB[np.isinf(expB)] = 0
+  rowsums = expB.sum(axis=1)
+  expOldB = np.exp(oldB)
+  expOldB[np.isinf(expOldB)] = 0
+  oldrowsums = expOldB.sum(axis=1)
+
+  change = 0
+  rowsums[rowsums==0] = 1
+  oldrowsums[oldrowsums==0] = 1
+  for i in xrange(B.shape[0]):
+    row = expB[i]
+    oldrow = expOldB[i]
+    rmask = row == 0
+    ormask = oldrow == 0
+    change += np.count_nonzero(np.logical_xor(rmask, ormask))
+    mask = ~np.logical_and(rmask, ormask)
+    change += np.abs(oldrow[mask]/oldrowsums[i] -
+                     row[mask]/rowsums[i]).sum()
+  return change
+
+
+def _quickselect(B_row, *ks):
   order = np.argpartition(-B_row, ks)
   if len(ks) == 1:
     return order[ks[0]]
   return [order[k] for k in ks]
 
 
-def updateB(oldB, B, W, degrees, damping, inds, backinds):
+def _updateB(oldB, B, W, degrees, damping, inds, backinds):
   '''belief update function.'''
-  # TODO: cythonize this, because it's the bottleneck
   for j,d in enumerate(degrees):
     kk = inds[j]
     bk = backinds[j]
@@ -126,3 +130,19 @@ def updateB(oldB, B, W, degrees, damping, inds, backinds):
 
     belief -= np.where(oldBj >= oldBj[bth], oldBj[bplus], oldBj[bth])
     B[kk,bk] = damping*belief + (1-damping)*oldB[kk,bk]
+
+
+try:
+  import pyximport
+  pyximport.install(setup_args={'include_dirs': np.get_include()})
+  from b_matching_helper import quickselect, updateB, update_change
+except:
+  quickselect = _quickselect
+  updateB = _updateB
+  update_change = _update_change
+
+if __name__ == '__main__':
+  D = np.random.random((100,100))
+  D += D.T
+  np.fill_diagonal(D, 0)
+  b_matching(D, 5)
