@@ -44,7 +44,6 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
     if n_iter % INTERVAL == 0:
       # track changes
       c = np.abs(B[:,0]).sum()
-      dc = np.abs(c - cbuff)
       if np.any(np.abs(c - cbuff) < conv_thresh):
         oscillation -= 1
       cbuff[cbuffpos] = c
@@ -67,7 +66,8 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
         ormask = oldrow == 0
         change += np.count_nonzero(np.logical_xor(rmask, ormask))
         mask = ~np.logical_and(rmask, ormask)
-        change += np.abs(oldrow[mask]/oldrowsums[i] - row[mask]/rowsums[i]).sum()
+        change += np.abs(oldrow[mask]/oldrowsums[i] -
+                         row[mask]/rowsums[i]).sum()
       if np.isnan(change):
         print "change is NaN! BP will quit but solution",
         print "could be invalid. Problem may be infeasible."
@@ -87,17 +87,18 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
 
   # recover result from B
   thresholds = np.zeros(N)
-  for i,k in enumerate(degrees):
+  for i,d in enumerate(degrees):
     Brow = B[i]
-    if k >= N - 1:
+    if d >= N - 1:
       thresholds[i] = -np.inf
-    elif k < 1:
+    elif d < 1:
       thresholds[i] = np.inf
     else:
-      thresholds[i] = Brow[quickselect(Brow,k-1)]
+      thresholds[i] = Brow[quickselect(Brow, d-1)]
 
   ii,jj = np.where(B >= thresholds[:,None])
-  return Graph.from_edge_pairs(np.column_stack((ii, inds[ii,jj])), num_vertices=N)
+  pairs = np.column_stack((ii, inds[ii,jj]))
+  return Graph.from_edge_pairs(pairs, num_vertices=N)
 
 
 def quickselect(B_row, *ks):
@@ -109,7 +110,7 @@ def quickselect(B_row, *ks):
 
 def updateB(oldB, B, W, degrees, damping, inds, backinds):
   '''belief update function.'''
-  N = len(degrees)
+  # TODO: cythonize this, because it's the bottleneck
   for j,d in enumerate(degrees):
     kk = inds[j]
     bk = backinds[j]
@@ -125,4 +126,3 @@ def updateB(oldB, B, W, degrees, damping, inds, backinds):
 
     belief -= np.where(oldBj >= oldBj[bth], oldBj[bplus], oldBj[bth])
     B[kk,bk] = damping*belief + (1-damping)*oldB[kk,bk]
-
