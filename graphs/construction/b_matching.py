@@ -112,23 +112,18 @@ def updateB(oldB, B, W, degrees, damping, inds, backinds):
   '''belief update function.'''
   N = len(degrees)
   for j,d in enumerate(degrees):
+    kk = inds[j]
+    bk = backinds[j]
+
     if d == 0:
-      B[inds[j],backinds[j]] = -np.inf
+      B[kk,bk] = -np.inf
       continue
 
+    belief = W[kk,bk] + W[j]
     oldBj = oldB[j]
+    # TODO: handle case with degree < 1
     bth,bplus = quickselect(oldBj, d-1, d)
 
-    for i in xrange(N-1):
-      k = inds[j,i]
-      bkji = backinds[j,i]
+    belief -= np.where(oldBj >= oldBj[bth], oldBj[bplus], oldBj[bth])
+    B[kk,bk] = damping*belief + (1-damping)*oldB[kk,bk]
 
-      if oldBj[i] >= oldBj[bth]:
-        if bplus < 0:
-          B[k,bkji] = np.inf
-        else:
-          B[k,bkji] = W[k,bkji] + W[j,i] - oldBj[bplus]
-      else:
-        B[k,bkji] = W[k,bkji] + W[j,i] - oldBj[bth]
-
-      B[k,bkji] = damping*B[k,bkji] + (1-damping)*oldB[k,bkji]
