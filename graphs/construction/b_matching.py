@@ -1,113 +1,171 @@
 import numpy as np
 from graphs import Graph
 
-__all__ = ['b_matching', 'b_matching_jebara']
+__all__ = ['b_matching']
 
 
-def b_matching_jebara(D, k, max_iter=999):
-  """See docs for b_matching.
-  http://www.cs.columbia.edu/~jebara/code/loopy/"""
-  N = D.shape[0]
-  D = np.exp(-D)  # convert to similarity
-  ii = np.arange(N)
-
-  def _find_mininds(work_vecs, k):
-    inds = np.repeat(np.arange(k)[None], N, axis=0)
-    mininds = np.argmin(work_vecs[inds.T,ii], axis=0)
-    for j in xrange(k,N):
-      cond = work_vecs[j] > work_vecs[inds[ii,mininds],ii]
-      inds[cond,mininds[cond]] = j
-      mininds = np.argmin(work_vecs[inds.T,ii], axis=0)
-    return inds, mininds
-
-  def _update(work_vecs, transposed, out):
-    inds, mininds = _find_mininds(work_vecs, k+1)
-    true_kth = np.argpartition(work_vecs[inds,ii[:,None]], 1)[:,1]
-    true_vecs = work_vecs[inds[ii,true_kth],ii]
-    if transposed:
-      in_top_k = work_vecs.T >= true_vecs[:,None]
-    else:
-      in_top_k = work_vecs >= true_vecs
-    jj = np.nonzero(in_top_k)[0]
-    out[in_top_k] = D[in_top_k] / work_vecs[inds[jj,mininds[jj]],jj]
-    out[~in_top_k] = D[~in_top_k] / true_vecs[np.nonzero(~in_top_k)[0]]
-
-  # run the iterative matching
-  P = np.zeros_like(D, dtype=bool)
-  alpha = np.ones_like(D)
-  beta = np.ones_like(D)
-  found_answer = 0.0
-  for it in xrange(max_iter):
-    # update beta from alpha
-    _update(D * alpha, True, beta)
-    work_vecs = D.T * beta
-    # compute beliefs
-    P[:] = False
-    inds = _find_mininds(work_vecs, k)[0]
-    P[ii,inds.T] = True
-    # check for convergence
-    num_invalid_edges = (np.count_nonzero(P.sum(axis=0) != k) +
-                         np.count_nonzero(P.sum(axis=1) != k))
-    if it >= N and num_invalid_edges == 0:
-      found_answer += 1
-    else:
-      found_answer -= 0.1
-    if found_answer > 0:
-      # print "Converged in %d steps" % it
-      break
-    # update alpha from beta
-    _update(work_vecs, False, alpha)
-  else:
-    print "Didn't converge in %d steps" % max_iter
-  return Graph.from_adj_matrix(P)
-
-
-def b_matching(D, k, all_ranks=False, epsilon=-0.5, max_iter=5000):
+def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
+               verbose=False):
   '''
   "Belief-Propagation for Weighted b-Matchings on Arbitrary Graphs
   and its Relation to Linear Programs with Integer Solutions"
   Bayati et al.
 
   Finds the minimal weight perfect b-matching using min-sum loopy-BP.
-  This is a *symmetric* alternative to a kNN matrix.
 
-  @param D pairwise distance matrix, only symmetric matrices currently
-  @param k number of neighbors
-  @param all_ranks returns the full nearness ranking of all neighbors
-  @param epsilon a converges when k messages (per sample) are below eps.
-  @param max_iter cap on the number of iterations of message passing
+  @param D pairwise distance matrix
+  @param k number of neighbors per vertex (scalar or array-like)
 
-  @return binary adjacency matrix of neighbors
+  Based on the code at http://www.cs.columbia.edu/~bert/code/bmatching/bdmatch
   '''
+  INTERVAL = 2
+  oscillation = 10
+  cbuff = np.zeros(100, dtype=float)
+  cbuffpos = 0
+  N = D.shape[0]
+  assert D.shape[1] == N, 'Input distance matrix must be square'
+  mask = ~np.eye(N, dtype=bool)  # Assume all nonzero except for diagonal
+  W = -D[mask].reshape((N, -1)).astype(float)
+  degrees = np.zeros(N, dtype=int) + k
+  # TODO: remove these later
+  inds = np.tile(np.arange(N), (N, 1))
+  backinds = inds.copy()
+  inds = inds[mask].reshape((N, -1))
+  backinds = backinds.T.ravel()[:(N*(N-1))].reshape((N, -1))
 
-  n = D.shape[0]
-  assert D.shape[1] == n, 'Input distances matrix must be square'
-  # TODO: add non-symmetric matrix support, maybe something like...
-  #dim_diff = D.shape[0] - D.shape[1]
-  #if dim_diff > 0: #tall
-  #    D = np.hstack((D, np.ones((D.shape[0],dim_diff))*float('inf')))
-  #elif dim_diff < 0: #short
-  #    D = np.vstack((D,np.ones((abs(dim_diff),D.shape[1]))*float('inf')))
+  # Run Belief Revision
+  change = 1.0
+  B = W.copy()
+  for n_iter in xrange(1, max_iter+1):
+    oldB = B.copy()
+    updateB(oldB, B, W, degrees, damping, inds, backinds)
 
-  # TODO: In theory, epsilon should always be zero, but in practice that often
-  # leads to a bad convergence (to a non-symmetric matrix).
-  # This ain't right and someone should figure it out.
+    # check for convergence
+    if n_iter % INTERVAL == 0:
+      # track changes
+      cbuff[cbuffpos] = 0
+      for i in xrange(N):
+        cbuff[cbuffpos] += abs(B[i,0])
 
-  msg = D
-  for t_step in xrange(max_iter):
-    sorted_msg = np.partition(msg, (k-1,k), axis=0)
-    d1 = sorted_msg[k-1,None].T
-    d2 = sorted_msg[k,None].T
-    mask = msg.T <= d1
-    msg = D - np.where(mask, d2, d1)
-    if np.count_nonzero(msg < epsilon) == k*n:
-      # print "Converged in %d steps" % t_step
-      break
+      for i,c in enumerate(cbuff):
+        if i != cbuffpos and abs(c-cbuff[cbuffpos]) < conv_thresh:
+          oscillation -= 1
+          break
+
+      cbuffpos += 1
+      if cbuffpos >= len(cbuff):
+        cbuffpos = 0
+
+      expB = np.exp(B)
+      expB[np.isinf(expB)] = 0
+      rowsums = expB.sum(axis=1)
+      expOldB = np.exp(oldB)
+      expOldB[np.isinf(expOldB)] = 0
+      oldrowsums = expOldB.sum(axis=1)
+
+      change = 0
+      for i in xrange(N):
+        if rowsums[i] == 0:
+          rowsums[i] = 1
+        if oldrowsums[i] == 0:
+          oldrowsums[i] = 1
+        for j in xrange(N-1):
+          if ((expOldB[i,j] == 0 and expB[i,j] != 0) or
+              (expOldB[i,j] != 0 and expB[i,j] == 0)):
+            change += 1
+          elif expOldB[i,j] == 0 and expB[i,j] == 0:
+            change = change
+          else:
+            change += abs(expOldB[i,j]/oldrowsums[i]- expB[i,j]/rowsums[i])
+      if np.isnan(change):
+        print "change is NaN! BP will quit but solution",
+        print "could be invalid. Problem may be infeasible."
+        break
+      if change < conv_thresh or oscillation < 1:
+        break
   else:
-    print "Didn't converge in %d steps" % max_iter
+    print "Hit iteration limit (%d) before converging" % max_iter
 
-  sorted_indices = np.argsort(np.argsort(msg))
-  G = Graph.from_adj_matrix(sorted_indices < k)
-  if all_ranks:
-    return G, sorted_indices
-  return G
+  if verbose:
+    if change < conv_thresh:
+      print "Converged to stable beliefs in %d iterations" % n_iter
+    elif oscillation < 1:
+      print "Stopped after reaching oscillation in %d iterations" % n_iter
+      print "No feasible solution found or there are multiple maxima."
+      print "Outputting best approximate solution. Try damping."
+
+  # recover result from B
+  thresholds = np.zeros(N)
+  for i,k in enumerate(degrees):
+    poscount = np.count_nonzero(B[i] > 0)
+    if degrees[i] >= N - 1:
+      thresholds[i] = -np.inf
+    elif k < 1:
+      thresholds[i] = np.inf
+    elif poscount >= k:
+      thresholds[i] = B[i][quickselect(B[i],k-1)]
+    elif poscount <= k:
+      if k == 0:
+        thresholds[i] = np.inf
+      else:
+        thresholds[i] = B[i][quickselect(B[i],k-1)]
+    else:
+        thresholds[i] = B[i][quickselect(B[i],poscount-1)]
+
+  ii,jj = np.where(B >= thresholds[:,None])
+  adj = np.zeros_like(D, dtype=bool)
+  adj[ii,inds[ii,jj]] = True
+  return Graph.from_adj_matrix(adj)
+
+
+def quickselect(B_row, *ks):
+  order = np.argpartition(-B_row, ks)
+  if len(ks) == 1:
+    return order[ks[0]]
+  return [order[k] for k in ks]
+
+
+def updateB(oldB, B, W, degrees, damping, inds, backinds):
+  '''belief update function.'''
+  N = len(degrees)
+  for j in xrange(N):
+    poscount = np.count_nonzero(B[j] > 0)
+
+    if degrees[j] == 0:
+      for i in xrange(N-1):
+        k = inds[j,i]
+        B[k,backinds[j,i]] = -np.inf
+    elif ((degrees[j]<poscount and poscount<degrees[j]) or (degrees[j]==0 and poscount==0)):
+      for i in xrange(N-1):
+        k = inds[j,i]
+        B[k,backinds[j,i]] = W[k,backinds[j,i]] + W[j,i]
+    else:
+      bth,bplus = quickselect(oldB[j], degrees[j]-1, degrees[j])
+
+      for i in xrange(N-1):
+        k = inds[j,i]
+        bkji = backinds[j,i]
+
+        if poscount <= degrees[j]:
+          if oldB[j,i] >= oldB[j,bth]:
+            if bplus < 0:
+              B[k,bkji] = np.inf
+            else:
+              B[k,bkji] = W[k,bkji] + W[j,i] - oldB[j,bplus]
+          else:
+            B[k,bkji] = W[k,bkji] + W[j,i] - oldB[j,bth]
+        elif poscount == degrees[j]:
+          if oldB[j,i] >= oldB[j,bth]:
+            B[k,bkji] = W[k,bkji] + W[j,i]
+          else:
+            B[k,bkji] = W[k,bkji] + W[j,i] - oldB[j,bth]
+        elif poscount > degrees[j]:
+          if oldB[j,i] >= oldB[j,bth]:
+            if bplus < 0:
+              B[k,bkji] = np.inf
+            else:
+              B[k,bkji] = W[k,bkji] + W[j,i] - oldB[j,bplus]
+          else:
+              B[k,bkji] = W[k,bkji] + W[j,i] - oldB[j,bth]
+
+        B[k,bkji] = damping*B[k,bkji] + (1-damping)*oldB[k,bkji]
