@@ -13,25 +13,30 @@ cdef extern from "math.h":
     float INFINITY
 
 def update_change(B, oldB):
+  cdef IDX_DTYPE_t i, j, N = B.shape[0]
+  cdef double rs, ors, change = 0
+  cdef double[::1] rowsums, oldrowsums, row, oldrow
   expB = np.exp(B)
-  expB[np.isinf(expB)] = 0
-  rowsums = expB.sum(axis=1)
   expOldB = np.exp(oldB)
+  expB[np.isinf(expB)] = 0
   expOldB[np.isinf(expOldB)] = 0
+  rowsums = expB.sum(axis=1)
   oldrowsums = expOldB.sum(axis=1)
 
-  change = 0
-  rowsums[rowsums==0] = 1
-  oldrowsums[oldrowsums==0] = 1
-  for i in xrange(B.shape[0]):
+  for i in range(N):
+    rs = rowsums[i]
+    ors = oldrowsums[i]
+    if rs == 0:
+      rs = 1
+    if ors == 0:
+      ors = 1
     row = expB[i]
     oldrow = expOldB[i]
-    rmask = row == 0
-    ormask = oldrow == 0
-    change += np.count_nonzero(np.logical_xor(rmask, ormask))
-    mask = ~np.logical_and(rmask, ormask)
-    change += np.abs(oldrow[mask]/oldrowsums[i] -
-                     row[mask]/rowsums[i]).sum()
+    for j in range(N-1):
+      if (row[j] == 0 and oldrow[j] != 0) or (row[j] != 0 and oldrow[j] == 0):
+        change += 1
+      if row[j] != 0 and oldrow[j] != 0:
+        change += abs(oldrow[j]/ors - row[j]/rs)
   return change
 
 
