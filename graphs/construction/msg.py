@@ -165,6 +165,9 @@ def _connect_meta_edges(X, G, CC_planes, CC_labels, CC_ninds,
   min_F = 1.0
   min_D = np.inf
   W = G.matrix(dense=True, coo=True)
+  # COO format only supports sum_duplicates since August 2014.
+  if issparse(W) and not hasattr(W, 'sum_duplicates'):
+    W = W.toarray()
   to_add = []
   for p,q in CC_ninds:
     ii, = np.where(CC_labels==p)
