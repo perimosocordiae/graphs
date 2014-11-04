@@ -43,17 +43,12 @@ def _parse_fmt(fmt, color_key='colors', ls_key='linestyles',
   '''Modified from matplotlib's _process_plot_format function.'''
   try:  # Is fmt just a colorspec?
     color = mcolors.colorConverter.to_rgb(fmt)
-    # We need to differentiate grayscale '1.0' from tri_down marker '1'
-    try:
-      fmtint = str(int(fmt))
-    except ValueError:
-      return {color_key:color}
-    else:
-      if fmt != fmtint:
-        # user definitely doesn't want tri_down marker
-        return {color_key:color}
   except ValueError:
     pass  # No, not just a color.
+  else:
+    # Yes, just a color (or maybe tri_down marker '1')
+    if fmt != '1':
+      return {color_key:color}
 
   result = dict()
   # handle the multi char special cases and strip them from the string

@@ -43,20 +43,28 @@ class TestPlot(unittest.TestCase):
       plot_graph(G, self.coords, unweighted=False)
 
   def test_plot_graph_styles(self):
-    for G in self.graphs:
-      plot_graph(G, self.coords, edge_style='r--')
-      plot_graph(G, self.coords,
-                 edge_style=dict(colors=range(4), linestyles=':'))
-      plot_graph(G, self.coords, vertex_style='rx')
-      plot_graph(G, self.coords,
-                 vertex_style=dict(c=[(0,0,0),(1,1,1)], marker='o'))
-      plot_graph(G, self.coords, edge_style='k')
-      plot_graph(G, self.coords, edge_style='1')
-      with self.assertRaises(ValueError):
-        plot_graph(G, self.coords, edge_style='5')
-      plot_graph(G, self.coords, edge_style=' x')
-      plot_graph(G, self.coords, edge_style='-.')
-      plot_graph(G, self.coords, edge_style='k-')
+    G = self.graphs[0]  # No need to do this with each type of graph.
+    plot_graph(G, self.coords, edge_style='r--')
+    plot_graph(G, self.coords,
+               edge_style=dict(colors=range(4), linestyles=':'))
+    plot_graph(G, self.coords, vertex_style='rx')
+    plot_graph(G, self.coords,
+               vertex_style=dict(c=[(0,0,0),(1,1,1)], marker='o'))
+    plot_graph(G, self.coords, edge_style='k')
+    plot_graph(G, self.coords, edge_style='1')
+    plot_graph(G, self.coords, edge_style='01')
+    plot_graph(G, self.coords, edge_style=' x')
+    plot_graph(G, self.coords, edge_style='-.')
+    plot_graph(G, self.coords, edge_style='k-')
+    # Make sure we break with bogus styles
+    with self.assertRaises(ValueError):
+      plot_graph(G, self.coords, edge_style='5')
+    with self.assertRaises(ValueError):
+      plot_graph(G, self.coords, edge_style='::')
+    with self.assertRaises(ValueError):
+      plot_graph(G, self.coords, edge_style='oo')
+    with self.assertRaises(ValueError):
+      plot_graph(G, self.coords, edge_style='kk')
 
 
 if __name__ == '__main__':
