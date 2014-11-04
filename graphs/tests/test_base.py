@@ -21,15 +21,23 @@ ADJ = [[0,1,1,0],
 
 class TestStaticConstructors(unittest.TestCase):
   def test_from_pairs(self):
-    epg = Graph.from_edge_pairs(PAIRS)
-    self.assertEqual(epg.num_edges(), 5)
-    self.assertEqual(epg.num_vertices(), 4)
-    epg = Graph.from_edge_pairs(PAIRS, num_vertices=10)
-    self.assertEqual(epg.num_edges(), 5)
-    self.assertEqual(epg.num_vertices(), 10)
-    spg = Graph.from_edge_pairs(PAIRS, symmetric=True)
-    self.assertEqual(spg.num_edges(), 8)
-    self.assertEqual(spg.num_vertices(), 4)
+    g = Graph.from_edge_pairs(PAIRS)
+    self.assertEqual(g.num_edges(), 5)
+    self.assertEqual(g.num_vertices(), 4)
+    g = Graph.from_edge_pairs(PAIRS, num_vertices=10)
+    self.assertEqual(g.num_edges(), 5)
+    self.assertEqual(g.num_vertices(), 10)
+    g = Graph.from_edge_pairs(PAIRS, symmetric=True)
+    self.assertEqual(g.num_edges(), 8)
+    self.assertEqual(g.num_vertices(), 4)
+
+  def test_from_pairs_weighted(self):
+    w = np.arange(1, 6)
+    g = Graph.from_edge_pairs(PAIRS, weights=w)
+    assert_array_equal(g.edge_weights(), w)
+    # weighted + symmetric is NYI for now
+    self.assertRaises(AssertionError, Graph.from_edge_pairs, PAIRS,
+                      symmetric=True, weights=w)
 
   def test_from_adj(self):
     m = Graph.from_adj_matrix(ADJ)

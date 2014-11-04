@@ -7,10 +7,7 @@ with associated visualization, analysis, and embedding functions.
 
 ## TODO list
 
-  * Get test coverage up to 100%
-  * Add a weighted variant of EdgePairGraph
   * Add a symmetric variant of AdjacencyMatrixGraph
-  * Support casting between Graph subtypes
   * Hook into networkx/graphviz/arbor/etc for no-coordinate graph vizualization
   * Add docstrings to all public functions/classes/modules
   * Provide usage examples
