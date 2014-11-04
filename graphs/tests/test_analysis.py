@@ -3,6 +3,7 @@ matplotlib.use('template')
 
 import unittest
 import numpy as np
+import warnings
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.sparse import coo_matrix
 from graphs import analysis, Graph
@@ -48,6 +49,13 @@ class TestAnalysis(unittest.TestCase):
     for G in self.graphs:
       L = analysis.directed_laplacian(G)
       assert_array_almost_equal(L, expected)
+
+    # test non-convergence case
+    with warnings.catch_warnings(record=True) as w:
+      analysis.directed_laplacian(self.graphs[0], max_iter=2)
+      self.assertEqual(len(w), 1)
+      self.assertEqual(w[0].message.message,
+                       'phi failed to converge after 2 iterations')
 
   def test_bottlenecks(self):
     for G in self.graphs:

@@ -3,6 +3,7 @@ from itertools import count
 import numpy as np
 import scipy.sparse.csgraph as ssc
 import scipy.sparse as ss
+import warnings
 
 __all__ = [
     'connected_components', 'laplacian', 'shortest_path', 'greedy_coloring',
@@ -78,7 +79,7 @@ def directed_laplacian(G, D=None, eta=0.99, tol=1e-12, max_iter=500):
       break
     old_phi = phi
   else:
-    print "Warning: phi failed to converge"
+    warnings.warn("phi failed to converge after %d iterations" % max_iter)
   # L = Phi - (Phi P + P' Phi)/2
   return np.diag(phi) - ((phi * P.T).T + P.T * phi)/2
 
