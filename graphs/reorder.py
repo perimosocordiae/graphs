@@ -47,19 +47,20 @@ def _cuthill_mckee(G):
   return permute_graph(G, np.array(result))
 
 
-if hasattr(ssc, 'reverse_cuthill_mckee'):
+if hasattr(ssc, 'reverse_cuthill_mckee'):  # pragma: no cover
   def cuthill_mckee(G):
     sG = G.matrix(csr=True)
     order = ssc.reverse_cuthill_mckee(sG, symmetric_mode=True)
     return permute_graph(G, order)
-else:
+else:  # pragma: no cover
   cuthill_mckee = _cuthill_mckee
 
 
 def laplacian_reordering(G):
   L = laplacian(G)
   vals, vecs = np.linalg.eigh(L)
-  vec, = vecs[vals == vals[vals>0].min()]
+  min_positive_idx = np.argmax(vals == vals[vals>0].min())
+  vec = vecs[:, min_positive_idx]
   return permute_graph(G, np.argsort(vec))
 
 
@@ -71,11 +72,11 @@ def node_centroid_hill_climbing(G, relax=1, num_centerings=20, verbose=False):
     nc_order = node_center(G, order, relax=relax)
     nc_B = bandwidth(permute_graph(G, nc_order))
     if nc_B < B:
-      if verbose:
+      if verbose:  # pragma: no cover
         print 'post-center', B, nc_B
       order = nc_order
     order = hill_climbing(G, order, verbose=verbose)
-  return order
+  return permute_graph(G, order)
 
 
 def breadth_first_order(G):
