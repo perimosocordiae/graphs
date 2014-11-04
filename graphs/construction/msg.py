@@ -26,7 +26,8 @@ def manifold_spanning_graph(X, embed_dim, num_ccs=1, verbose=False):
     n, labels = connected_components(G, return_labels=True)
     for i in xrange(n):
       mask = labels==i
-      print 'CC', i, 'has size', np.count_nonzero(mask)
+      if verbose:  # pragma: no cover
+        print 'CC', i, 'has size', np.count_nonzero(mask)
       idx = np.ix_(mask, mask)
       _, tmp_labels = np.unique(CC_labels[mask], return_inverse=True)
       adj[idx] = flesh_out(X[mask], adj[idx], embed_dim, tmp_labels,
