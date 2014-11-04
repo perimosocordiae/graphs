@@ -140,7 +140,7 @@ def hill_climbing(G, order, verbose=False):
         new_B = bandwidth(permute_graph(G, new_order))
         if new_B < B:
           order = new_order
-          if verbose:
+          if verbose:  # pragma: no cover
             print 'improved B', B, new_B
           B = new_B
           break
@@ -149,7 +149,7 @@ def hill_climbing(G, order, verbose=False):
           new_nc = sum(1 for _ in critical_vertices(G, new_order, bw=B))
           if new_nc < nc:
             order = new_order
-            if verbose:
+            if verbose:  # pragma: no cover
               print 'improved nc', nc, new_nc
             break
       else:
