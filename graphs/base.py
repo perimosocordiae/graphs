@@ -1,5 +1,6 @@
 import numpy as np
 import scipy.sparse as ss
+import warnings
 
 __all__ = ['Graph']
 
@@ -102,6 +103,9 @@ class EdgePairGraph(Graph):
 
   def add_self_edges(self, weight=None):
     '''Adds all i->i edges, in-place.'''
+    if weight is not None:
+      warnings.warn('Cannot supply weights for unweighted graph; '
+                    'ignoring weight argument')
     row,col = self._pairs.T
     diag_inds = row[np.equal(row,col)]
     to_add = np.arange(self._num_vertices)

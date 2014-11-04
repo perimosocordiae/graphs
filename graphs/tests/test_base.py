@@ -3,6 +3,7 @@ matplotlib.use('template')
 
 import unittest
 import numpy as np
+import warnings
 from numpy.testing import assert_array_equal
 from scipy.sparse import csr_matrix
 
@@ -58,6 +59,13 @@ class TestEdgePairGraph(unittest.TestCase):
     self.assertEqual(M.format, 'csr')
     assert_array_equal(M.toarray(), ADJ)
 
+  def test_self_edges(self):
+    self.epg.add_self_edges()
+    expected = self.epg.pairs()
+    # Ensure that calling it again does the right thing.
+    self.epg.add_self_edges()
+    assert_array_equal(self.epg.pairs(), expected)
+
 
 class TestSymmEdgePairGraph(unittest.TestCase):
   def setUp(self):
@@ -93,8 +101,19 @@ class TestAdjacencyMatrixGraphs(unittest.TestCase):
     M = self.S.matrix()
     self.assertEqual(M.format, 'csr')
     assert_array_equal(M.toarray(), ADJ)
-    M = self.G.matrix(dense=True)
+
+  def test_matrix_copy(self):
+    M = self.G.matrix(dense=True, copy=False)
     assert_array_equal(M, ADJ)
+    M2 = self.G.matrix(dense=True, copy=True)
+    assert_array_equal(M, M2)
+    self.assertIsNot(M, M2)
+    # Sparse case
+    M = self.S.matrix(csr=True, copy=False)
+    assert_array_equal(M.toarray(), ADJ)
+    M2 = self.S.matrix(csr=True, copy=True)
+    assert_array_equal(M.toarray(), M2.toarray())
+    self.assertIsNot(M, M2)
 
 
 class TestGenericMembers(unittest.TestCase):
@@ -133,19 +152,35 @@ class TestGenericMembers(unittest.TestCase):
       for a,e in zip(adj_list, expected):
         assert_array_equal(a, e)
 
-  def test_add_self_edges(self):
+  def test_add_self_edges_unweighted(self):
     expected = (np.array(ADJ) + np.eye(len(ADJ))).astype(bool).astype(int)
     for G in self.graphs:
       gg = G.add_self_edges()
-      assert_array_equal(gg.matrix(dense=True), expected,
+      self.assertIs(gg, G)
+      self.assertEqual(G.num_edges(), 7)
+      assert_array_equal(G.matrix(dense=True), expected,
                          'unweighted (%s)' % type(G))
+    with warnings.catch_warnings(record=True) as w:
+      self.graphs[0].add_self_edges(weight=3)
+      self.assertEqual(len(w), 1)
+      self.assertIn('ignoring weight argument', w[0].message.message)
+
+  def test_add_self_edges_weighted(self):
+    wg = [G for G in self.graphs if G.is_weighted()]
     expected = np.array(ADJ, dtype=float)
     np.fill_diagonal(expected, 0.5)
-    for G in self.graphs:
-      if G.is_weighted():
-        gg = G.add_self_edges(weight=0.5)
-        assert_array_equal(gg.matrix(dense=True), expected,
-                           'weighted (%s)' % type(G))
+    for G in wg:
+      G.add_self_edges(weight=0.5)
+      self.assertEqual(G.num_edges(), 7)
+      assert_array_equal(G.matrix(dense=True), expected,
+                         'weighted (%s)' % type(G))
+    # zeros case
+    np.fill_diagonal(expected, 0)
+    for G in wg:
+      G.add_self_edges(weight=0)
+      self.assertEqual(G.num_edges(), 3)
+      assert_array_equal(G.matrix(dense=True), expected,
+                         'weighted (%s)' % type(G))
 
   def test_symmetrize(self):
     adj = np.array(ADJ)
@@ -175,6 +210,7 @@ class TestGenericMembers(unittest.TestCase):
       if G.is_weighted():
         ew = G.edge_weights()
         assert_array_equal(ew, expected, 'edge weights (%s)' % type(G))
+        self.assertIsNot(G.edge_weights(copy=True), ew)
     expected = [1,2,1,1,3]
     assert_array_equal(self.weighted.edge_weights(), expected)
 
