@@ -147,7 +147,7 @@ try:
   import pyximport
   pyximport.install(setup_args={'include_dirs': np.get_include()})
   from b_matching_helper import quickselect, updateB, update_change
-except ImportError:  # pragma: no cover
+except ImportError:
   quickselect = _quickselect
   updateB = _updateB
   update_change = _update_change
