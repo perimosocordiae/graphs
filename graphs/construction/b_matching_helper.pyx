@@ -40,7 +40,7 @@ def update_change(B, oldB):
   return change
 
 
-def quickselect(B_row, IDX_DTYPE_t k):
+cpdef IDX_DTYPE_t quickselect(B_row, IDX_DTYPE_t k):
   cdef IDX_DTYPE_t[::1] order = np.argpartition(-B_row, k)
   return order[k]
 
@@ -68,10 +68,13 @@ def updateB(oldB, double[:,::1] B, double[:,::1] W,
       continue
 
     oldBj = oldBview[j]
-    # TODO: handle case with degree < 1
-    order = np.argpartition(-oldB[j], (d-1, d))
-    bth = order[d-1]
-    bplus = order[d]
+    if d == n-1:
+      bth = quickselect(oldB[j], d-1)
+      bplus = -1
+    else:
+      order = np.argpartition(-oldB[j], (d-1, d))
+      bth = order[d-1]
+      bplus = order[d]
 
     for k in range(n-1):
       kkk = kk[k]

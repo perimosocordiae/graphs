@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 from graphs import Graph
 
 __all__ = ['b_matching']
@@ -26,7 +27,11 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
   assert D.shape[1] == N, 'Input distance matrix must be square'
   mask = ~np.eye(N, dtype=bool)  # Assume all nonzero except for diagonal
   W = -D[mask].reshape((N, -1)).astype(float)
-  degrees = np.zeros(N, dtype=int) + k
+  degrees = np.clip(np.atleast_1d(k), 0, N-1)
+  if degrees.size == 1:  # broadcast scalar up to length-N array
+    degrees = np.repeat(degrees, N)
+  else:
+    assert degrees.shape == (N,), 'Input degrees must have length N'
   # TODO: remove these later
   inds = np.tile(np.arange(N), (N, 1))
   backinds = inds.copy()
@@ -51,15 +56,16 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
 
       change = update_change(B, oldB)
       if np.isnan(change):
-        print "change is NaN! BP will quit but solution",
-        print "could be invalid. Problem may be infeasible."
+        warnings.warn("change is NaN! "
+                      "BP will quit but solution could be invalid. "
+                      "Problem may be infeasible.")
         break
       if change < conv_thresh or oscillation < 1:
         break
   else:
-    print "Hit iteration limit (%d) before converging" % max_iter
+    warnings.warn("Hit iteration limit (%d) before converging" % max_iter)
 
-  if verbose:
+  if verbose:  # pragma: no cover
     if change < conv_thresh:
       print "Converged to stable beliefs in %d iterations" % n_iter
     elif oscillation < 1:
@@ -83,7 +89,7 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
   return Graph.from_edge_pairs(pairs, num_vertices=N)
 
 
-def _update_change(B, oldB):
+def _update_change(B, oldB):  # pragma: no cover
   expB = np.exp(B)
   expB[np.isinf(expB)] = 0
   rowsums = expB.sum(axis=1)
@@ -106,14 +112,14 @@ def _update_change(B, oldB):
   return change
 
 
-def _quickselect(B_row, *ks):
+def _quickselect(B_row, *ks):  # pragma: no cover
   order = np.argpartition(-B_row, ks)
   if len(ks) == 1:
     return order[ks[0]]
   return [order[k] for k in ks]
 
 
-def _updateB(oldB, B, W, degrees, damping, inds, backinds):
+def _updateB(oldB, B, W, degrees, damping, inds, backinds):  # pragma: no cover
   '''belief update function.'''
   for j,d in enumerate(degrees):
     kk = inds[j]
@@ -125,8 +131,11 @@ def _updateB(oldB, B, W, degrees, damping, inds, backinds):
 
     belief = W[kk,bk] + W[j]
     oldBj = oldB[j]
-    # TODO: handle case with degree < 1
-    bth,bplus = quickselect(oldBj, d-1, d)
+    if d == oldBj.shape[0]:
+      bth = quickselect(oldBj, d-1)
+      bplus = -1
+    else:
+      bth,bplus = quickselect(oldBj, d-1, d)
 
     belief -= np.where(oldBj >= oldBj[bth], oldBj[bplus], oldBj[bth])
     B[kk,bk] = damping*belief + (1-damping)*oldB[kk,bk]
@@ -136,13 +145,7 @@ try:
   import pyximport
   pyximport.install(setup_args={'include_dirs': np.get_include()})
   from b_matching_helper import quickselect, updateB, update_change
-except:
+except ImportError:  # pragma: no cover
   quickselect = _quickselect
   updateB = _updateB
   update_change = _update_change
-
-if __name__ == '__main__':
-  D = np.random.random((100,100))
-  D += D.T
-  np.fill_diagonal(D, 0)
-  b_matching(D, 5)
