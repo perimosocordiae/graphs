@@ -35,9 +35,9 @@ def jeff_prune_edges(G, X, traj_lengths, pruning_thresh=0.1, verbose=False):
     theta = paired_distances(graph_edges, traj_edges, 'cosine')
     bad_edges = theta > pruning_thresh
     W[s[bad_edges],t[bad_edges]] = 0
-    if verbose:
+    if verbose:  # pragma: no cover
       num_bad += np.count_nonzero(bad_edges)
     i += n
-  if verbose:
+  if verbose:  # pragma: no cover
     print 'removed %d bad edges' % num_bad
   return Graph.from_adj_matrix(W)

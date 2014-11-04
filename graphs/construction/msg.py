@@ -58,7 +58,7 @@ def flesh_out(X, W, embed_dim, CC_labels, dist_mult=2.0, angle_thresh=0.2,
   CC_mask = CC_labels != CC_labels[:,None]
   candidate_edges = ~W & dist_mask & hops_mask & CC_mask
   candidate_points, = np.where(np.any(candidate_edges, axis=0))
-  if verbose:
+  if verbose:  # pragma: no cover
     print 'before F: %d potentials' % candidate_edges.sum()
 
   # calc subspaces
@@ -75,7 +75,7 @@ def flesh_out(X, W, embed_dim, CC_labels, dist_mult=2.0, angle_thresh=0.2,
   mask = F < angle_thresh
   edge_ii = ii[mask]
   edge_jj = jj[mask]
-  if verbose:
+  if verbose:  # pragma: no cover
     print 'got %d potential edges' % len(edge_ii)
   # Prevent any one node from getting a really high degree
   degree = W.sum(axis=0)
@@ -102,7 +102,7 @@ def grow_trees(X, G, embed_dim, verbose=False):
     ninds = pairs[tree_sizes == min_tree_size]
     meta_edge_lengths = Dcenter[ninds[:,0],ninds[:,1]]
     dist_thresh = max(dist_thresh, np.max(meta_edge_lengths))
-    if verbose:
+    if verbose:  # pragma: no cover
       print n, 'CCs. dist thresh:', dist_thresh
     # modify G to connect edges between nearby CCs
     G, num_added = _connect_meta_edges(X, G, None, labels, ninds,
@@ -126,13 +126,13 @@ def join_CCs(X, G, embed_dim, num_ccs=1, max_angle=0.3, verbose=False):
     ninds = nearest_neighbors(Dcenter, precomputed=True, k=2)  # self + 1 == 2
     meta_edge_lengths = Dcenter[ninds[:,0],ninds[:,1]]
     dist_thresh = np.median(meta_edge_lengths)
-    if verbose:
+    if verbose:  # pragma: no cover
       print n, 'CCs'
     # convert ninds to CC_ninds (back to the CC_labels space, via W-space)
     CC_ninds = CC_labels[min_edge_idxs[ninds[:,0],ninds[:,1]]]
     # modify G to connect edges between nearby CCs
     while True:
-      if verbose:
+      if verbose:  # pragma: no cover
         print 'DT:', dist_thresh, 'AT:', angle_thresh
       G, num_added, minD, minF = _connect_meta_edges(
           X, G, CC_planes, CC_labels, CC_ninds,
@@ -145,13 +145,13 @@ def join_CCs(X, G, embed_dim, num_ccs=1, max_angle=0.3, verbose=False):
         if np.isinf(minD):
           max_angle += 0.1  # XXX: hack
           angle_thresh = min(minF, max_angle)
-          if verbose:
+          if verbose:  # pragma: no cover
             print 'Increasing max_angle to', max_angle
         else:
           dist_thresh = minD
       else:
-        assert False, ("Impossible state: "
-                       "can't increase dist_thresh enough to make a connection")
+        raise AssertionError("Impossible state: can't increase dist_thresh "
+                             "enough to make a connection")
 
     # recalc CCs and repeat (keeping the original CC_planes!)
     #  until there's only one left.
