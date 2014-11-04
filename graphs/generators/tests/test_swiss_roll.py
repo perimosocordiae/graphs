@@ -1,8 +1,10 @@
 import matplotlib
 matplotlib.use('template')
 
+import numpy as np
 import unittest
 
+from graphs import Graph
 from graphs.generators import swiss_roll as sr
 
 
@@ -18,8 +20,16 @@ class TestSwissRoll(unittest.TestCase):
     self.assertAlmostEqual(theta.max(), 3.0)
 
   def test_error_ratio(self):
-    # TODO: test
-    sr.error_ratio
+    adj = np.diag(np.ones(3), k=1)
+    adj += adj.T
+    G = Graph.from_adj_matrix(adj)
+    GT = np.tile(np.linspace(0, 1, adj.shape[0])**2, (2,1)).T
+    err_edges, tot_edges = sr.error_ratio(G, GT, return_tuple=True)
+    self.assertEqual(err_edges, 6)
+    self.assertEqual(tot_edges, 6)
+    self.assertEqual(sr.error_ratio(G, GT, max_delta_theta=0.2), 4/6.)
+    self.assertEqual(sr.error_ratio(G, GT, max_delta_theta=0.5), 2/6.)
+    self.assertEqual(sr.error_ratio(G, GT, max_delta_theta=1), 0.0)
 
 
 if __name__ == '__main__':
