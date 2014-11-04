@@ -49,8 +49,10 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
     if n_iter % INTERVAL == 0:
       # track changes
       c = np.abs(B[:,0]).sum()
-      if np.any(np.abs(c - cbuff) < conv_thresh):
-        oscillation -= 1
+      # c may be infinite here, and that's ok
+      with np.errstate(invalid='ignore'):
+        if np.any(np.abs(c - cbuff) < conv_thresh):
+          oscillation -= 1
       cbuff[cbuffpos] = c
       cbuffpos = (cbuffpos + 1) % len(cbuff)
 
