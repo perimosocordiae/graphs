@@ -1,5 +1,5 @@
-
 import numpy as np
+import warnings
 from scipy.sparse import issparse
 from scipy.sparse.linalg import eigsh
 from scipy.linalg import eigh
@@ -57,7 +57,7 @@ def _lapeig(L, num_vecs, return_vals, val_thresh):
       # TODO: try using shift-invert mode (sigma=0?) for speed here.
       vals,vecs = eigsh(L, k, which='SM')
     except:
-      print 'Sparse eigsh failed, falling back to dense version'
+      warnings.warn('Sparse eigsh failed, falling back to dense version')
       vals,vecs = eigh(L.A, overwrite_a=True)
   else:
     vals,vecs = eigh(L, overwrite_a=True)

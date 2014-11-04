@@ -25,13 +25,17 @@ class TestEmbeddings(unittest.TestCase):
     # Test a simple chain graph
     expected = np.array([0.5, 0.5, 0., -0.5, -0.5])
     W = np.zeros((5,5)) + np.diag(np.ones(4), k=1) + np.diag(np.ones(4), k=-1)
-    Y = embed.laplacian_eigenmaps(Graph.from_adj_matrix(W), num_vecs=1)
+    G = Graph.from_adj_matrix(W)
+    Y = embed.laplacian_eigenmaps(G, num_vecs=1)
     self.assertEqual(Y.shape, (5, 1))
     assert_array_almost_equal(Y[:,0], expected)
+    # Test num_vecs=None case
+    Y = embed.laplacian_eigenmaps(G)
+    self.assertEqual(Y.shape, (5, 4))
+    assert_array_almost_equal(Y[:,0], expected)
     # Test sparse case + return_vals
-    S = csr_matrix(W)
-    Y, vals = embed.laplacian_eigenmaps(Graph.from_adj_matrix(S), num_vecs=1,
-                                        return_vals=True)
+    G = Graph.from_adj_matrix(csr_matrix(W))
+    Y, vals = embed.laplacian_eigenmaps(G, num_vecs=1, return_vals=True)
     assert_array_almost_equal(vals, [0.292893])
     self.assertEqual(Y.shape, (5, 1))
     assert_array_almost_equal(Y[:,0], expected)
