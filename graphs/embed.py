@@ -9,7 +9,7 @@ from analysis import shortest_path, laplacian
 
 __all__ = [
     'isomap', 'laplacian_eigenmaps', 'locality_preserving_projections',
-    'laplacian_pca'
+    'laplacian_pca', 'circular_layout', 'spring_layout'
 ]
 
 
@@ -76,10 +76,6 @@ def _lapeig(L, num_vecs, return_vals, val_thresh):
   return embedding
 
 
-def random_layout(G, num_dims=2):
-  return np.random.random((G.num_vertices(), num_dims))
-
-
 def circular_layout(G):
   n = G.num_vertices()
   t = np.linspace(0, 2*np.pi, n)
@@ -97,7 +93,7 @@ def spring_layout(G, num_dims=2, spring_constant=None, iterations=50):
   iterations : int  optional (default=50)
      Number of iterations of spring-force relaxation
   """
-  X = random_layout(G, num_dims=num_dims)
+  X = np.random.random((G.num_vertices(), num_dims))
   if spring_constant is None:
     spring_constant = X.shape[0] ** -0.5
   adj = G.matrix()
