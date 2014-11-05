@@ -74,3 +74,52 @@ def _lapeig(L, num_vecs, return_vals, val_thresh):
   if return_vals:
     return embedding, vals[i:i+num_vecs]
   return embedding
+
+
+def random_layout(G, num_dims=2):
+  return np.random.random((G.num_vertices(), num_dims))
+
+
+def circular_layout(G):
+  n = G.num_vertices()
+  t = np.linspace(0, 2*np.pi, n)
+  return np.column_stack((np.cos(t), np.sin(t)))
+
+
+def spring_layout(G, num_dims=2, spring_constant=None, iterations=50):
+  """Position nodes using Fruchterman-Reingold force-directed algorithm.
+
+  spring_constant : float (default=None)
+     Optimal distance between nodes.  If None the distance is set to
+     1/sqrt(n) where n is the number of nodes.  Increase this value
+     to move nodes farther apart.
+
+  iterations : int  optional (default=50)
+     Number of iterations of spring-force relaxation
+  """
+  X = random_layout(G, num_dims=num_dims)
+  if spring_constant is None:
+    spring_constant = X.shape[0] ** -0.5
+  adj = G.matrix()
+  # the initial "temperature"  is about .1 of domain area (=1x1)
+  # this is the largest step allowed in the dynamics.
+  initial_temp = 0.1
+  # simple cooling scheme, linearly steps down
+  cooling_scheme = np.linspace(initial_temp, 0, iterations+2)[:-2]
+  # this is still O(V^2)
+  # could use multilevel methods to speed this up significantly
+  for t in cooling_scheme:
+    delta = X[:,None] - X[None]
+    distance = np.linalg.norm(delta, ord=2, axis=2)
+    # enforce minimum distance of 0.01
+    np.maximum(distance, 0.01, out=distance)
+    # displacement "force"
+    # TODO: this seems like a bug, where small weights are made big
+    #   maybe do 1/adj or something (without div by zero)
+    accel = (spring_constant/distance)**2 - adj*distance/spring_constant
+    displacement = (delta * accel[:,:,None]).sum(axis=1)
+    # update positions
+    length = np.linalg.norm(displacement, axis=1)
+    np.maximum(length, 0.01, out=length)
+    X += displacement * t / length[:,None]
+  return X
