@@ -78,7 +78,7 @@ def _lapeig(L, num_vecs, return_vals, val_thresh):
 
 def circular_layout(G):
   n = G.num_vertices()
-  t = np.linspace(0, 2*np.pi, n)
+  t = np.linspace(0, 2*np.pi, n+1)[:n]
   return np.column_stack((np.cos(t), np.sin(t)))
 
 

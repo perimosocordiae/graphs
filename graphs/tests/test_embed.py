@@ -63,6 +63,28 @@ class TestEmbeddings(unittest.TestCase):
     actual = embed.laplacian_pca(G, mX, num_vecs=1, beta=0)[:,:1]
     self.assertTrue(np.abs(expected - actual).sum() < 0.5)
 
+  def test_circular_layout(self):
+    G = Graph.from_edge_pairs([], num_vertices=4)
+    expected = np.array([[1,0],[0,1],[-1,0],[0,-1]])
+    assert_array_almost_equal(embed.circular_layout(G), expected)
+    # edge cases
+    for nv in (0, 1):
+      G = Graph.from_edge_pairs([], num_vertices=nv)
+      X = embed.circular_layout(G)
+      self.assertEqual(X.shape, (nv, 2))
+
+  def test_spring_layout(self):
+    np.random.seed(1234)
+    w = np.array([1,2,0.1,1,1,2,0.1,1])
+    p = [[0,1],[1,2],[2,3],[3,4],[1,0],[2,1],[3,2],[4,3]]
+    G = Graph.from_edge_pairs(p, weights=w, num_vertices=5)
+    expected = np.array([
+        [-1.12951518, 0.44975598],
+        [-0.42574481, 0.51702804],
+        [0.58946761,  0.61403187],
+        [0.96513010,  0.64989485],
+        [1.67011322,  0.71714073]])
+    assert_array_almost_equal(embed.spring_layout(G), expected)
 
 if __name__ == '__main__':
   unittest.main()
