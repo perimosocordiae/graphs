@@ -64,8 +64,11 @@ class Graph(object):
     if weights is None:
       return G
     # Convert to sparse adj graph with provided edge weights
-    s = G.matrix(csr=True, csc=True, coo=True)
-    s.data[:] = weights
+    s = G.matrix(csr=True, csc=True, coo=True).astype(float)
+    # shenanigans to assign edge weights in the right order
+    nv = G.num_vertices()
+    order = np.argsort((pairs * np.array([nv, 1])).sum(axis=1))
+    s.data[:] = weights[order]
     return SparseAdjacencyMatrixGraph(s)
 
   @staticmethod
@@ -79,6 +82,17 @@ class Graph(object):
 class EdgePairGraph(Graph):
   def __init__(self, pairs, num_vertices=None):
     self._pairs = np.atleast_2d(pairs)
+    # Handle empty-input case
+    if self._pairs.size == 0:
+      self._pairs.shape = (0, 2)
+      self._pairs.dtype = int
+      self._num_vertices = num_vertices if num_vertices is not None else 0
+      return
+    # Validate shape and dtype
+    assert self._pairs.shape[1] == 2
+    if not np.can_cast(self._pairs, int, casting='same_kind'):
+      self._pairs = self._pairs.astype(int)
+    # Set self._num_vertices
     if num_vertices is not None:
       self._num_vertices = num_vertices
     else:

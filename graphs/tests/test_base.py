@@ -4,7 +4,7 @@ matplotlib.use('template')
 import unittest
 import numpy as np
 import warnings
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.sparse import csr_matrix
 
 from graphs.base import (
@@ -31,10 +31,33 @@ class TestStaticConstructors(unittest.TestCase):
     self.assertEqual(g.num_edges(), 8)
     self.assertEqual(g.num_vertices(), 4)
 
+  def test_from_pairs_empty(self):
+    g = Graph.from_edge_pairs([])
+    self.assertEqual(g.num_edges(), 0)
+    self.assertEqual(g.num_vertices(), 0)
+    ii, jj = g.pairs().T
+    assert_array_equal(ii, [])
+    assert_array_equal(jj, [])
+    # Make sure ii and jj have indexable dtypes
+    PAIRS[ii,jj]
+    # Make sure num_vertices is set correctly
+    g = Graph.from_edge_pairs([], num_vertices=5)
+    self.assertEqual(g.num_edges(), 0)
+    self.assertEqual(g.num_vertices(), 5)
+
+  def test_from_pairs_floating(self):
+    g = Graph.from_edge_pairs(PAIRS.astype(float))
+    p = g.pairs()
+    self.assertTrue(np.can_cast(p, PAIRS.dtype, casting='same_kind'),
+                    "Expected integral dtype, got %s" % p.dtype)
+    assert_array_equal(p, PAIRS)
+
   def test_from_pairs_weighted(self):
-    w = np.arange(1, 6)
-    g = Graph.from_edge_pairs(PAIRS, weights=w)
-    assert_array_equal(g.edge_weights(), w)
+    w = np.array([1,1,0.1,2,1,2,3.1,4])
+    p = [[0,1],[1,2],[2,3],[3,4],[1,0],[2,1],[3,2],[4,3]]
+    expected = [[0,1,0,0,0],[1,0,1,0,0],[0,2,0,0.1,0],[0,0,3.1,0,2],[0,0,0,4,0]]
+    G = Graph.from_edge_pairs(p, weights=w, num_vertices=5)
+    assert_array_almost_equal(G.matrix(dense=True), expected)
     # weighted + symmetric is NYI for now
     self.assertRaises(AssertionError, Graph.from_edge_pairs, PAIRS,
                       symmetric=True, weights=w)
