@@ -82,7 +82,8 @@ def circular_layout(G):
   return np.column_stack((np.cos(t), np.sin(t)))
 
 
-def spring_layout(G, num_dims=2, spring_constant=None, iterations=50):
+def spring_layout(G, num_dims=2, spring_constant=None, iterations=50,
+                  initial_temp=0.1):
   """Position nodes using Fruchterman-Reingold force-directed algorithm.
 
   spring_constant : float (default=None)
@@ -92,30 +93,37 @@ def spring_layout(G, num_dims=2, spring_constant=None, iterations=50):
 
   iterations : int  optional (default=50)
      Number of iterations of spring-force relaxation
+
+  initial_temp : float (default=0.1)
+     Largest step-size allowed in the dynamics, decays linearly.
+     Must be positive, should probably be less than 1.
   """
   X = np.random.random((G.num_vertices(), num_dims))
   if spring_constant is None:
+    # default to sqrt(area_of_viewport / num_vertices)
     spring_constant = X.shape[0] ** -0.5
-  adj = G.matrix()
-  # the initial "temperature"  is about .1 of domain area (=1x1)
-  # this is the largest step allowed in the dynamics.
-  initial_temp = 0.1
+  S = G.matrix(csr=True, csc=True, coo=True)
+  S.data[:] = 1. / S.data  # Convert to similarity
+  ii,jj = S.nonzero()  # cache nonzero indices
   # simple cooling scheme, linearly steps down
   cooling_scheme = np.linspace(initial_temp, 0, iterations+2)[:-2]
   # this is still O(V^2)
   # could use multilevel methods to speed this up significantly
   for t in cooling_scheme:
     delta = X[:,None] - X[None]
-    distance = np.linalg.norm(delta, ord=2, axis=2)
-    # enforce minimum distance of 0.01
-    np.maximum(distance, 0.01, out=distance)
-    # displacement "force"
-    # TODO: this seems like a bug, where small weights are made big
-    #   maybe do 1/adj or something (without div by zero)
-    accel = (spring_constant/distance)**2 - adj*distance/spring_constant
-    displacement = (delta * accel[:,:,None]).sum(axis=1)
+    distance = _bounded_norm(delta, 1e-8)
+    # repulsion from all vertices
+    force = spring_constant**2 / distance
+    # attraction from connected vertices
+    force[ii,jj] -= S.data * distance[ii,jj]**2 / spring_constant
+    displacement = np.einsum('ijk,ij->ik', delta, force)
     # update positions
-    length = np.linalg.norm(displacement, axis=1)
-    np.maximum(length, 0.01, out=length)
+    length = _bounded_norm(displacement, 1e-2)
     X += displacement * t / length[:,None]
   return X
+
+
+def _bounded_norm(X, min_length):
+  length = np.linalg.norm(X, ord=2, axis=-1)
+  np.maximum(length, min_length, out=length)
+  return length
