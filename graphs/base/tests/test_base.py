@@ -116,6 +116,7 @@ class TestGenericMembers(unittest.TestCase):
     expected = [1,2,1,1,3]
     assert_array_equal(self.weighted.edge_weights(), expected)
 
+  # TODO: test symmetric version as well
   def test_add_edges_unweighted(self):
     expected = np.array(ADJ)
     from_idx = [0,3,2]
@@ -128,6 +129,7 @@ class TestGenericMembers(unittest.TestCase):
       assert_array_equal(G.matrix(dense=True), expected,
                          'unweighted (%s)' % type(G))
 
+  # TODO: test symmetric version as well
   def test_add_edges_weighted(self):
     wg = [G for G in self.graphs if G.is_weighted()]
     expected = np.array(ADJ, dtype=float)
