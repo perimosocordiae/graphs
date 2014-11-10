@@ -1,296 +1,35 @@
 import numpy as np
 import scipy.sparse as ss
-import warnings
+
+from adj import SparseAdjacencyMatrixGraph, DenseAdjacencyMatrixGraph
+from base import Graph
+from pairs import EdgePairGraph, SymmEdgePairGraph
 
 __all__ = ['Graph']
 
 
-class Graph(object):
-
-  def __init__(self, *args, **kwargs):
-    raise NotImplementedError('Graph should not be instantiated directly')
-
-  def pairs(self, copy=False):
-    raise NotImplementedError()
-
-  def matrix(self, copy=False, **kwargs):
-    raise NotImplementedError()
-
-  def edge_weights(self, copy=False):
-    raise NotImplementedError()
-
-  def num_edges(self):
-    raise NotImplementedError()
-
-  def num_vertices(self):
-    raise NotImplementedError()
-
-  def add_self_edges(self, weight=None):
-    raise NotImplementedError()
-
-  def symmetrize(self, overwrite=True, method='sum'):
-    raise NotImplementedError()
-
-  def add_edges(self, from_idx, to_idx, weight=None, symmetric=False):
-    raise NotImplementedError()
-
-  def is_weighted(self):
-    return False
-
-  def is_directed(self):
-    return True
-
-  def adj_list(self):
-    '''Generates a sequence of lists of neighbor indices:
-        an adjacency list representation.'''
-    adj = self.matrix(dense=True, csr=True)
-    for row in adj:
-      yield row.nonzero()[-1]
-
-  def degree(self, kind='out', unweighted=False):
-    axis = 1 if kind == 'out' else 0
-    adj = self.matrix(dense=True, csr=1-axis, csc=axis)
-    if unweighted and self.is_weighted():
-      # With recent numpy and a dense matrix, could do:
-      # d = np.count_nonzero(adj, axis=axis)
-      d = (adj!=0).sum(axis=axis)
-    else:
-      d = adj.sum(axis=axis)
-    return np.asarray(d).ravel()
-
-  @staticmethod
-  def from_edge_pairs(pairs, num_vertices=None, symmetric=False, weights=None):
-    if symmetric:
-      assert weights is None, 'symmetric+weighted from_edge_pairs is NYI'
-      return SymmEdgePairGraph(pairs, num_vertices=num_vertices)
-    G = EdgePairGraph(pairs, num_vertices=num_vertices)
-    if weights is None:
-      return G
-    # Convert to sparse adj graph with provided edge weights
-    s = G.matrix(csr=True, csc=True, coo=True).astype(float)
-    # shenanigans to assign edge weights in the right order
-    nv = G.num_vertices()
-    order = np.argsort((pairs * np.array([nv, 1])).sum(axis=1))
-    s.data[:] = weights[order]
-    return SparseAdjacencyMatrixGraph(s)
-
-  @staticmethod
-  def from_adj_matrix(adj, weighted=True):
-    assert weighted, 'Unweighted adj-matrix graphs are NYI'
-    if ss.issparse(adj):
-      return SparseAdjacencyMatrixGraph(adj)
-    return DenseAdjacencyMatrixGraph(adj)
+def from_edge_pairs(pairs, num_vertices=None, symmetric=False, weights=None):
+  if symmetric:
+    assert weights is None, 'symmetric+weighted from_edge_pairs is NYI'
+    return SymmEdgePairGraph(pairs, num_vertices=num_vertices)
+  G = EdgePairGraph(pairs, num_vertices=num_vertices)
+  if weights is None:
+    return G
+  # Convert to sparse adj graph with provided edge weights
+  s = G.matrix(csr=True, csc=True, coo=True).astype(float)
+  # shenanigans to assign edge weights in the right order
+  nv = G.num_vertices()
+  order = np.argsort((pairs * np.array([nv, 1])).sum(axis=1))
+  s.data[:] = weights[order]
+  return SparseAdjacencyMatrixGraph(s)
 
 
-class EdgePairGraph(Graph):
-  def __init__(self, pairs, num_vertices=None):
-    self._pairs = np.atleast_2d(pairs)
-    # Handle empty-input case
-    if self._pairs.size == 0:
-      self._pairs.shape = (0, 2)
-      self._pairs.dtype = int
-      self._num_vertices = num_vertices if num_vertices is not None else 0
-      return
-    # Validate shape and dtype
-    assert self._pairs.shape[1] == 2
-    if not np.can_cast(self._pairs, int, casting='same_kind'):
-      self._pairs = self._pairs.astype(int)
-    # Set self._num_vertices
-    if num_vertices is not None:
-      self._num_vertices = num_vertices
-    else:
-      self._num_vertices = self._pairs.max() + 1
+def from_adj_matrix(adj, weighted=True):
+  assert weighted, 'Unweighted adj-matrix graphs are NYI'
+  if ss.issparse(adj):
+    return SparseAdjacencyMatrixGraph(adj)
+  return DenseAdjacencyMatrixGraph(adj)
 
-  def pairs(self, copy=False):
-    if copy:
-      return self._pairs.copy()
-    return self._pairs
-
-  def matrix(self, copy=False, **kwargs):
-    n = self._num_vertices
-    row,col = self.pairs().T
-    data = np.ones(len(row), dtype=int)
-    M = ss.coo_matrix((data, (row,col)), shape=(n,n))
-    if not kwargs:
-      return M
-    if 'csr' in kwargs:
-      return M.tocsr()
-    if 'dense' in kwargs:
-      return M.toarray()
-    raise NotImplementedError('Unknown matrix type(s): %s' % kwargs.keys())
-
-  def num_edges(self):
-    return len(self._pairs)
-
-  def num_vertices(self):
-    return self._num_vertices
-
-  def add_self_edges(self, weight=None):
-    '''Adds all i->i edges, in-place.'''
-    if weight is not None:
-      warnings.warn('Cannot supply weights for unweighted graph; '
-                    'ignoring weight argument')
-    row,col = self._pairs.T
-    diag_inds = row[np.equal(row,col)]
-    to_add = np.arange(self._num_vertices)
-    to_add = np.setdiff1d(to_add, diag_inds, assume_unique=True)
-    if len(to_add) > 0:
-      self._pairs = np.vstack((self._pairs, np.tile(to_add, (2,1)).T))
-    return self
-
-  def symmetrize(self, overwrite=True, method='sum'):
-    '''Symmetrizes with the given method. {sum,max,avg}
-    Returns a copy if overwrite=False.'''
-    # TODO: be smarter about this and return a SymmEdgePairGraph
-    S = _symmetrize(self.matrix(dense=True, csr=True), method)
-    P = np.transpose(np.nonzero(S))
-    if overwrite:
-      self._pairs = P
-      return self
-    return EdgePairGraph(P, num_vertices=self._num_vertices)
-
-
-class SymmEdgePairGraph(EdgePairGraph):
-  def __init__(self, pairs, num_vertices=None):
-    EdgePairGraph.__init__(self, pairs, num_vertices=num_vertices)
-    self._pairs.sort()  # push all edges to upper triangle
-    self._offdiag_mask = ~np.equal(*self._pairs.T)
-
-  def pairs(self, copy=False):
-    return np.vstack((self._pairs[self._offdiag_mask], self._pairs[:,::-1]))
-
-  def num_edges(self):
-    num_offdiag_edges = np.count_nonzero(self._offdiag_mask)
-    return len(self._pairs) + num_offdiag_edges
-
-  def symmetrize(self, overwrite=True, method='sum'):
-    if overwrite:
-      return self
-    return SymmEdgePairGraph(self._pairs, num_vertices=self._num_vertices)
-
-
-class AdjacencyMatrixGraph(Graph):
-
-  def pairs(self, copy=False):
-    return np.transpose(np.nonzero(self._adj))
-
-  def num_vertices(self):
-    return self._adj.shape[0]
-
-  def is_weighted(self):
-    return True
-
-
-class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
-  def __init__(self, adj):
-    self._adj = np.atleast_2d(adj)
-    assert self._adj.shape[0] == self._adj.shape[1]
-
-  def matrix(self, copy=False, **kwargs):
-    if not kwargs or 'dense' in kwargs:
-      if copy:
-        return self._adj.copy()
-      return self._adj
-    if 'csr' in kwargs:
-      return ss.csr_matrix(self._adj)
-    raise NotImplementedError('Unknown matrix type(s): %s' % kwargs.keys())
-
-  def edge_weights(self, copy=False):
-    ii,jj = self.pairs().T
-    W = self._adj[ii,jj]
-    if copy:
-      return W.copy()
-    return W
-
-  def num_edges(self):
-    return np.count_nonzero(self._adj)
-
-  def add_self_edges(self, weight=1):
-    '''Adds all i->i edges, in-place.'''
-    # Do some dtype checking shenanigans.
-    if not isinstance(weight, int):
-      self._adj = self._adj.astype(float)
-    np.fill_diagonal(self._adj, weight)
-    return self
-
-  def symmetrize(self, overwrite=True, method='sum'):
-    '''Symmetrizes with the given method. {sum,max,avg}
-    Returns a copy if overwrite=False.'''
-    S = _symmetrize(self._adj, method)
-    if overwrite:
-      self._adj = S
-      return self
-    return DenseAdjacencyMatrixGraph(S)
-
-
-class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
-  def __init__(self, adj):
-    assert ss.issparse(adj), 'SparseAdjacencyMatrixGraph input must be sparse'
-    self._adj = adj
-    assert self._adj.shape[0] == self._adj.shape[1]
-    # Things go wrong if we have explicit zeros in the graph.
-    if adj.format in ('csr', 'csc'):
-      self._adj.eliminate_zeros()
-
-  def matrix(self, copy=False, **kwargs):
-    assert ss.issparse(self._adj), 'SparseAdjacencyMatrixGraph must be sparse'
-    if not kwargs or self._adj.format in kwargs:
-      if copy:
-        return self._adj.copy()
-      return self._adj
-    for fmt in kwargs:
-      if fmt != 'dense' and hasattr(self._adj, 'to'+fmt):
-        return getattr(self._adj, 'to'+fmt)()
-    if 'dense' in kwargs:
-      return self._adj.toarray()
-    raise NotImplementedError('Unknown matrix type(s): %s' % kwargs.keys())
-
-  def edge_weights(self, copy=False):
-    W = self._adj.data.ravel()  # assumes correct internal ordering
-    # Also assumes no explicit zeros
-    if copy:
-      return W.copy()
-    return W
-
-  def num_edges(self):
-    return self._adj.nnz
-
-  def add_self_edges(self, weight=1):
-    '''Adds all i->i edges, in-place.'''
-    # Do some dtype checking shenanigans.
-    if not isinstance(weight, int):
-      self._adj = self._adj.astype(float)
-    try:
-      self._adj.setdiag(weight)
-    except TypeError:
-      # Older scipy doesn't support setdiag on everything.
-      self._adj = self._adj.tocsr()
-      self._adj.setdiag(weight)
-    if weight == 0:
-      # TODO: be smarter about avoiding writing explicit zeros
-      # We changed the sparsity structure, possibly.
-      assert hasattr(self._adj, 'eliminate_zeros'), 'Other formats NYI'
-      self._adj.eliminate_zeros()
-    return self
-
-  def symmetrize(self, overwrite=True, method='sum'):
-    '''Symmetrizes with the given method. {sum,max,avg}
-    Returns a copy if overwrite=False.'''
-    S = _symmetrize(self._adj.tocsr(), method)
-    if overwrite:
-      self._adj = S
-      return self
-    return SparseAdjacencyMatrixGraph(S)
-
-
-def _symmetrize(A, method):
-  if method == 'sum':
-    S = A + A.T
-  elif method == 'max':
-    if ss.issparse(A):
-      S = A.maximum(A.T)
-    else:
-      S = np.maximum(A, A.T)
-  else:
-    S = (A + A.T) / 2.0
-  return S
+# Add static methods to the Graph class.
+Graph.from_edge_pairs = staticmethod(from_edge_pairs)
+Graph.from_adj_matrix = staticmethod(from_adj_matrix)
