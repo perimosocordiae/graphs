@@ -31,6 +31,9 @@ class Graph(object):
   def symmetrize(self, overwrite=True, method='sum'):
     raise NotImplementedError()
 
+  def add_edges(self, from_idx, to_idx, weight=None, symmetric=False):
+    raise NotImplementedError()
+
   def is_weighted(self):
     return False
 
