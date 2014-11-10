@@ -50,7 +50,10 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
 
   def add_edges(self, from_idx, to_idx, weight=1, symmetric=False):
     '''Adds all from->to edges, in-place.'''
-    # TODO
+    # Do some dtype checking shenanigans.
+    if not isinstance(weight, int):
+      self._adj = self._adj.astype(float)
+    self._adj[from_idx, to_idx] = weight
     return self
 
   def symmetrize(self, overwrite=True, method='sum'):
@@ -115,7 +118,15 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
 
   def add_edges(self, from_idx, to_idx, weight=1, symmetric=False):
     '''Adds all from->to edges, in-place.'''
-    # TODO
+    # Do some dtype checking shenanigans.
+    if not isinstance(weight, int):
+      self._adj = self._adj.astype(float)
+    self._adj[from_idx, to_idx] = weight
+    if weight is 0:
+      # TODO: be smarter about avoiding writing explicit zeros
+      # We changed the sparsity structure, possibly.
+      assert hasattr(self._adj, 'eliminate_zeros'), 'Other formats NYI'
+      self._adj.eliminate_zeros()
     return self
 
   def symmetrize(self, overwrite=True, method='sum'):

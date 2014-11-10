@@ -66,7 +66,13 @@ class EdgePairGraph(Graph):
     if weight is not None:
       warnings.warn('Cannot supply weights for unweighted graph; '
                     'ignoring weight argument')
-    # TODO
+    to_add = np.column_stack((from_idx, to_idx))
+    flattener = (self._num_vertices, 1)
+    flat_inds = self._pairs.dot(flattener)
+    flat_add = to_add.dot(flattener)
+    to_add = to_add[~np.in1d(flat_add, flat_inds)]
+    if len(to_add) > 0:
+      self._pairs = np.vstack((self._pairs, to_add))
     return self
 
   def symmetrize(self, overwrite=True, method='sum'):
