@@ -4,12 +4,11 @@ matplotlib.use('template')
 import unittest
 import numpy as np
 import warnings
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_equal
 from scipy.sparse import csr_matrix
 
 from graphs.base import (
-    Graph, EdgePairGraph, SymmEdgePairGraph,
-    DenseAdjacencyMatrixGraph, SparseAdjacencyMatrixGraph
+    EdgePairGraph, DenseAdjacencyMatrixGraph, SparseAdjacencyMatrixGraph
 )
 
 PAIRS = np.array([[0,1],[0,2],[1,1],[2,1],[3,3]])
@@ -17,134 +16,6 @@ ADJ = [[0,1,1,0],
        [0,1,0,0],
        [0,1,0,0],
        [0,0,0,1]]
-
-
-class TestStaticConstructors(unittest.TestCase):
-  def test_from_pairs(self):
-    g = Graph.from_edge_pairs(PAIRS)
-    self.assertEqual(g.num_edges(), 5)
-    self.assertEqual(g.num_vertices(), 4)
-    g = Graph.from_edge_pairs(PAIRS, num_vertices=10)
-    self.assertEqual(g.num_edges(), 5)
-    self.assertEqual(g.num_vertices(), 10)
-    g = Graph.from_edge_pairs(PAIRS, symmetric=True)
-    self.assertEqual(g.num_edges(), 8)
-    self.assertEqual(g.num_vertices(), 4)
-
-  def test_from_pairs_empty(self):
-    g = Graph.from_edge_pairs([])
-    self.assertEqual(g.num_edges(), 0)
-    self.assertEqual(g.num_vertices(), 0)
-    ii, jj = g.pairs().T
-    assert_array_equal(ii, [])
-    assert_array_equal(jj, [])
-    # Make sure ii and jj have indexable dtypes
-    PAIRS[ii,jj]
-    # Make sure num_vertices is set correctly
-    g = Graph.from_edge_pairs([], num_vertices=5)
-    self.assertEqual(g.num_edges(), 0)
-    self.assertEqual(g.num_vertices(), 5)
-
-  def test_from_pairs_floating(self):
-    g = Graph.from_edge_pairs(PAIRS.astype(float))
-    p = g.pairs()
-    self.assertTrue(np.can_cast(p, PAIRS.dtype, casting='same_kind'),
-                    "Expected integral dtype, got %s" % p.dtype)
-    assert_array_equal(p, PAIRS)
-
-  def test_from_pairs_weighted(self):
-    w = np.array([1,1,0.1,2,1,2,3.1,4])
-    p = [[0,1],[1,2],[2,3],[3,4],[1,0],[2,1],[3,2],[4,3]]
-    expected = [[0,1,0,0,0],[1,0,1,0,0],[0,2,0,0.1,0],[0,0,3.1,0,2],[0,0,0,4,0]]
-    G = Graph.from_edge_pairs(p, weights=w, num_vertices=5)
-    assert_array_almost_equal(G.matrix(dense=True), expected)
-    # weighted + symmetric is NYI for now
-    self.assertRaises(AssertionError, Graph.from_edge_pairs, PAIRS,
-                      symmetric=True, weights=w)
-
-  def test_from_adj(self):
-    m = Graph.from_adj_matrix(ADJ)
-    self.assertEqual(m.num_edges(), 5)
-    self.assertEqual(m.num_vertices(), 4)
-    m = Graph.from_adj_matrix(csr_matrix(ADJ))
-    self.assertEqual(m.num_edges(), 5)
-    self.assertEqual(m.num_vertices(), 4)
-
-
-class TestEdgePairGraph(unittest.TestCase):
-  def setUp(self):
-    self.epg = EdgePairGraph(PAIRS)
-
-  def test_epg_pairs(self):
-    self.assert_(self.epg.pairs(copy=False) is PAIRS)
-    P = self.epg.pairs(copy=True)
-    self.assert_(P is not PAIRS)
-    assert_array_equal(P, PAIRS)
-
-  def test_epg_matrix(self):
-    M = self.epg.matrix()
-    assert_array_equal(M.toarray(), ADJ)
-    M = self.epg.matrix(dense=True)
-    assert_array_equal(M, ADJ)
-    M = self.epg.matrix(csr=True)
-    self.assertEqual(M.format, 'csr')
-    assert_array_equal(M.toarray(), ADJ)
-
-  def test_self_edges(self):
-    self.epg.add_self_edges()
-    expected = self.epg.pairs()
-    # Ensure that calling it again does the right thing.
-    self.epg.add_self_edges()
-    assert_array_equal(self.epg.pairs(), expected)
-
-
-class TestSymmEdgePairGraph(unittest.TestCase):
-  def setUp(self):
-    self.G = SymmEdgePairGraph(PAIRS)
-
-  def test_pairs(self):
-    expected = [[0,1], [0,2], [1,0], [1,1], [1,2], [2,0], [2,1], [3,3]]
-    P = self.G.pairs()
-    assert_array_equal(sorted(P.tolist()), expected)
-
-  def test_symmetrize(self):
-    self.assertIs(self.G.symmetrize(overwrite=True), self.G)
-    S = self.G.symmetrize(overwrite=False)
-    self.assertIsNot(S, self.G)
-    assert_array_equal(S.matrix(dense=True), self.G.matrix(dense=True))
-
-
-class TestAdjacencyMatrixGraphs(unittest.TestCase):
-  def setUp(self):
-    self.G = DenseAdjacencyMatrixGraph(ADJ)
-    self.S = SparseAdjacencyMatrixGraph(csr_matrix(ADJ))
-
-  def test_pairs(self):
-    assert_array_equal(self.G.pairs(), PAIRS)
-    assert_array_equal(self.S.pairs(), PAIRS)
-
-  def test_matrix(self):
-    M = self.G.matrix()
-    assert_array_equal(M, ADJ)
-    M = self.G.matrix(csr=True)
-    self.assertEqual(M.format, 'csr')
-    assert_array_equal(M.toarray(), ADJ)
-    M = self.S.matrix()
-    self.assertEqual(M.format, 'csr')
-    assert_array_equal(M.toarray(), ADJ)
-
-  def test_matrix_copy(self):
-    M = self.G.matrix(dense=True, copy=False)
-    assert_array_equal(M, ADJ)
-    M2 = self.G.matrix(dense=True, copy=True)
-    assert_array_equal(M, M2)
-    self.assertIsNot(M, M2)
-    # Sparse case
-    M = self.S.matrix(csr=True, copy=False)
-    assert_array_equal(M.toarray(), ADJ)
-    M2 = self.S.matrix(csr=True, copy=True)
-    assert_array_equal(M.toarray(), M2.toarray())
-    self.assertIsNot(M, M2)
 
 
 class TestGenericMembers(unittest.TestCase):
