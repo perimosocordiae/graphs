@@ -116,5 +116,38 @@ class TestGenericMembers(unittest.TestCase):
     expected = [1,2,1,1,3]
     assert_array_equal(self.weighted.edge_weights(), expected)
 
+  def test_add_edges_unweighted(self):
+    expected = np.array(ADJ)
+    from_idx = [0,3,2]
+    to_idx = [2,2,2]
+    expected[from_idx,to_idx] = 1
+    for G in self.graphs:
+      gg = G.add_edges(from_idx, to_idx)
+      self.assertIs(gg, G)
+      self.assertEqual(G.num_edges(), 7)
+      assert_array_equal(G.matrix(dense=True), expected,
+                         'unweighted (%s)' % type(G))
+
+  def test_add_edges_weighted(self):
+    wg = [G for G in self.graphs if G.is_weighted()]
+    expected = np.array(ADJ, dtype=float)
+    from_idx = [0,3,2]
+    to_idx = [2,2,2]
+    expected[from_idx,to_idx] = 1
+    for G in wg:
+      gg = G.add_edges(from_idx, to_idx, weight=1)
+      self.assertIs(gg, G)
+      self.assertEqual(G.num_edges(), 7)
+      assert_array_equal(G.matrix(dense=True), expected,
+                         'weighted (%s)' % type(G))
+    weights = np.linspace(1, 9, 3)
+    expected[from_idx,to_idx] = weights
+    for G in wg:
+      gg = G.add_edges(from_idx, to_idx, weight=weights)
+      self.assertIs(gg, G)
+      self.assertEqual(G.num_edges(), 7)
+      assert_array_equal(G.matrix(dense=True), expected,
+                         'weighted (%s)' % type(G))
+
 if __name__ == '__main__':
   unittest.main()

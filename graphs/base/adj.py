@@ -48,6 +48,11 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     np.fill_diagonal(self._adj, weight)
     return self
 
+  def add_edges(self, from_idx, to_idx, weight=1, symmetric=False):
+    '''Adds all from->to edges, in-place.'''
+    # TODO
+    return self
+
   def symmetrize(self, overwrite=True, method='sum'):
     '''Symmetrizes with the given method. {sum,max,avg}
     Returns a copy if overwrite=False.'''
@@ -106,6 +111,11 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
       # We changed the sparsity structure, possibly.
       assert hasattr(self._adj, 'eliminate_zeros'), 'Other formats NYI'
       self._adj.eliminate_zeros()
+    return self
+
+  def add_edges(self, from_idx, to_idx, weight=1, symmetric=False):
+    '''Adds all from->to edges, in-place.'''
+    # TODO
     return self
 
   def symmetrize(self, overwrite=True, method='sum'):

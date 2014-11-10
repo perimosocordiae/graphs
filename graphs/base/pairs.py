@@ -61,6 +61,14 @@ class EdgePairGraph(Graph):
       self._pairs = np.vstack((self._pairs, np.tile(to_add, (2,1)).T))
     return self
 
+  def add_edges(self, from_idx, to_idx, weight=None, symmetric=False):
+    '''Adds all from->to edges, in-place.'''
+    if weight is not None:
+      warnings.warn('Cannot supply weights for unweighted graph; '
+                    'ignoring weight argument')
+    # TODO
+    return self
+
   def symmetrize(self, overwrite=True, method='sum'):
     '''Symmetrizes with the given method. {sum,max,avg}
     Returns a copy if overwrite=False.'''
