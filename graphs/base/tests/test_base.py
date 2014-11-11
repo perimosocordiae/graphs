@@ -157,6 +157,19 @@ class TestGenericMembers(unittest.TestCase):
       self.assertEqual(G.num_edges(), 9, msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
 
+  def test_add_edges_zeros(self):
+    wg = [G for G in self.graphs if G.is_weighted()]
+    expected = np.array(ADJ, dtype=float)
+    from_idx = [0,3,2]
+    to_idx = [2,2,2]
+    expected[from_idx,to_idx] = 0
+    for G in wg:
+      msg = 'zero-weight (%s)' % type(G)
+      gg = G.add_edges(from_idx, to_idx, weight=0)
+      self.assertIs(gg, G)
+      self.assertEqual(G.num_edges(), 4, msg)
+      assert_array_equal(G.matrix(dense=True), expected, msg)
+
   def test_add_edges_array_weighted(self):
     wg = [G for G in self.graphs if G.is_weighted()]
     weights = np.linspace(1, 9, 3)
