@@ -1,9 +1,8 @@
 from __future__ import division
-from collections import defaultdict
+from collections import Counter
 from itertools import count
 import numpy as np
 import scipy.sparse.csgraph as ssc
-import scipy.sparse as ss
 import warnings
 
 __all__ = [
@@ -102,7 +101,7 @@ def edge_traffic(G, directed=False):
   Returns a dictionary of (ei,ej) -> # of paths
   """
   D, pred = shortest_path(G, return_predecessors=True, directed=directed)
-  counts = defaultdict(int)
+  counts = Counter()
   n = D.shape[0]
   if directed:
     j_range = lambda i: xrange(n)
@@ -120,11 +119,19 @@ def edge_traffic(G, directed=False):
   return counts
 
 
-def bottlenecks(G, n=1, directed=False):
+def bottlenecks(G, n=1, directed=False, return_counts=False):
   """Finds n bottleneck edges, ranked by all-pairs path traffic."""
-  counts = edge_traffic(G, directed=directed)
-  top_k = np.array(counts.values()).argpartition(n-1)[:n]
-  return np.atleast_2d(counts.keys()[top_k])
+  traffic = edge_traffic(G, directed=directed)
+  top_edges = np.empty((n, 2), dtype=int)
+  if return_counts:
+    top_counts = np.empty(n, dtype=int)
+    for i, (edge, c) in enumerate(traffic.most_common(n)):
+      top_edges[i] = edge
+      top_counts[i] = c
+    return top_edges, top_counts
+  for i, (edge, c) in enumerate(traffic.most_common(n)):
+    top_edges[i] = edge
+  return top_edges
 
 
 def bandwidth(G):
