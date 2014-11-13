@@ -32,7 +32,9 @@ def shortest_path(G, **kwargs):
   shortest_path(G, method='auto', directed=True, return_predecessors=False,
                 unweighted=False, overwrite=False)
   '''
-  return ssc.shortest_path(G.matrix(), **kwargs)
+  # ssc.shortest_path requires one of these formats:
+  adj = G.matrix(dense=True, lil=True, csr=True, csc=True)
+  return ssc.shortest_path(adj, **kwargs)
 
 
 def greedy_coloring(G):
@@ -95,8 +97,7 @@ def directed_laplacian(G, D=None, eta=0.99, tol=1e-12, max_iter=500):
 
 
 def edge_traffic(G, directed=False):
-  adj = G.matrix(dense=True, lil=True, csr=True, csc=True)
-  D, pred = ssc.shortest_path(adj, return_predecessors=True, directed=directed)
+  D, pred = shortest_path(G, return_predecessors=True, directed=directed)
   counts = np.zeros_like(D, dtype=int)
   n = D.shape[0]
   if directed:
@@ -126,8 +127,7 @@ def bottlenecks(G, n=1, directed=False, counts=None):
 
 def bandwidth(G):
   """Computes the 'bandwidth' of a graph."""
-  r,c = np.nonzero(G.matrix())
-  return np.abs(r - c).max()
+  return np.abs(np.diff(G.pairs(), axis=1)).max()
 
 
 def profile(G):
