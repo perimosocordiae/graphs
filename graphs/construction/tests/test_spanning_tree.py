@@ -4,6 +4,7 @@ matplotlib.use('template')
 import numpy as np
 import unittest
 from numpy.testing import assert_array_almost_equal
+from sklearn.metrics import pairwise_distances
 
 from graphs.construction import mst, perturbed_mst, disjoint_mst
 
@@ -18,6 +19,10 @@ class TestSpanningTree(unittest.TestCase):
                 [0,    2,    0, 0],
                 [1,    0,    0, 0]]
     G = mst(self.pts)
+    assert_array_almost_equal(G.matrix(dense=True), expected, decimal=3)
+    # Check precomputed metric.
+    D = pairwise_distances(self.pts)
+    G = mst(D, metric='precomputed')
     assert_array_almost_equal(G.matrix(dense=True), expected, decimal=3)
 
   def test_perturbed_mst(self):

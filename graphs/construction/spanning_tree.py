@@ -7,7 +7,7 @@ __all__ = ['mst', 'perturbed_mst', 'disjoint_mst']
 
 
 def mst(X, metric='euclidean'):
-  D = pairwise_distances(X, metric=metric)
+  D = _pdist(X, metric)
   mst = minimum_spanning_tree(D)
   return Graph.from_adj_matrix(mst + mst.T)
 
@@ -16,7 +16,8 @@ def perturbed_mst(X, num_perturbations=20, metric='euclidean', jitter=None):
   '''Builds a graph as the union of several MSTs on perturbed data.
   Reference: http://ecovision.mit.edu/~sloop/shao.pdf, page 8
   jitter refers to the scale of the gaussian noise added for each perturbation.
-  When jitter is None, it defaults to the 5th percentile interpoint distance.'''
+  When jitter is None, it defaults to the 5th percentile interpoint distance.
+  Note that metric cannot be 'precomputed', as multiple MSTs are computed.'''
   D = pairwise_distances(X, metric=metric)
   if jitter is None:
     jitter = np.percentile(D[D>0], 5)
@@ -38,7 +39,7 @@ def disjoint_mst(X, num_spanning_trees=3, metric='euclidean'):
   '''Builds a graph as the union of several spanning trees,
   each time removing any edges present in previously-built trees.
   Reference: http://ecovision.mit.edu/~sloop/shao.pdf, page 9.'''
-  D = pairwise_distances(X, metric=metric)
+  D = _pdist(X, metric)
   mst = minimum_spanning_tree(D)
   W = mst.copy()
   for i in xrange(1, num_spanning_trees):
@@ -49,3 +50,9 @@ def disjoint_mst(X, num_spanning_trees=3, metric='euclidean'):
     W = W + mst
   # MSTs are all one-sided, so we symmetrize here
   return Graph.from_adj_matrix(W + W.T)
+
+
+def _pdist(X, metric):
+  if metric == 'precomputed':
+    return X
+  return pairwise_distances(X, metric=metric)
