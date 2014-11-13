@@ -14,14 +14,24 @@ __all__ = [
 
 # scipy.sparse.csgraph wrappers
 def connected_components(G, **kwargs):
+  '''Mirrors the scipy.sparse.csgraph function of the same name:
+  connected_components(G, directed=True, connection='weak', return_labels=True)
+  '''
   return ssc.connected_components(G.matrix(), **kwargs)
 
 
 def laplacian(G, **kwargs):
+  '''Mirrors the scipy.sparse.csgraph function of the same name:
+  laplacian(G, normed=False, return_diag=False, use_out_degree=False)
+  '''
   return ssc.laplacian(G.matrix(), **kwargs)
 
 
 def shortest_path(G, **kwargs):
+  '''Mirrors the scipy.sparse.csgraph function of the same name:
+  shortest_path(G, method='auto', directed=True, return_predecessors=False,
+                unweighted=False, overwrite=False)
+  '''
   return ssc.shortest_path(G.matrix(), **kwargs)
 
 
