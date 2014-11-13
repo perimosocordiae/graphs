@@ -1,4 +1,5 @@
 from __future__ import division
+from collections import defaultdict
 from itertools import count
 import numpy as np
 import scipy.sparse.csgraph as ssc
@@ -97,8 +98,11 @@ def directed_laplacian(G, D=None, eta=0.99, tol=1e-12, max_iter=500):
 
 
 def edge_traffic(G, directed=False):
+  """Counts number of shortest paths that use a given edge.
+  Returns a dictionary of (ei,ej) -> # of paths
+  """
   D, pred = shortest_path(G, return_predecessors=True, directed=directed)
-  counts = np.zeros_like(D, dtype=int)
+  counts = defaultdict(int)
   n = D.shape[0]
   if directed:
     j_range = lambda i: xrange(n)
@@ -111,18 +115,16 @@ def edge_traffic(G, directed=False):
         continue
       while j != i:
         k = pp[j]
-        counts[k,j] += 1
+        counts[(k,j)] += 1
         j = k
   return counts
 
 
-def bottlenecks(G, n=1, directed=False, counts=None):
+def bottlenecks(G, n=1, directed=False):
   """Finds n bottleneck edges, ranked by all-pairs path traffic."""
-  if counts is None:
-    counts = edge_traffic(G, directed=directed)
-  edges = ss.dok_matrix(counts)
-  top_k = np.argpartition(np.array(edges.values()), n-1)[:n]
-  return np.array(edges.keys())[top_k]
+  counts = edge_traffic(G, directed=directed)
+  top_k = np.array(counts.values()).argpartition(n-1)[:n]
+  return np.atleast_2d(counts.keys()[top_k])
 
 
 def bandwidth(G):
