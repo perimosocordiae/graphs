@@ -57,18 +57,6 @@ class TestAnalysis(unittest.TestCase):
       self.assertEqual(w[0].message.message,
                        'phi failed to converge after 2 iterations')
 
-  def test_bottlenecks(self):
-    for G in self.graphs:
-      b = analysis.bottlenecks(G)
-      assert_array_equal(b, [[0, 1]])
-    for G in self.graphs:
-      b,c = analysis.bottlenecks(G, n=2, return_counts=True)
-      assert_array_equal(b, [[0, 1], [1, 2]])
-      assert_array_equal(c, [1, 1])
-    for G in self.graphs:
-      b = analysis.bottlenecks(G, directed=True)
-      assert_array_equal(b, [[2, 0]])
-
   def test_bandwidth(self):
     for G in self.graphs:
       self.assertEqual(analysis.bandwidth(G), 2)
