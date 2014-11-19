@@ -2,7 +2,7 @@ import numpy as np
 import scipy.sparse as ss
 import warnings
 
-from base import Graph, _symmetrize
+from base import Graph
 
 
 class EdgePairGraph(Graph):
@@ -82,22 +82,29 @@ class EdgePairGraph(Graph):
       self._pairs = np.vstack((self._pairs, to_add))
     return self
 
-  def symmetrize(self, overwrite=True, method='sum'):
-    '''Symmetrizes with the given method. {sum,max,avg}
-    Returns a copy if overwrite=False.'''
-    # TODO: be smarter about this and return a SymmEdgePairGraph
-    S = _symmetrize(self.matrix(dense=True, csr=True), method)
-    P = np.transpose(np.nonzero(S))
-    if overwrite:
-      self._pairs = P
-      return self
-    return EdgePairGraph(P, num_vertices=self._num_vertices)
+  def symmetrize(self, overwrite=True, method=None):
+    '''Symmetrizes (ignores method). Returns a copy if overwrite=False.'''
+    if not overwrite:
+      return SymmEdgePairGraph(self._pairs.copy(),
+                               num_vertices=self._num_vertices)
+    shape = (self._num_vertices, self._num_vertices)
+    flat_inds = np.union1d(np.ravel_multi_index(self._pairs.T, shape),
+                           np.ravel_multi_index(self._pairs.T[::-1], shape))
+    self._pairs = np.transpose(np.unravel_index(flat_inds, shape))
+    return self
 
 
 class SymmEdgePairGraph(EdgePairGraph):
-  def __init__(self, pairs, num_vertices=None):
+  def __init__(self, pairs, num_vertices=None, ensure_format=True):
     EdgePairGraph.__init__(self, pairs, num_vertices=num_vertices)
-    self._pairs.sort()  # push all edges to upper triangle
+    if ensure_format:
+      # push all edges to upper triangle
+      self._pairs.sort()
+      # remove any duplicates
+      shape = (self._num_vertices, self._num_vertices)
+      _, idx = np.unique(np.ravel_multi_index(self._pairs.T, shape),
+                         return_index=True)
+      self._pairs = self._pairs[idx]
     self._offdiag_mask = ~np.equal(*self._pairs.T)
 
   def pairs(self, copy=False):
@@ -107,7 +114,8 @@ class SymmEdgePairGraph(EdgePairGraph):
     num_offdiag_edges = np.count_nonzero(self._offdiag_mask)
     return len(self._pairs) + num_offdiag_edges
 
-  def symmetrize(self, overwrite=True, method='sum'):
+  def symmetrize(self, overwrite=True, method=None):
     if overwrite:
       return self
-    return SymmEdgePairGraph(self._pairs, num_vertices=self._num_vertices)
+    return SymmEdgePairGraph(self._pairs, num_vertices=self._num_vertices,
+                             ensure_format=False)

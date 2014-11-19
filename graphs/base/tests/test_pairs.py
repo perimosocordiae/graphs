@@ -40,6 +40,11 @@ class TestEdgePairGraph(unittest.TestCase):
     self.epg.add_self_edges()
     assert_array_equal(self.epg.pairs(), expected)
 
+  def test_symmetrize(self):
+    # Check that overwrite=False doesn't change anything
+    self.epg.symmetrize(overwrite=False)
+    assert_array_equal(self.epg.matrix(dense=True), ADJ)
+
 
 class TestSymmEdgePairGraph(unittest.TestCase):
   def setUp(self):
