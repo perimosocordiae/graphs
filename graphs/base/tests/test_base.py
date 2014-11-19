@@ -194,11 +194,28 @@ class TestGenericMembers(unittest.TestCase):
 
   def test_to_igraph(self):
     try:
-      for G in self.graphs:
+      for G in self.graphs + [self.weighted]:
         ig = G.to_igraph()
-        assert_array_equal(G.matrix(dense=True), ig.get_adjacency().data)
+        if G.is_weighted():
+          adj = ig.get_adjacency(attribute='weight')
+        else:
+          adj = ig.get_adjacency()
+        assert_array_equal(G.matrix(dense=True), adj.data)
     except ImportError:
-      pass  # Skip this test.
+      return  # Skip this test.
+
+  def test_to_graph_tool(self):
+    try:
+      from graph_tool.spectral import adjacency
+    except ImportError:
+      return  # Skip this test.
+    for G in self.graphs + [self.weighted]:
+      gt = G.to_graph_tool()
+      if G.is_weighted():
+        adj = adjacency(gt, weight=gt.ep['weight']).A.T
+      else:
+        adj = adjacency(gt).A.T
+      assert_array_equal(G.matrix(dense=True), adj)
 
 if __name__ == '__main__':
   unittest.main()

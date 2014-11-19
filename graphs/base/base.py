@@ -59,5 +59,23 @@ class Graph(object):
     Requires the python-igraph library.'''
     # Import here to avoid ImportErrors when igraph isn't available.
     import igraph
-    return igraph.Graph(n=self.num_vertices(), edges=self.pairs().tolist(),
-                        directed=True)
+    ig = igraph.Graph(n=self.num_vertices(), edges=self.pairs().tolist(),
+                      directed=self.is_directed())
+    if self.is_weighted():
+      ig.es['weight'] = self.edge_weights()
+    return ig
+
+  def to_graph_tool(self):
+    '''Converts this Graph object to a graph_tool-compatible object.
+    Requires the graph_tool library.
+    Note that the internal ordering of graph_tool seems to be column-major.'''
+    # Import here to avoid ImportErrors when igraph isn't available.
+    import graph_tool
+    gt = graph_tool.Graph(directed=self.is_directed())
+    gt.add_edge_list(self.pairs())
+    if self.is_weighted():
+      weights = gt.new_edge_property('double')
+      for e,w in zip(gt.edges(), self.edge_weights()):
+        weights[e] = w
+      gt.edge_properties['weight'] = weights
+    return gt
