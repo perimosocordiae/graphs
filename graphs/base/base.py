@@ -55,6 +55,14 @@ class Graph(object):
       d = adj.sum(axis=axis)
     return np.asarray(d).ravel()
 
+  def to_igraph(self):
+    '''Converts this Graph object to an igraph-compatible object.
+    Requires the python-igraph library.'''
+    # Import here to avoid ImportErrors when igraph isn't available.
+    import igraph
+    return igraph.Graph(n=self.num_vertices(), edges=self.pairs().tolist(),
+                        directed=True)
+
 
 def _symmetrize(A, method):
   if method == 'sum':

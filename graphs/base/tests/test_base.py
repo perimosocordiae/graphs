@@ -192,5 +192,13 @@ class TestGenericMembers(unittest.TestCase):
       self.assertEqual(G.num_edges(), 9, msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
 
+  def test_to_igraph(self):
+    try:
+      for G in self.graphs:
+        ig = G.to_igraph()
+        assert_array_equal(G.matrix(dense=True), ig.get_adjacency().data)
+    except ImportError:
+      pass  # Skip this test.
+
 if __name__ == '__main__':
   unittest.main()
