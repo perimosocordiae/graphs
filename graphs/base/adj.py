@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.sparse as ss
 
-from base import Graph, _symmetrize
+from base import Graph
 
 
 class AdjacencyMatrixGraph(Graph):
@@ -141,3 +141,16 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
       self._adj = S
       return self
     return SparseAdjacencyMatrixGraph(S)
+
+
+def _symmetrize(A, method):
+  if method == 'sum':
+    S = A + A.T
+  elif method == 'max':
+    if ss.issparse(A):
+      S = A.maximum(A.T)
+    else:
+      S = np.maximum(A, A.T)
+  else:
+    S = (A + A.T) / 2.0
+  return S
