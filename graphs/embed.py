@@ -25,11 +25,15 @@ def laplacian_eigenmaps(G, num_vecs=None, return_vals=False, val_thresh=1e-8):
 
 
 def locality_preserving_projections(G, coordinates, num_vecs=None):
-  X = np.atleast_2d(coordinates)
-  L = laplacian(G, normed=True)
+  X = np.atleast_2d(coordinates)  # n x d
+  L = laplacian(G, normed=True)  # n x n
   u,s,_ = np.linalg.svd(X.T.dot(X))
-  Fplus = np.linalg.pinv(u * np.sqrt(s))
-  T = reduce(np.dot,(Fplus,X.T,L,X,Fplus.T))
+  Fplus = np.linalg.pinv(u * np.sqrt(s))  # d x d
+  n, d = X.shape
+  if n >= d:  # optimized order: F(X'LX)F'
+    T = Fplus.dot(X.T.dot(L).dot(X)).dot(Fplus.T)
+  else:  # optimized order: (FX')L(XF')
+    T = Fplus.dot(X.T).dot(L).dot(X.dot(Fplus.T))
   L = 0.5*(T+T.T)
   return _lapeig(L, num_vecs, False, 1e-8)
 

@@ -49,6 +49,11 @@ class TestEmbeddings(unittest.TestCase):
                                [0, 0, 1, 1, 0]])
     proj = embed.locality_preserving_projections(G, X, num_vecs=1)
     assert_array_almost_equal(proj, np.array([[-0.95479113],[0.29727749]]))
+    # test case with bigger d than n
+    X = np.hstack((X, X))[:3]
+    G = Graph.from_adj_matrix(G.matrix()[:3,:3])
+    proj = embed.locality_preserving_projections(G, X, num_vecs=1)
+    assert_array_almost_equal(proj, np.array([[0.9854859,0.1697574,0,0]]).T)
 
   def test_laplacian_pca(self):
     X = np.array([[1,2],[2,1],[3,1.5],[4,0.5],[5,1]])
