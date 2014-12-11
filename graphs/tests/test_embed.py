@@ -90,6 +90,16 @@ class TestEmbeddings(unittest.TestCase):
         [0.96513010,  0.64989485],
         [1.67011322,  0.71714073]])
     assert_array_almost_equal(embed.spring_layout(G), expected)
+    # Test initial_layout kwarg
+    X = np.arange(10).reshape((5,2))
+    expected = np.array([
+        [1.837091, 2.837091],
+        [2.691855, 3.691855],
+        [3.396880, 4.396880],
+        [5.307083, 6.307083],
+        [6.162909, 7.162909]])
+    assert_array_almost_equal(embed.spring_layout(G, initial_layout=X),
+                              expected)
 
 if __name__ == '__main__':
   unittest.main()
