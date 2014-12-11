@@ -87,7 +87,7 @@ def circular_layout(G):
 
 
 def spring_layout(G, num_dims=2, spring_constant=None, iterations=50,
-                  initial_temp=0.1):
+                  initial_temp=0.1, initial_layout=None):
   """Position nodes using Fruchterman-Reingold force-directed algorithm.
 
   spring_constant : float (default=None)
@@ -101,8 +101,15 @@ def spring_layout(G, num_dims=2, spring_constant=None, iterations=50,
   initial_temp : float (default=0.1)
      Largest step-size allowed in the dynamics, decays linearly.
      Must be positive, should probably be less than 1.
+
+  initial_layout : array-like of shape (n,num_dims)
+     If provided, serves as initial placement of vertex coordinates.
   """
-  X = np.random.random((G.num_vertices(), num_dims))
+  if initial_layout is None:
+    X = np.random.random((G.num_vertices(), num_dims))
+  else:
+    X = np.array(initial_layout, dtype=float, copy=True)
+    assert X.shape == (G.num_vertices(), num_dims)
   if spring_constant is None:
     # default to sqrt(area_of_viewport / num_vertices)
     spring_constant = X.shape[0] ** -0.5
