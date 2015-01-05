@@ -77,7 +77,7 @@ class EdgePairGraph(Graph):
       mask = np.zeros_like(flat_add, dtype=bool)
       mask[idx] = True
       flat_add = flat_add[mask]
-    to_add = to_add[~np.in1d(flat_add, flat_inds)]
+    to_add = to_add[np.in1d(flat_add, flat_inds, invert=True)]
     if len(to_add) > 0:
       self._pairs = np.vstack((self._pairs, to_add))
     return self
