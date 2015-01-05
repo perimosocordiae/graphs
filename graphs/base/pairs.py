@@ -105,7 +105,7 @@ class SymmEdgePairGraph(EdgePairGraph):
       _, idx = np.unique(np.ravel_multi_index(self._pairs.T, shape),
                          return_index=True)
       self._pairs = self._pairs[idx]
-    self._offdiag_mask = ~np.equal(*self._pairs.T)
+    self._offdiag_mask = np.not_equal(*self._pairs.T)
 
   def pairs(self, copy=False):
     return np.vstack((self._pairs[self._offdiag_mask], self._pairs[:,::-1]))
