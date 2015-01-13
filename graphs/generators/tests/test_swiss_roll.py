@@ -21,8 +21,7 @@ class TestSwissRoll(unittest.TestCase):
 
   def test_error_ratio(self):
     adj = np.diag(np.ones(3), k=1)
-    adj += adj.T
-    G = Graph.from_adj_matrix(adj)
+    G = Graph.from_adj_matrix(adj + adj.T)
     GT = np.tile(np.linspace(0, 1, adj.shape[0])**2, (2,1)).T
     err_edges, tot_edges = sr.error_ratio(G, GT, return_tuple=True)
     self.assertEqual(err_edges, 6)
