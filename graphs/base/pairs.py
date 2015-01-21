@@ -93,6 +93,11 @@ class EdgePairGraph(Graph):
     self._pairs = np.transpose(np.unravel_index(flat_inds, shape))
     return self
 
+  def reweight(self, new_weights, edge_inds=None):
+    warnings.warn('Cannot supply weights for unweighted graph; '
+                  'ignoring call to reweight')
+    return self
+
 
 class SymmEdgePairGraph(EdgePairGraph):
   def __init__(self, pairs, num_vertices=None, ensure_format=True):

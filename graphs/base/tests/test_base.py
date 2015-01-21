@@ -217,5 +217,32 @@ class TestGenericMembers(unittest.TestCase):
         adj = adjacency(gt).A.T
       assert_array_equal(G.matrix(dense=True), adj)
 
+  def test_reweight(self):
+    wg = [G for G in self.graphs if G.is_weighted()]
+    expected = np.array(ADJ, dtype=float)
+    mask = expected != 0
+    new_weights = np.arange(1, np.count_nonzero(mask)+1)
+    expected[mask] = new_weights
+    for G in wg:
+      msg = 'reweight (%s)' % type(G)
+      gg = G.reweight(new_weights)
+      self.assertIs(gg, G)
+      self.assertEqual(G.num_edges(), 5, msg)
+      assert_array_equal(G.matrix(dense=True), expected, msg)
+
+  def test_reweight_partial(self):
+    wg = [G for G in self.graphs if G.is_weighted()]
+    expected = np.array(ADJ, dtype=float)
+    ii, jj = np.where(expected)
+    new_weight_inds = [2,3]
+    new_weights = np.array([5,6])
+    expected[ii[new_weight_inds], jj[new_weight_inds]] = new_weights
+    for G in wg:
+      msg = 'reweight partial (%s)' % type(G)
+      gg = G.reweight(new_weights, new_weight_inds)
+      self.assertIs(gg, G)
+      self.assertEqual(G.num_edges(), 5, msg)
+      assert_array_equal(G.matrix(dense=True), expected, msg)
+
 if __name__ == '__main__':
   unittest.main()

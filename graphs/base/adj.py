@@ -67,6 +67,15 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
       return self
     return DenseAdjacencyMatrixGraph(S)
 
+  def reweight(self, new_weights, edge_inds=None):
+    P = self.pairs()
+    if edge_inds is None:
+      ii,jj = P.T
+    else:
+      ii,jj = P[edge_inds].T
+    self._adj[ii,jj] = new_weights
+    return self
+
 
 class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
   def __init__(self, adj):
@@ -141,6 +150,13 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
       self._adj = S
       return self
     return SparseAdjacencyMatrixGraph(S)
+
+  def reweight(self, new_weights, edge_inds=None):
+    if edge_inds is None:
+      self._adj.data[:] = new_weights
+    else:
+      self._adj.data[edge_inds] = new_weights
+    return self
 
 
 def _symmetrize(A, method):

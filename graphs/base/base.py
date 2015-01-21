@@ -30,6 +30,9 @@ class Graph(object):
   def add_edges(self, from_idx, to_idx, weight=None, symmetric=False):
     raise NotImplementedError()
 
+  def reweight(self, new_weights, edge_inds=None):
+    raise NotImplementedError()
+
   def is_weighted(self):
     return False
 
