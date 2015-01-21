@@ -75,7 +75,7 @@ class Graph(object):
     '''Converts this Graph object to a graph_tool-compatible object.
     Requires the graph_tool library.
     Note that the internal ordering of graph_tool seems to be column-major.'''
-    # Import here to avoid ImportErrors when igraph isn't available.
+    # Import here to avoid ImportErrors when graph_tool isn't available.
     import graph_tool
     gt = graph_tool.Graph(directed=self.is_directed())
     gt.add_edge_list(self.pairs())
