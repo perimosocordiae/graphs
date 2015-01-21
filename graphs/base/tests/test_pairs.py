@@ -50,6 +50,12 @@ class TestSymmEdgePairGraph(unittest.TestCase):
   def setUp(self):
     self.G = SymmEdgePairGraph(PAIRS)
 
+  def test_copy(self):
+    gg = self.G.copy()
+    self.assertIsNot(gg, self.G)
+    assert_array_equal(gg.matrix(dense=True), self.G.matrix(dense=True))
+    assert_array_equal(gg.pairs(), self.G.pairs())
+
   def test_pairs(self):
     expected = [[0,1], [0,2], [1,0], [1,1], [1,2], [2,0], [2,1], [3,3]]
     P = self.G.pairs()

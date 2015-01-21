@@ -33,6 +33,9 @@ class Graph(object):
   def reweight(self, new_weights, edge_inds=None):
     raise NotImplementedError()
 
+  def copy(self):
+    raise NotImplementedError()
+
   def is_weighted(self):
     return False
 

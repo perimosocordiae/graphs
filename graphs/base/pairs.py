@@ -42,6 +42,9 @@ class EdgePairGraph(Graph):
       return M.toarray()
     raise NotImplementedError('Unknown matrix type(s): %s' % kwargs.keys())
 
+  def copy(self):
+    return EdgePairGraph(self._pairs.copy(), num_vertices=self._num_vertices)
+
   def num_edges(self):
     return len(self._pairs)
 
@@ -118,6 +121,11 @@ class SymmEdgePairGraph(EdgePairGraph):
   def num_edges(self):
     num_offdiag_edges = np.count_nonzero(self._offdiag_mask)
     return len(self._pairs) + num_offdiag_edges
+
+  def copy(self):
+    return SymmEdgePairGraph(self._pairs.copy(),
+                             num_vertices=self._num_vertices,
+                             ensure_format=False)
 
   def symmetrize(self, overwrite=True, method=None):
     if overwrite:

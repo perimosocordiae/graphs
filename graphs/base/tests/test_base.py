@@ -34,6 +34,13 @@ class TestGenericMembers(unittest.TestCase):
       self.assertEqual(G.num_edges(), 5, 'num_edges (%s)' % type(G))
       self.assertEqual(G.num_vertices(), 4, 'num_vertices (%s)' % type(G))
 
+  def test_copy(self):
+    for G in self.graphs:
+      gg = G.copy()
+      self.assertIsNot(gg, G)
+      assert_array_equal(gg.matrix(dense=True), G.matrix(dense=True))
+      assert_array_equal(gg.pairs(), G.pairs())
+
   def test_degree(self):
     for G in self.graphs:
       in_degree = G.degree('in', unweighted=True)

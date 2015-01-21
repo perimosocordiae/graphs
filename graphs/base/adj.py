@@ -9,6 +9,9 @@ class AdjacencyMatrixGraph(Graph):
   def pairs(self, copy=False):
     return np.transpose(np.nonzero(self._adj))
 
+  def copy(self):
+    return self.__class__(self._adj.copy())
+
   def num_vertices(self):
     return self._adj.shape[0]
 
