@@ -218,17 +218,22 @@ class TestGenericMembers(unittest.TestCase):
       assert_array_equal(G.matrix(dense=True), adj)
 
   def test_reweight(self):
-    wg = [G for G in self.graphs if G.is_weighted()]
     expected = np.array(ADJ, dtype=float)
     mask = expected != 0
     new_weights = np.arange(1, np.count_nonzero(mask)+1)
     expected[mask] = new_weights
-    for G in wg:
-      msg = 'reweight (%s)' % type(G)
-      gg = G.reweight(new_weights)
-      self.assertIs(gg, G)
-      self.assertEqual(G.num_edges(), 5, msg)
-      assert_array_equal(G.matrix(dense=True), expected, msg)
+    for G in self.graphs:
+      if G.is_weighted():
+        msg = 'reweight (%s)' % type(G)
+        gg = G.reweight(new_weights)
+        self.assertIs(gg, G)
+        self.assertEqual(G.num_edges(), 5, msg)
+        assert_array_equal(G.matrix(dense=True), expected, msg)
+      else:
+        with warnings.catch_warnings(record=True) as w:
+          G.reweight(new_weights)
+          self.assertEqual(len(w), 1)
+          self.assertIn('ignoring call to reweight', w[0].message.message)
 
   def test_reweight_partial(self):
     wg = [G for G in self.graphs if G.is_weighted()]
