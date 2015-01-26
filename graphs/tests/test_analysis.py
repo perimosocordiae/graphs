@@ -65,6 +65,31 @@ class TestAnalysis(unittest.TestCase):
     for G in self.graphs:
       self.assertEqual(G.profile(), 1)
 
+  def test_betweenness(self):
+    for G in self.graphs:
+      assert_array_equal(G.betweenness(kind='vertex'), [1,0,1,0,0])
+      assert_array_equal(G.betweenness(kind='edge'), [2,1,2,3,1,1])
+
+  def test_eccentricity(self):
+    for G in self.graphs:
+      # unconnected graphs have infinite eccentricity
+      assert_array_equal(G.eccentricity(), np.inf+np.ones(5))
+    g = Graph.from_adj_matrix([[0,1,2],[1,0,0],[2,0,0]])
+    assert_array_equal(g.eccentricity(), [2,3,3])
+
+  def test_diameter(self):
+    for G in self.graphs:
+      # unconnected graphs have infinite diameter
+      self.assertEqual(G.diameter(), np.inf)
+    g = Graph.from_adj_matrix([[0,1,2],[1,0,0],[2,0,0]])
+    self.assertEqual(g.diameter(), 3)
+
+  def test_radius(self):
+    for G in self.graphs:
+      # unconnected graphs have infinite radius
+      self.assertEqual(G.radius(), np.inf)
+    g = Graph.from_adj_matrix([[0,1,2],[1,0,0],[2,0,0]])
+    self.assertEqual(g.radius(), 2)
 
 if __name__ == '__main__':
   unittest.main()

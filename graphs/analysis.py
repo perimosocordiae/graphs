@@ -114,9 +114,18 @@ class AnalysisMixin(object):
       btw = ig.edge_betweenness(weights=w, directed=d)
     return np.array(btw)
 
-  def diameter(self, directed=None, weighted=None):
-    '''Finds the length of the longest shortest path'''
+  def eccentricity(self, directed=None, weighted=None):
+    '''Maximum distance from each vertex to any other vertex.'''
     d = directed if directed is not None else self.is_directed()
     w = weighted if weighted is not None else self.is_weighted()
     sp = self.shortest_path(directed=d, unweighted=(not w))
-    return sp.max()
+    return sp.max(axis=0)
+
+  def diameter(self, directed=None, weighted=None):
+    '''Finds the length of the longest shortest path,
+    a.k.a. the maximum graph eccentricity.'''
+    return self.eccentricity(directed, weighted).max()
+
+  def radius(self, directed=None, weighted=None):
+    '''minimum graph eccentricity'''
+    return self.eccentricity(directed, weighted).min()
