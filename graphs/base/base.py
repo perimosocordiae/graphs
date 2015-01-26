@@ -1,7 +1,8 @@
 import numpy as np
+from graphs.analysis import AnalysisMixin
 
 
-class Graph(object):
+class Graph(AnalysisMixin):
 
   def __init__(self, *args, **kwargs):
     raise NotImplementedError('Graph should not be instantiated directly')

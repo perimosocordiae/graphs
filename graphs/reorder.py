@@ -1,7 +1,7 @@
 from collections import deque
 import numpy as np
 import scipy.sparse.csgraph as ssc
-from graphs import Graph, laplacian, bandwidth
+from graphs import Graph
 
 __all__ = [
     'permute_graph', 'cuthill_mckee', 'node_centroid_hill_climbing',
@@ -57,7 +57,7 @@ else:  # pragma: no cover
 
 
 def laplacian_reordering(G):
-  L = laplacian(G)
+  L = G.laplacian()
   vals, vecs = np.linalg.eigh(L)
   min_positive_idx = np.argmax(vals == vals[vals>0].min())
   vec = vecs[:, min_positive_idx]
@@ -68,9 +68,9 @@ def node_centroid_hill_climbing(G, relax=1, num_centerings=20, verbose=False):
   # Initialize order with BFS from a random start node.
   order = breadth_first_order(G)
   for it in xrange(num_centerings):
-    B = bandwidth(permute_graph(G, order))
+    B = permute_graph(G, order).bandwidth()
     nc_order = node_center(G, order, relax=relax)
-    nc_B = bandwidth(permute_graph(G, nc_order))
+    nc_B = permute_graph(G, nc_order).bandwidth()
     if nc_B < B:
       if verbose:  # pragma: no cover
         print 'post-center', B, nc_B
@@ -94,7 +94,7 @@ def breadth_first_order(G):
 def critical_vertices(G, order, relax=1, bw=None):
   go = permute_graph(G, order)
   if bw is None:
-    bw = bandwidth(go)
+    bw = go.bandwidth()
   adj = go.matrix(dense=True)
   if relax == 1:
     for i in np.where(np.diag(adj, -bw))[0]:
@@ -122,7 +122,7 @@ def node_center(G, order, relax=0.99):
 
 
 def hill_climbing(G, order, verbose=False):
-  B = bandwidth(permute_graph(G, order))
+  B = permute_graph(G, order).bandwidth()
   while True:
     inv_order = np.argsort(order)
     for i, j in critical_vertices(G, order, bw=B):
@@ -137,7 +137,7 @@ def hill_climbing(G, order, verbose=False):
         elif k > j:
           new_order[[v,w]] = new_order[[w,v]]
 
-        new_B = bandwidth(permute_graph(G, new_order))
+        new_B = permute_graph(G, new_order).bandwidth()
         if new_B < B:
           order = new_order
           if verbose:  # pragma: no cover

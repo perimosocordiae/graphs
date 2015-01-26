@@ -3,7 +3,7 @@ from scipy.sparse import issparse
 from scipy.sparse.csgraph import dijkstra
 from sklearn.decomposition import PCA
 from sklearn.metrics.pairwise import pairwise_distances
-from graphs import Graph, connected_components
+from graphs import Graph
 
 from neighbors import neighbor_graph, nearest_neighbors
 
@@ -23,7 +23,7 @@ def manifold_spanning_graph(X, embed_dim, num_ccs=1, verbose=False):
     G = flesh_out(X, adj, embed_dim, CC_labels, angle_thresh=angle_thresh,
                   min_shortcircuit=embed_dim+1, verbose=verbose)
   else:
-    n, labels = connected_components(G, return_labels=True)
+    n, labels = G.connected_components(return_labels=True)
     for i in xrange(n):
       mask = labels==i
       if verbose:  # pragma: no cover
@@ -93,7 +93,7 @@ def flesh_out(X, W, embed_dim, CC_labels, dist_mult=2.0, angle_thresh=0.2,
 def grow_trees(X, G, embed_dim, verbose=False):
   dist_thresh = 0
   while True:
-    n, labels = connected_components(G, return_labels=True)
+    n, labels = G.connected_components(return_labels=True)
     tree_sizes = np.bincount(labels)
     min_tree_size = tree_sizes.min()
     if min_tree_size > embed_dim:
@@ -113,7 +113,7 @@ def grow_trees(X, G, embed_dim, verbose=False):
 
 
 def join_CCs(X, G, embed_dim, num_ccs=1, max_angle=0.3, verbose=False):
-  n, labels = connected_components(G, return_labels=True)
+  n, labels = G.connected_components(return_labels=True)
   # compute linear subspaces for each connected component
   #  (assumed to be local+linear)
   CC_planes, _ = cluster_subspaces(X, embed_dim, n, labels)
@@ -156,7 +156,7 @@ def join_CCs(X, G, embed_dim, num_ccs=1, max_angle=0.3, verbose=False):
 
     # recalc CCs and repeat (keeping the original CC_planes!)
     #  until there's only one left.
-    n, labels = connected_components(G, return_labels=True)
+    n, labels = G.connected_components(return_labels=True)
   return CC_labels, angle_thresh
 
 

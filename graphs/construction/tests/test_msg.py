@@ -5,7 +5,6 @@ import numpy as np
 import unittest
 from numpy.testing import assert_array_equal
 
-from graphs import connected_components
 from graphs.generators.swiss_roll import swiss_roll, error_ratio
 from graphs.construction import manifold_spanning_graph
 
@@ -33,7 +32,7 @@ class TestMSG(unittest.TestCase):
     X[n1:] += np.array([[0.9, 0.25]])
 
     G = manifold_spanning_graph(X, 2, num_ccs=2)
-    num_ccs, labels = connected_components(G)
+    num_ccs, labels = G.connected_components()
     self.assertEqual(num_ccs, 2)
     assert_array_equal(labels[:n1], np.zeros(n1))
     assert_array_equal(labels[n1:], np.ones(n2))

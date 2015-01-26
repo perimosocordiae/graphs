@@ -5,8 +5,6 @@ from scipy.sparse.linalg import eigsh
 from scipy.linalg import eigh
 from sklearn.decomposition import KernelPCA
 
-from analysis import shortest_path, laplacian
-
 __all__ = [
     'isomap', 'laplacian_eigenmaps', 'locality_preserving_projections',
     'laplacian_pca', 'circular_layout', 'spring_layout'
@@ -15,18 +13,18 @@ __all__ = [
 
 def isomap(G, num_vecs=None, directed=True):
   directed = directed and G.is_directed()
-  W = -0.5 * shortest_path(G, directed=directed) ** 2
+  W = -0.5 * G.shortest_path(directed=directed) ** 2
   return KernelPCA(n_components=num_vecs, kernel='precomputed').fit_transform(W)
 
 
 def laplacian_eigenmaps(G, num_vecs=None, return_vals=False, val_thresh=1e-8):
-  L = laplacian(G, normed=True)
+  L = G.laplacian(normed=True)
   return _lapeig(L, num_vecs, return_vals, val_thresh)
 
 
 def locality_preserving_projections(G, coordinates, num_vecs=None):
   X = np.atleast_2d(coordinates)  # n x d
-  L = laplacian(G, normed=True)  # n x n
+  L = G.laplacian(normed=True)  # n x n
   u,s,_ = np.linalg.svd(X.T.dot(X))
   Fplus = np.linalg.pinv(u * np.sqrt(s))  # d x d
   n, d = X.shape
@@ -44,7 +42,7 @@ def laplacian_pca(G, coordinates, num_vecs=None, beta=0.5):
   Parameter beta in [0,1], scales how much PCA/LapEig contributes.
   Returns an approximation of input coordinates, ala PCA.'''
   X = np.atleast_2d(coordinates)
-  L = laplacian(G, normed=True)
+  L = G.laplacian(normed=True)
   kernel = X.dot(X.T)
   kernel /= eigsh(kernel, k=1, which='LM', return_eigenvectors=False)
   L /= eigsh(L, k=1, which='LM', return_eigenvectors=False)

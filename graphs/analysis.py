@@ -4,102 +4,93 @@ import numpy as np
 import scipy.sparse.csgraph as ssc
 import warnings
 
-__all__ = [
-    'connected_components', 'laplacian', 'shortest_path', 'greedy_coloring',
-    'ave_laplacian', 'directed_laplacian', 'bandwidth', 'profile'
-]
 
+class AnalysisMixin(object):
 
-# scipy.sparse.csgraph wrappers
-def connected_components(G, **kwargs):
-  '''Mirrors the scipy.sparse.csgraph function of the same name:
-  connected_components(G, directed=True, connection='weak', return_labels=True)
-  '''
-  return ssc.connected_components(G.matrix(), **kwargs)
+  # scipy.sparse.csgraph wrappers
+  def connected_components(self, **kwargs):
+    '''Mirrors the scipy.sparse.csgraph function of the same name:
+    connected_components(G, directed=True, connection='weak',
+                         return_labels=True)
+    '''
+    return ssc.connected_components(self.matrix(), **kwargs)
 
+  def laplacian(self, **kwargs):
+    '''Mirrors the scipy.sparse.csgraph function of the same name:
+    laplacian(G, normed=False, return_diag=False, use_out_degree=False)
+    '''
+    return ssc.laplacian(self.matrix(), **kwargs)
 
-def laplacian(G, **kwargs):
-  '''Mirrors the scipy.sparse.csgraph function of the same name:
-  laplacian(G, normed=False, return_diag=False, use_out_degree=False)
-  '''
-  return ssc.laplacian(G.matrix(), **kwargs)
+  def shortest_path(self, **kwargs):
+    '''Mirrors the scipy.sparse.csgraph function of the same name:
+    shortest_path(G, method='auto', directed=True, return_predecessors=False,
+                  unweighted=False, overwrite=False)
+    '''
+    # ssc.shortest_path requires one of these formats:
+    adj = self.matrix(dense=True, lil=True, csr=True, csc=True)
+    return ssc.shortest_path(adj, **kwargs)
 
+  def greedy_coloring(self):
+    '''Returns a greedy vertex coloring, as an array of ints.'''
+    n = self.num_vertices()
+    coloring = np.zeros(n, dtype=int)
+    for i, nbrs in enumerate(self.adj_list()):
+      nbr_colors = set(coloring[nbrs])
+      for c in count(start=1):
+        if c not in nbr_colors:
+          coloring[i] = c
+          break
+    return coloring
 
-def shortest_path(G, **kwargs):
-  '''Mirrors the scipy.sparse.csgraph function of the same name:
-  shortest_path(G, method='auto', directed=True, return_predecessors=False,
-                unweighted=False, overwrite=False)
-  '''
-  # ssc.shortest_path requires one of these formats:
-  adj = G.matrix(dense=True, lil=True, csr=True, csc=True)
-  return ssc.shortest_path(adj, **kwargs)
+  def ave_laplacian(self):
+    '''Another kind of laplacian normalization, used in the matlab PVF code.
+    Uses the formula: L = I - D^{-1} * W'''
+    W = self.matrix(dense=True)
+    # calculate -inv(D)
+    Dinv = W.sum(axis=0)
+    mask = Dinv!=0
+    Dinv[mask] = -1./Dinv[mask]
+    # calculate -inv(D) * W
+    lap = (Dinv * W.T).T
+    # add I
+    lap.flat[::W.shape[0]+1] += 1
+    # symmetrize
+    return (lap + lap.T) / 2.0
 
+  def directed_laplacian(self, D=None, eta=0.99, tol=1e-12, max_iter=500):
+    '''Computes the directed combinatorial graph laplacian.
+    http://www-all.cs.umass.edu/pubs/2007/johns_m_ICML07.pdf
 
-def greedy_coloring(G):
-  '''Returns a greedy vertex coloring, as an array of ints.'''
-  n = G.num_vertices()
-  coloring = np.zeros(n, dtype=int)
-  for i, nbrs in enumerate(G.adj_list()):
-    nbr_colors = set(coloring[nbrs])
-    for c in count(start=1):
-      if c not in nbr_colors:
-        coloring[i] = c
+    D: (optional) N-array of degrees
+    eta: probability of not teleporting (see the paper)
+    tol, max_iter: convergence params for Perron vector calculation
+    '''
+    W = self.matrix(dense=True)
+    n = W.shape[0]
+    if D is None:
+      D = W.sum(axis=1)
+    # compute probability transition matrix
+    with np.errstate(invalid='ignore', divide='ignore'):
+      P = W.astype(float) / D[:,None]
+    P[D==0] = 0
+    # start at the uniform distribution Perron vector (phi)
+    old_phi = np.ones(n) / n
+    # iterate to the fixed point (teleporting random walk)
+    for _ in xrange(max_iter):
+      phi = eta * old_phi.dot(P) + (1-eta)/n
+      if np.abs(phi - old_phi).max() < tol:
         break
-  return coloring
+      old_phi = phi
+    else:
+      warnings.warn("phi failed to converge after %d iterations" % max_iter)
+    # L = Phi - (Phi P + P' Phi)/2
+    return np.diag(phi) - ((phi * P.T).T + P.T * phi)/2
 
+  def bandwidth(self):
+    """Computes the 'bandwidth' of a graph."""
+    return np.abs(np.diff(self.pairs(), axis=1)).max()
 
-def ave_laplacian(G):
-  '''Another kind of laplacian normalization, used in the matlab PVF code.
-  Uses the formula: L = I - D^{-1} * W'''
-  W = G.matrix(dense=True)
-  # calculate -inv(D)
-  Dinv = W.sum(axis=0)
-  mask = Dinv!=0
-  Dinv[mask] = -1./Dinv[mask]
-  # calculate -inv(D) * W
-  lap = (Dinv * W.T).T
-  # add I
-  lap.flat[::W.shape[0]+1] += 1
-  # symmetrize
-  return (lap + lap.T) / 2.0
-
-
-def directed_laplacian(G, D=None, eta=0.99, tol=1e-12, max_iter=500):
-  '''Computes the directed combinatorial graph laplacian.
-  http://www-all.cs.umass.edu/pubs/2007/johns_m_ICML07.pdf
-
-  D: (optional) N-array of degrees
-  eta: probability of not teleporting (see the paper)
-  tol, max_iter: convergence params for Perron vector calculation
-  '''
-  W = G.matrix(dense=True)
-  n = W.shape[0]
-  if D is None:
-    D = W.sum(axis=1)
-  # compute probability transition matrix
-  with np.errstate(invalid='ignore', divide='ignore'):
-    P = W.astype(float) / D[:,None]
-  P[D==0] = 0
-  # start at the uniform distribution Perron vector (phi)
-  old_phi = np.ones(n) / n
-  # iterate to the fixed point (teleporting random walk)
-  for _ in xrange(max_iter):
-    phi = eta * old_phi.dot(P) + (1-eta)/n
-    if np.abs(phi - old_phi).max() < tol:
-      break
-    old_phi = phi
-  else:
-    warnings.warn("phi failed to converge after %d iterations" % max_iter)
-  # L = Phi - (Phi P + P' Phi)/2
-  return np.diag(phi) - ((phi * P.T).T + P.T * phi)/2
-
-
-def bandwidth(G):
-  """Computes the 'bandwidth' of a graph."""
-  return np.abs(np.diff(G.pairs(), axis=1)).max()
-
-
-def profile(G):
-  """Measure of bandedness, also known as 'envelope size'."""
-  leftmost_idx = np.argmax(G.matrix(dense=True).astype(bool), axis=0)
-  return (np.arange(G.num_vertices()) - leftmost_idx).sum()
+  def profile(self):
+    """Measure of bandedness, also known as 'envelope size'."""
+    leftmost_idx = np.argmax(self.matrix(dense=True).astype(bool), axis=0)
+    return (np.arange(self.num_vertices()) - leftmost_idx).sum()
