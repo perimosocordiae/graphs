@@ -94,3 +94,22 @@ class AnalysisMixin(object):
     """Measure of bandedness, also known as 'envelope size'."""
     leftmost_idx = np.argmax(self.matrix(dense=True).astype(bool), axis=0)
     return (np.arange(self.num_vertices()) - leftmost_idx).sum()
+
+  def betweenness(self, kind='vertex', directed=None, weighted=None):
+    '''Computes the betweenness centrality of a graph.
+    kind : string, either 'vertex' (default) or 'edge'
+
+    NOTE: Current implementation relies on an optional dependency: igraph
+    '''
+    assert kind in ('vertex', 'edge'), 'Invalid kind argument: ' + kind
+    if weighted is not False and self.is_weighted():
+      w = self.edge_weights()
+    else:
+      w = None
+    ig = self.to_igraph()
+    d = directed if directed is not None else self.is_directed()
+    if kind == 'vertex':
+      btw = ig.betweenness(weights=w, directed=d)
+    else:
+      btw = ig.edge_betweenness(weights=w, directed=d)
+    return np.array(btw)
