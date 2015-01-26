@@ -18,6 +18,7 @@ class TestPlot(unittest.TestCase):
            [0,0,0,0,0]]
     self.graphs = [
         Graph.from_edge_pairs(pairs),
+        Graph.from_edge_pairs(pairs, symmetric=True),
         Graph.from_adj_matrix(adj),
         Graph.from_adj_matrix(csr_matrix(adj)),
     ]
@@ -30,39 +31,39 @@ class TestPlot(unittest.TestCase):
 
   def test_plot_direction(self):
     for G in self.graphs:
-      G.plot(self.coords[:,:2], undirected=True)
-      G.plot(self.coords[:,:2], undirected=False)
-      G.plot(self.coords, undirected=True)
-      G.plot(self.coords, undirected=False)
+      G.plot(self.coords[:,:2], directed=True)
+      G.plot(self.coords[:,:2], directed=False)
+      G.plot(self.coords, directed=True)
+      G.plot(self.coords, directed=False)
 
   def test_plot_weighting(self):
     for G in self.graphs:
-      G.plot(self.coords[:,:2], unweighted=True)
-      G.plot(self.coords[:,:2], unweighted=False)
-      G.plot(self.coords, unweighted=True)
-      G.plot(self.coords, unweighted=False)
+      G.plot(self.coords[:,:2], weighted=True)
+      G.plot(self.coords[:,:2], weighted=False)
+      G.plot(self.coords, weighted=True)
+      G.plot(self.coords, weighted=False)
 
   def test_plot_styles(self):
-    G = self.graphs[0]  # No need to do this with each type of graph.
-    G.plot(self.coords, edge_style='r--')
-    G.plot(self.coords, edge_style=dict(colors=range(4), linestyles=':'))
-    G.plot(self.coords, vertex_style='rx')
-    G.plot(self.coords, vertex_style=dict(c=[(0,0,0),(1,1,1)], marker='o'))
-    G.plot(self.coords, edge_style='k')
-    G.plot(self.coords, edge_style='1')
-    G.plot(self.coords, edge_style='01')
-    G.plot(self.coords, edge_style=' x')
-    G.plot(self.coords, edge_style='-.')
-    G.plot(self.coords, edge_style='k-')
-    # Make sure we break with bogus styles
-    with self.assertRaises(ValueError):
-      G.plot(self.coords, edge_style='5')
-    with self.assertRaises(ValueError):
-      G.plot(self.coords, edge_style='::')
-    with self.assertRaises(ValueError):
-      G.plot(self.coords, edge_style='oo')
-    with self.assertRaises(ValueError):
-      G.plot(self.coords, edge_style='kk')
+    for G in self.graphs:
+      G.plot(self.coords, edge_style='r--')
+      G.plot(self.coords, edge_style=dict(colors=range(4), linestyles=':'))
+      G.plot(self.coords, vertex_style='rx')
+      G.plot(self.coords, vertex_style=dict(c=[(0,0,0),(1,1,1)], marker='o'))
+      G.plot(self.coords, edge_style='k')
+      G.plot(self.coords, edge_style='1')
+      G.plot(self.coords, edge_style='01')
+      G.plot(self.coords, edge_style=' x')
+      G.plot(self.coords, edge_style='-.')
+      G.plot(self.coords, edge_style='k-')
+      # Make sure we break with bogus styles
+      with self.assertRaises(ValueError):
+        G.plot(self.coords, edge_style='5')
+      with self.assertRaises(ValueError):
+        G.plot(self.coords, edge_style='::')
+      with self.assertRaises(ValueError):
+        G.plot(self.coords, edge_style='oo')
+      with self.assertRaises(ValueError):
+        G.plot(self.coords, edge_style='kk')
 
 
 if __name__ == '__main__':

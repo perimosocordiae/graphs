@@ -7,10 +7,27 @@ from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 class VizMixin(object):
 
-  def plot(self, coordinates, undirected=False, unweighted=False, fig=None,
+  def plot(self, coordinates, directed=None, weighted=None, fig=None,
            ax=None, edge_style=None, vertex_style=None, title=None, cmap=None):
+    '''Plot the graph using matplotlib in 2 or 3 dimensions.
+    coordinates : (n,2) or (n,3) array of vertex coordinates
+    directed : if True, edges have arrows indicating direction. Defaults to
+                the result of self.is_directed()
+    weighted : if True, edges are colored by their weight. Defaults to the
+                result of self.is_weighted()
+    fig : a matplotlib Figure to use. Defaults to gcf()
+    ax : a matplotlib Axes to use. Defaults to gca()
+    edge_style : string or dict of styles for edges. Defaults to 'b-'
+    vertex_style : string or dict of styles for vertices. Defaults to 'ko'
+    title : string to display as the plot title
+    cmap : a matplotlib Colormap to use for edge weight coloring
+    '''
     X = np.atleast_2d(coordinates)
     assert X.shape[1] in (2,3), 'can only plot graph for 2d or 3d coordinates'
+    if weighted is None:
+      weighted = self.is_weighted()
+    if directed is None:
+      directed = self.is_directed()
     is_3d = (X.shape[1] == 3)
     if ax is None:
       ax = _get_axis(is_3d, fig)
@@ -24,9 +41,9 @@ class VizMixin(object):
       if isinstance(vertex_style, basestring):
         vertex_style = _parse_fmt(vertex_style, color_key='c')
       vertex_kwargs.update(vertex_style)
-    if not unweighted and self.is_weighted():
+    if weighted and self.is_weighted():
       edge_kwargs['array'] = self.edge_weights()
-    if not undirected and self.is_directed():
+    if directed and self.is_directed():
       _directed_edges(self, X, ax, is_3d, edge_kwargs, cmap)
     else:
       _undirected_edges(self, X, ax, is_3d, edge_kwargs, cmap)
