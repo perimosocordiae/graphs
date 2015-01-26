@@ -6,7 +6,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from scipy.sparse import csr_matrix
 from sklearn.decomposition import PCA
-from graphs import embed, Graph
+from graphs import Graph
 
 
 class TestEmbeddings(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestEmbeddings(unittest.TestCase):
                                [0, np.sqrt(2), 0, np.sqrt(2), 0],
                                [0, 0, np.sqrt(2), 0, np.sqrt(2)],
                                [0, 0, 2.82842712, np.sqrt(2), 0]])
-    Y = embed.isomap(G, num_vecs=1)
+    Y = G.isomap(num_vecs=1)
     self.assertEqual(Y.shape, (5, 1))
     assert_array_almost_equal(Y[:,0], expected)
 
@@ -26,16 +26,16 @@ class TestEmbeddings(unittest.TestCase):
     expected = np.array([0.5, 0.5, 0., -0.5, -0.5])
     W = np.zeros((5,5)) + np.diag(np.ones(4), k=1) + np.diag(np.ones(4), k=-1)
     G = Graph.from_adj_matrix(W)
-    Y = embed.laplacian_eigenmaps(G, num_vecs=1)
+    Y = G.laplacian_eigenmaps(num_vecs=1)
     self.assertEqual(Y.shape, (5, 1))
     assert_array_almost_equal(Y[:,0], expected)
     # Test num_vecs=None case
-    Y = embed.laplacian_eigenmaps(G)
+    Y = G.laplacian_eigenmaps()
     self.assertEqual(Y.shape, (5, 4))
     assert_array_almost_equal(Y[:,0], expected)
     # Test sparse case + return_vals
     G = Graph.from_adj_matrix(csr_matrix(W))
-    Y, vals = embed.laplacian_eigenmaps(G, num_vecs=1, return_vals=True)
+    Y, vals = G.laplacian_eigenmaps(num_vecs=1, return_vals=True)
     assert_array_almost_equal(vals, [0.292893])
     self.assertEqual(Y.shape, (5, 1))
     assert_array_almost_equal(Y[:,0], expected)
@@ -47,12 +47,12 @@ class TestEmbeddings(unittest.TestCase):
                                [1, 1, 0, 1, 1],
                                [0, 0, 1, 0, 1],
                                [0, 0, 1, 1, 0]])
-    proj = embed.locality_preserving_projections(G, X, num_vecs=1)
+    proj = G.locality_preserving_projections(X, num_vecs=1)
     assert_array_almost_equal(proj, np.array([[-0.95479113],[0.29727749]]))
     # test case with bigger d than n
     X = np.hstack((X, X))[:3]
     G = Graph.from_adj_matrix(G.matrix()[:3,:3])
-    proj = embed.locality_preserving_projections(G, X, num_vecs=1)
+    proj = G.locality_preserving_projections(X, num_vecs=1)
     assert_array_almost_equal(proj, np.array([[0.9854859,0.1697574,0,0]]).T)
 
   def test_laplacian_pca(self):
@@ -65,17 +65,17 @@ class TestEmbeddings(unittest.TestCase):
     # check that beta=0 gets the (roughly) the same answer as PCA
     mX = X - X.mean(axis=0)
     expected = PCA(n_components=1).fit_transform(mX)
-    actual = embed.laplacian_pca(G, mX, num_vecs=1, beta=0)[:,:1]
+    actual = G.laplacian_pca(mX, num_vecs=1, beta=0)[:,:1]
     self.assertTrue(np.abs(expected - actual).sum() < 0.5)
 
   def test_circular_layout(self):
     G = Graph.from_edge_pairs([], num_vertices=4)
     expected = np.array([[1,0],[0,1],[-1,0],[0,-1]])
-    assert_array_almost_equal(embed.circular_layout(G), expected)
+    assert_array_almost_equal(G.layout_circle(), expected)
     # edge cases
     for nv in (0, 1):
       G = Graph.from_edge_pairs([], num_vertices=nv)
-      X = embed.circular_layout(G)
+      X = G.layout_circle()
       self.assertEqual(X.shape, (nv, 2))
 
   def test_spring_layout(self):
@@ -89,7 +89,7 @@ class TestEmbeddings(unittest.TestCase):
         [0.58946761,  0.61403187],
         [0.96513010,  0.64989485],
         [1.67011322,  0.71714073]])
-    assert_array_almost_equal(embed.spring_layout(G), expected)
+    assert_array_almost_equal(G.layout_spring(), expected)
     # Test initial_layout kwarg
     X = np.arange(10).reshape((5,2))
     expected = np.array([
@@ -98,8 +98,7 @@ class TestEmbeddings(unittest.TestCase):
         [3.396880, 4.396880],
         [5.307083, 6.307083],
         [6.162909, 7.162909]])
-    assert_array_almost_equal(embed.spring_layout(G, initial_layout=X),
-                              expected)
+    assert_array_almost_equal(G.layout_spring(initial_layout=X), expected)
 
 if __name__ == '__main__':
   unittest.main()
