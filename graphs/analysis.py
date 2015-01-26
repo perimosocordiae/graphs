@@ -113,3 +113,10 @@ class AnalysisMixin(object):
     else:
       btw = ig.edge_betweenness(weights=w, directed=d)
     return np.array(btw)
+
+  def diameter(self, directed=None, weighted=None):
+    '''Finds the length of the longest shortest path'''
+    d = directed if directed is not None else self.is_directed()
+    w = weighted if weighted is not None else self.is_weighted()
+    sp = self.shortest_path(directed=d, unweighted=(not w))
+    return sp.max()
