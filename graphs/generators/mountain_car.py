@@ -2,14 +2,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.interpolate import griddata
 
-from graphs import plot_graph, laplacian_eigenmaps
+from graphs import laplacian_eigenmaps
 
 __all__ = ['plot_mcar_basis', 'sample_mcar_trajectories']
 
 
 def plot_mcar_basis(G, X, title='Mountain Car graph'):
   _, axes = plt.subplots(nrows=2, ncols=2)
-  plot_graph(G, X, title=title, ax=axes[0,0])
+  G.plot(X, title=title, ax=axes[0,0])
 
   emb, vals = laplacian_eigenmaps(G, num_vecs=3, return_vals=True)
 

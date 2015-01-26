@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 from scipy.sparse import csr_matrix
 
-from graphs import Graph, plot_graph
+from graphs import Graph
 
 
 class TestPlot(unittest.TestCase):
@@ -23,48 +23,46 @@ class TestPlot(unittest.TestCase):
     ]
     self.coords = np.random.random((5, 3))
 
-  def test_plot_graph_default(self):
+  def test_plot_default(self):
     for G in self.graphs:
-      plot_graph(G, self.coords[:,:2])
-      plot_graph(G, self.coords)
+      G.plot(self.coords[:,:2])
+      G.plot(self.coords)
 
-  def test_plot_graph_direction(self):
+  def test_plot_direction(self):
     for G in self.graphs:
-      plot_graph(G, self.coords[:,:2], undirected=True)
-      plot_graph(G, self.coords[:,:2], undirected=False)
-      plot_graph(G, self.coords, undirected=True)
-      plot_graph(G, self.coords, undirected=False)
+      G.plot(self.coords[:,:2], undirected=True)
+      G.plot(self.coords[:,:2], undirected=False)
+      G.plot(self.coords, undirected=True)
+      G.plot(self.coords, undirected=False)
 
-  def test_plot_graph_weighting(self):
+  def test_plot_weighting(self):
     for G in self.graphs:
-      plot_graph(G, self.coords[:,:2], unweighted=True)
-      plot_graph(G, self.coords[:,:2], unweighted=False)
-      plot_graph(G, self.coords, unweighted=True)
-      plot_graph(G, self.coords, unweighted=False)
+      G.plot(self.coords[:,:2], unweighted=True)
+      G.plot(self.coords[:,:2], unweighted=False)
+      G.plot(self.coords, unweighted=True)
+      G.plot(self.coords, unweighted=False)
 
-  def test_plot_graph_styles(self):
+  def test_plot_styles(self):
     G = self.graphs[0]  # No need to do this with each type of graph.
-    plot_graph(G, self.coords, edge_style='r--')
-    plot_graph(G, self.coords,
-               edge_style=dict(colors=range(4), linestyles=':'))
-    plot_graph(G, self.coords, vertex_style='rx')
-    plot_graph(G, self.coords,
-               vertex_style=dict(c=[(0,0,0),(1,1,1)], marker='o'))
-    plot_graph(G, self.coords, edge_style='k')
-    plot_graph(G, self.coords, edge_style='1')
-    plot_graph(G, self.coords, edge_style='01')
-    plot_graph(G, self.coords, edge_style=' x')
-    plot_graph(G, self.coords, edge_style='-.')
-    plot_graph(G, self.coords, edge_style='k-')
+    G.plot(self.coords, edge_style='r--')
+    G.plot(self.coords, edge_style=dict(colors=range(4), linestyles=':'))
+    G.plot(self.coords, vertex_style='rx')
+    G.plot(self.coords, vertex_style=dict(c=[(0,0,0),(1,1,1)], marker='o'))
+    G.plot(self.coords, edge_style='k')
+    G.plot(self.coords, edge_style='1')
+    G.plot(self.coords, edge_style='01')
+    G.plot(self.coords, edge_style=' x')
+    G.plot(self.coords, edge_style='-.')
+    G.plot(self.coords, edge_style='k-')
     # Make sure we break with bogus styles
     with self.assertRaises(ValueError):
-      plot_graph(G, self.coords, edge_style='5')
+      G.plot(self.coords, edge_style='5')
     with self.assertRaises(ValueError):
-      plot_graph(G, self.coords, edge_style='::')
+      G.plot(self.coords, edge_style='::')
     with self.assertRaises(ValueError):
-      plot_graph(G, self.coords, edge_style='oo')
+      G.plot(self.coords, edge_style='oo')
     with self.assertRaises(ValueError):
-      plot_graph(G, self.coords, edge_style='kk')
+      G.plot(self.coords, edge_style='kk')
 
 
 if __name__ == '__main__':

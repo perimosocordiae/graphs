@@ -1,8 +1,9 @@
 import numpy as np
 from graphs.analysis import AnalysisMixin
+from graphs.viz import VizMixin
 
 
-class Graph(AnalysisMixin):
+class Graph(AnalysisMixin, VizMixin):
 
   def __init__(self, *args, **kwargs):
     raise NotImplementedError('Graph should not be instantiated directly')

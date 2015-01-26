@@ -4,38 +4,37 @@ from matplotlib.axes import mlines, mcolors
 from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
-__all__ = ['plot_graph']
 
+class VizMixin(object):
 
-def plot_graph(G, coordinates, undirected=False, unweighted=False, fig=None,
-               ax=None, edge_style=None, vertex_style=None, title=None,
-               cmap=None):
-  X = np.atleast_2d(coordinates)
-  assert X.shape[1] in (2,3), 'can only plot graph for 2d or 3d coordinates'
-  is_3d = (X.shape[1] == 3)
-  if ax is None:
-    ax = _get_axis(is_3d, fig)
-  edge_kwargs = dict(colors='b', linestyles='-', zorder=1)
-  vertex_kwargs = dict(marker='o', c='k', s=20, edgecolor='none', zorder=2)
-  if edge_style:
-    if isinstance(edge_style, basestring):
-      edge_style = _parse_fmt(edge_style, color_key='colors')
-    edge_kwargs.update(edge_style)
-  if vertex_style:
-    if isinstance(vertex_style, basestring):
-      vertex_style = _parse_fmt(vertex_style, color_key='c')
-    vertex_kwargs.update(vertex_style)
-  if not unweighted and G.is_weighted():
-    edge_kwargs['array'] = G.edge_weights()
-  if not undirected and G.is_directed():
-    _directed_edges(G, X, ax, is_3d, edge_kwargs, cmap)
-  else:
-    _undirected_edges(G, X, ax, is_3d, edge_kwargs, cmap)
-  ax.scatter(*X.T, **vertex_kwargs)
-  ax.autoscale_view()
-  if title:
-    ax.set_title(title)
-  return pyplot.show
+  def plot(self, coordinates, undirected=False, unweighted=False, fig=None,
+           ax=None, edge_style=None, vertex_style=None, title=None, cmap=None):
+    X = np.atleast_2d(coordinates)
+    assert X.shape[1] in (2,3), 'can only plot graph for 2d or 3d coordinates'
+    is_3d = (X.shape[1] == 3)
+    if ax is None:
+      ax = _get_axis(is_3d, fig)
+    edge_kwargs = dict(colors='b', linestyles='-', zorder=1)
+    vertex_kwargs = dict(marker='o', c='k', s=20, edgecolor='none', zorder=2)
+    if edge_style:
+      if isinstance(edge_style, basestring):
+        edge_style = _parse_fmt(edge_style, color_key='colors')
+      edge_kwargs.update(edge_style)
+    if vertex_style:
+      if isinstance(vertex_style, basestring):
+        vertex_style = _parse_fmt(vertex_style, color_key='c')
+      vertex_kwargs.update(vertex_style)
+    if not unweighted and self.is_weighted():
+      edge_kwargs['array'] = self.edge_weights()
+    if not undirected and self.is_directed():
+      _directed_edges(self, X, ax, is_3d, edge_kwargs, cmap)
+    else:
+      _undirected_edges(self, X, ax, is_3d, edge_kwargs, cmap)
+    ax.scatter(*X.T, **vertex_kwargs)
+    ax.autoscale_view()
+    if title:
+      ax.set_title(title)
+    return pyplot.show
 
 
 def _parse_fmt(fmt, color_key='colors', ls_key='linestyles',
