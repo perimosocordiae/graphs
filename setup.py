@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='graphs',
@@ -10,7 +10,7 @@ setup(
     description='All things graph.',
     url='http://github.com/perimosocordiae/graphs',
     license='MIT',
-    packages=['graphs'],
+    packages=find_packages(exclude=['tests']),
     install_requires=[
         'numpy >= 1.8',
         'scipy >= 0.14',
