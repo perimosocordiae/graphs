@@ -12,7 +12,7 @@ def jeff_graph(trajectories, k=5, verbose=False, pruning_thresh=0,
   trajectories: list of NxD arrays of ordered states
   '''
   X = np.vstack(trajectories)
-  G = neighbor_graph(X, k=k, symmetrize=False)
+  G = neighbor_graph(X, k=k)
   if pruning_thresh > 0:
     traj_len = map(len, trajectories)
     G = jeff_prune_edges(G, X, traj_len, pruning_thresh, verbose=verbose)

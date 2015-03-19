@@ -12,27 +12,21 @@ from graphs import Graph
 __all__ = ['neighbor_graph', 'nearest_neighbors']
 
 
-def neighbor_graph(X, precomputed=False, k=None, epsilon=None, symmetrize=True,
-                   weighting='binary'):
+def neighbor_graph(X, precomputed=False, k=None, epsilon=None,
+                   weighting='none'):
   '''Construct an adj matrix from a matrix of points (one per row).
   When `precomputed` is True, X is a distance matrix.
   `weighting` param can be one of {binary, none}.'''
   assert ((k is not None) or (epsilon is not None)
           ), "Must provide `k` or `epsilon`"
-  assert weighting in ('binary','none'), "Invalid weighting param: "+weighting
+  assert weighting in ('binary','none'), "Invalid weighting param: " + weighting
 
   # Try the fast path, if possible.
   if not precomputed and epsilon is None:
-    is_binary = weighting == 'binary'
-    G = _sparse_neighbor_graph(X, k, is_binary)
-    if symmetrize:
-      if is_binary:
-        G.symmetrize(method='max')
-      else:
-        G.symmetrize(method='avg')
-    return G
-  # Dense/slow path.
-  return _slow_neighbor_graph(X, precomputed, k, epsilon, symmetrize, weighting)
+    G = _sparse_neighbor_graph(X, k, weighting == 'binary')
+  else:
+    G = _slow_neighbor_graph(X, precomputed, k, epsilon, weighting)
+  return G
 
 
 def nearest_neighbors(query_pts, target_pts=None, precomputed=False,
@@ -80,7 +74,7 @@ def nearest_neighbors(query_pts, target_pts=None, precomputed=False,
   return nns
 
 
-def _slow_neighbor_graph(X, precomputed, k, epsilon, symmetrize, weighting):
+def _slow_neighbor_graph(X, precomputed, k, epsilon, weighting):
   num_pts = X.shape[0]
   if precomputed:
     dist = X.copy()
@@ -98,9 +92,6 @@ def _slow_neighbor_graph(X, precomputed, k, epsilon, symmetrize, weighting):
   else:
     for i in xrange(num_pts):
       dist[i,not_nn[i]] = 0  # zero out neighbors too far away
-
-  if symmetrize and k is not None:
-    dist = (dist + dist.T) / 2
 
   if weighting is 'binary':
     dist = dist.astype(bool).astype(float)

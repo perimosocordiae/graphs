@@ -11,7 +11,8 @@ __all__ = ['manifold_spanning_graph']
 
 
 def manifold_spanning_graph(X, embed_dim, num_ccs=1, verbose=False):
-  G = neighbor_graph(X, k=1, symmetrize=True)
+  G = neighbor_graph(X, k=1, weighting='binary')
+  G.symmetrize(method='max')
 
   G = grow_trees(X, G, embed_dim, verbose=verbose)
 

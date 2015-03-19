@@ -16,38 +16,35 @@ def ngraph(*a, **k):
 class TestNeighbors(unittest.TestCase):
   def setUp(self):
     self.pts = np.array([[0,0],[1,2],[3,2],[-1,0]])
+    self.bin_adj = np.array([[0,1,0,1],[1,0,1,0],[1,1,0,0],[1,1,0,0]])
+    self.l2_adj = np.sqrt([[0,5,0,1],[5,0,4,0],[13,4,0,0],[1,8,0,0]])
 
   def test_neighbor_graph(self):
     self.assertRaises(AssertionError, ngraph, self.pts)
 
   def test_binary_weighting(self):
-    expected = np.array([[0,1,1,1],[1,0,1,1],[1,1,0,0],[1,1,0,0]])
-    for kwargs in [dict(k=2, symmetrize=True),
-                   dict(epsilon=3.61),
-                   dict(k=2, epsilon=100)]:
-      assert_array_equal(ngraph(self.pts, **kwargs), expected, str(kwargs))
-    expected = np.array([[0,1,0,1],[1,0,1,0],[1,1,0,0],[1,1,0,0]])
-    assert_array_equal(ngraph(self.pts, k=2, symmetrize=False), expected)
+    assert_array_equal(ngraph(self.pts, weighting='binary', k=2), self.bin_adj)
+    assert_array_equal(ngraph(self.pts, weighting='binary', k=2, epsilon=100),
+                       self.bin_adj)
+    # Add extra values for e-ball
+    self.bin_adj[0,2] = 1
+    self.bin_adj[1,3] = 1
+    assert_array_equal(ngraph(self.pts, weighting='binary', epsilon=3.61),
+                       self.bin_adj)
 
-  def test_no_weighting_k(self):
-    exp = np.sqrt([[0,5,0,1],[5,0,4,0],[13,4,0,0],[1,8,0,0]])
-    kw = dict(k=2, weighting='none')
-    assert_array_almost_equal(ngraph(self.pts, symmetrize=False, **kw), exp)
-    assert_array_almost_equal(ngraph(self.pts, symmetrize=True, **kw),
-                              (exp+exp.T)/2)
-
-  def test_no_weighting_eps(self):
-    exp = np.sqrt([[0,5,13,1],[5,0,4,8],[13,4,0,0],[1,8,0,0]])
-    kw = dict(weighting='none', epsilon=3.61)
-    assert_array_almost_equal(ngraph(self.pts, symmetrize=False, **kw), exp)
-    assert_array_almost_equal(ngraph(self.pts, symmetrize=True, **kw),
-                              (exp+exp.T)/2)
+  def test_no_weighting(self):
+    assert_array_almost_equal(ngraph(self.pts, k=2), self.l2_adj)
+    # Add extra values for e-ball
+    self.l2_adj[0,2] = np.sqrt(13)
+    self.l2_adj[1,3] = np.sqrt(8)
+    assert_array_almost_equal(ngraph(self.pts, epsilon=3.61), self.l2_adj)
 
   def test_precomputed(self):
     D = pairwise_distances(self.pts, metric='l2')
-    expected = np.array([[0,1,1,1],[1,0,1,1],[1,1,0,0],[1,1,0,0]])
     actual = ngraph(D, precomputed=True, k=2)
-    assert_array_almost_equal(actual, expected, decimal=4)
+    assert_array_almost_equal(actual, self.l2_adj, decimal=4)
+    actual = ngraph(D, precomputed=True, k=2, weighting='binary')
+    assert_array_almost_equal(actual, self.bin_adj, decimal=4)
 
   def test_nearest_neighbors(self):
     nns = neighbors.nearest_neighbors
