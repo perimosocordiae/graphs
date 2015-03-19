@@ -41,8 +41,8 @@ class TestEdgePairGraph(unittest.TestCase):
     assert_array_equal(self.epg.pairs(), expected)
 
   def test_symmetrize(self):
-    # Check that overwrite=False doesn't change anything
-    self.epg.symmetrize(overwrite=False)
+    # Check that copy=True doesn't change anything
+    self.epg.symmetrize(copy=True)
     assert_array_equal(self.epg.matrix(dense=True), ADJ)
 
 
@@ -62,8 +62,8 @@ class TestSymmEdgePairGraph(unittest.TestCase):
     assert_array_equal(sorted(P.tolist()), expected)
 
   def test_symmetrize(self):
-    self.assertIs(self.G.symmetrize(overwrite=True), self.G)
-    S = self.G.symmetrize(overwrite=False)
+    self.assertIs(self.G.symmetrize(copy=False), self.G)
+    S = self.G.symmetrize(copy=True)
     self.assertIsNot(S, self.G)
     assert_array_equal(S.matrix(dense=True), self.G.matrix(dense=True))
 

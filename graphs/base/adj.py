@@ -43,40 +43,26 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
   def num_edges(self):
     return np.count_nonzero(self._adj)
 
-  def add_self_edges(self, weight=1):
-    '''Adds all i->i edges, in-place.'''
-    # Do some dtype checking shenanigans.
-    if not isinstance(weight, int):
-      self._adj = self._adj.astype(float)
-    np.fill_diagonal(self._adj, weight)
-    return self
-
-  def add_edges(self, from_idx, to_idx, weight=1, symmetric=False):
-    '''Adds all from->to edges, in-place.'''
-    # Do some dtype checking shenanigans.
-    if not isinstance(weight, int):
-      self._adj = self._adj.astype(float)
-    self._adj[from_idx, to_idx] = weight
+  def add_edges(self, from_idx, to_idx, weight=1, symmetric=False, copy=False):
+    '''Adds all from->to edges. weight may be a scalar or 1d array.
+    If symmetric=True, also adds to->from edges with the same weights.'''
+    weight = np.atleast_1d(1 if weight is None else weight)
+    res_dtype = np.promote_types(weight.dtype, self._adj.dtype)
+    adj = self._adj.astype(res_dtype, copy=copy)
+    adj[from_idx, to_idx] = weight
     if symmetric:
-      self._adj[to_idx, from_idx] = weight
+      adj[to_idx, from_idx] = weight
+    if copy:
+      return DenseAdjacencyMatrixGraph(adj)
+    self._adj = adj
     return self
 
-  def symmetrize(self, overwrite=True, method='sum'):
-    '''Symmetrizes with the given method. {sum,max,avg}
-    Returns a copy if overwrite=False.'''
-    S = _symmetrize(self._adj, method)
-    if overwrite:
-      self._adj = S
-      return self
-    return DenseAdjacencyMatrixGraph(S)
-
-  def reweight(self, new_weights, edge_inds=None):
-    P = self.pairs()
-    if edge_inds is None:
-      ii,jj = P.T
-    else:
-      ii,jj = P[edge_inds].T
-    self._adj[ii,jj] = new_weights
+  def symmetrize(self, method='sum', copy=False):
+    '''Symmetrizes with the given method \in {sum,max,avg}'''
+    adj = _symmetrize(self._adj, method)
+    if copy:
+      return DenseAdjacencyMatrixGraph(adj)
+    self._adj = adj
     return self
 
 
@@ -112,53 +98,61 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
   def num_edges(self):
     return self._adj.nnz
 
-  def add_self_edges(self, weight=1):
-    '''Adds all i->i edges, in-place.'''
-    # Do some dtype checking shenanigans.
-    if not isinstance(weight, int):
-      self._adj = self._adj.astype(float)
+  def add_edges(self, from_idx, to_idx, weight=1, symmetric=False, copy=False):
+    '''Adds all from->to edges. weight may be a scalar or 1d array.
+    If symmetric=True, also adds to->from edges with the same weights.'''
+    adj = self._weightable_adj(weight, copy)
+    adj[from_idx, to_idx] = weight
+    if symmetric:
+      adj[to_idx, from_idx] = weight
+    return self._post_weighting(adj, weight, copy)
+
+  def add_self_edges(self, weight=1, copy=False):
+    '''Adds all i->i edges. weight may be a scalar or 1d array.'''
+    adj = self._weightable_adj(weight, copy)
     try:
-      self._adj.setdiag(weight)
+      adj.setdiag(weight)
     except TypeError:
       # Older scipy doesn't support setdiag on everything.
-      self._adj = self._adj.tocsr()
-      self._adj.setdiag(weight)
-    if weight == 0:
+      adj = adj.tocsr()
+      adj.setdiag(weight)
+    return self._post_weighting(adj, weight, copy)
+
+  def reweight(self, weight, edges=None, copy=False):
+    '''Replaces existing edge weights. weight may be a scalar or 1d array.
+    edges is a mask or index array that specifies a subset of edges to modify'''
+    adj = self._weightable_adj(weight, copy)
+    if edges is None:
+      adj.data[:] = weight
+    else:
+      adj.data[edges] = weight
+    return self._post_weighting(adj, weight, copy)
+
+  def _weightable_adj(self, weight, copy):
+    weight = np.atleast_1d(weight)
+    res_dtype = np.promote_types(weight.dtype, self._adj.dtype)
+    if copy or res_dtype is not self._adj.dtype:
+      return self._adj.astype(res_dtype)
+    return self._adj
+
+  def _post_weighting(self, adj, weight, copy):
+    if np.any(weight == 0):
       # TODO: be smarter about avoiding writing explicit zeros
       # We changed the sparsity structure, possibly.
-      assert hasattr(self._adj, 'eliminate_zeros'), 'Other formats NYI'
-      self._adj.eliminate_zeros()
+      assert hasattr(adj, 'eliminate_zeros'), 'Other formats NYI'
+      adj.eliminate_zeros()
+    if copy:
+      return SparseAdjacencyMatrixGraph(adj)
+    self._adj = adj
     return self
 
-  def add_edges(self, from_idx, to_idx, weight=1, symmetric=False):
-    '''Adds all from->to edges, in-place.'''
-    # Do some dtype checking shenanigans.
-    if not isinstance(weight, int):
-      self._adj = self._adj.astype(float)
-    self._adj[from_idx, to_idx] = weight
-    if symmetric:
-      self._adj[to_idx, from_idx] = weight
-    if weight is 0:
-      # TODO: be smarter about avoiding writing explicit zeros
-      # We changed the sparsity structure, possibly.
-      assert hasattr(self._adj, 'eliminate_zeros'), 'Other formats NYI'
-      self._adj.eliminate_zeros()
-    return self
-
-  def symmetrize(self, overwrite=True, method='sum'):
+  def symmetrize(self, method='sum', copy=False):
     '''Symmetrizes with the given method. {sum,max,avg}
     Returns a copy if overwrite=False.'''
-    S = _symmetrize(self._adj.tocsr(), method)
-    if overwrite:
-      self._adj = S
-      return self
-    return SparseAdjacencyMatrixGraph(S)
-
-  def reweight(self, new_weights, edge_inds=None):
-    if edge_inds is None:
-      self._adj.data[:] = new_weights
-    else:
-      self._adj.data[edge_inds] = new_weights
+    adj = _symmetrize(self._adj.tocsr(), method)
+    if copy:
+      return SparseAdjacencyMatrixGraph(adj)
+    self._adj = adj
     return self
 
 

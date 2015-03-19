@@ -106,7 +106,7 @@ class TestGenericMembers(unittest.TestCase):
 
   def _help_test_symmetrize(self, expected, bool_expected, method):
     for G in self.graphs:
-      sym = G.symmetrize(overwrite=False, method=method).matrix(dense=True)
+      sym = G.symmetrize(method=method, copy=True).matrix(dense=True)
       msg = '%s symmetrize (%s)' % (method, type(G))
       if G.is_weighted():
         assert_array_equal(sym, expected, msg)

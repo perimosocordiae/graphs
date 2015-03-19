@@ -24,16 +24,10 @@ class Graph(AnalysisMixin, EmbedMixin, VizMixin):
   def num_vertices(self):
     raise NotImplementedError()
 
-  def add_self_edges(self, weight=None):
+  def symmetrize(self, method='sum', copy=False):
     raise NotImplementedError()
 
-  def symmetrize(self, overwrite=True, method='sum'):
-    raise NotImplementedError()
-
-  def add_edges(self, from_idx, to_idx, weight=None, symmetric=False):
-    raise NotImplementedError()
-
-  def reweight(self, new_weights, edge_inds=None):
+  def add_edges(self, from_idx, to_idx, weight=1, symmetric=False, copy=False):
     raise NotImplementedError()
 
   def copy(self):
@@ -44,6 +38,19 @@ class Graph(AnalysisMixin, EmbedMixin, VizMixin):
 
   def is_directed(self):
     return True
+
+  def add_self_edges(self, weight=None, copy=False):
+    '''Adds all i->i edges. weight may be a scalar or 1d array.'''
+    ii = np.arange(self.num_vertices())
+    return self.add_edges(ii, ii, weight=weight, symmetric=False, copy=copy)
+
+  def reweight(self, weight, edges=None, copy=False):
+    '''Replaces existing edge weights. weight may be a scalar or 1d array.
+    edges is a mask or index array that specifies a subset of edges to modify'''
+    P = self.pairs()
+    if edges is not None:
+      P = P[edges]
+    return self.add_edges(*P.T, weight=weight, symmetric=False, copy=copy)
 
   def adj_list(self):
     '''Generates a sequence of lists of neighbor indices:

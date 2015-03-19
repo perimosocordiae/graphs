@@ -51,21 +51,10 @@ class EdgePairGraph(Graph):
   def num_vertices(self):
     return self._num_vertices
 
-  def add_self_edges(self, weight=None):
-    '''Adds all i->i edges, in-place.'''
-    if weight is not None:
-      warnings.warn('Cannot supply weights for unweighted graph; '
-                    'ignoring weight argument')
-    row,col = self._pairs.T
-    diag_inds = row[np.equal(row,col)]
-    to_add = np.arange(self._num_vertices)
-    to_add = np.setdiff1d(to_add, diag_inds, assume_unique=True)
-    if len(to_add) > 0:
-      self._pairs = np.vstack((self._pairs, np.tile(to_add, (2,1)).T))
-    return self
-
-  def add_edges(self, from_idx, to_idx, weight=None, symmetric=False):
-    '''Adds all from->to edges, in-place.'''
+  def add_edges(self, from_idx, to_idx,
+                weight=None, symmetric=False, copy=False):
+    '''Adds all from->to edges.
+    If symmetric=True, also adds to->from edges as well.'''
     if weight is not None:
       warnings.warn('Cannot supply weights for unweighted graph; '
                     'ignoring weight argument')
@@ -81,24 +70,25 @@ class EdgePairGraph(Graph):
       mask[idx] = True
       flat_add = flat_add[mask]
     to_add = to_add[np.in1d(flat_add, flat_inds, invert=True)]
+    res = self.copy() if copy else self
     if len(to_add) > 0:
-      self._pairs = np.vstack((self._pairs, to_add))
+      res._pairs = np.vstack((self._pairs, to_add))
+    return res
+
+  def reweight(self, weight, edges=None, copy=False):
+    warnings.warn('Cannot supply weights for unweighted graph; '
+                  'ignoring call to reweight')
     return self
 
-  def symmetrize(self, overwrite=True, method=None):
-    '''Symmetrizes (ignores method). Returns a copy if overwrite=False.'''
-    if not overwrite:
+  def symmetrize(self, method=None, copy=False):
+    '''Symmetrizes (ignores method). Returns a copy if copy=True.'''
+    if copy:
       return SymmEdgePairGraph(self._pairs.copy(),
                                num_vertices=self._num_vertices)
     shape = (self._num_vertices, self._num_vertices)
     flat_inds = np.union1d(np.ravel_multi_index(self._pairs.T, shape),
                            np.ravel_multi_index(self._pairs.T[::-1], shape))
     self._pairs = np.transpose(np.unravel_index(flat_inds, shape))
-    return self
-
-  def reweight(self, new_weights, edge_inds=None):
-    warnings.warn('Cannot supply weights for unweighted graph; '
-                  'ignoring call to reweight')
     return self
 
 
@@ -127,8 +117,8 @@ class SymmEdgePairGraph(EdgePairGraph):
                              num_vertices=self._num_vertices,
                              ensure_format=False)
 
-  def symmetrize(self, overwrite=True, method=None):
-    if overwrite:
+  def symmetrize(self, method=None, copy=False):
+    if not copy:
       return self
     return SymmEdgePairGraph(self._pairs, num_vertices=self._num_vertices,
                              ensure_format=False)
