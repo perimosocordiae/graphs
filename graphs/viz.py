@@ -128,9 +128,10 @@ def _undirected_edges(G, X, ax, is_3d, edge_style, cmap):
 
 
 def _get_axis(is_3d, fig):
-  if is_3d:
+  if fig is None:
+    fig = pyplot.gcf()
+  # Only make a new Axes3D if we need to.
+  if is_3d and not (fig.axes and hasattr(fig.gca(), 'zaxis')):
     from mpl_toolkits.mplot3d import Axes3D
-    if fig is None:
-      fig = pyplot.gcf()
     return Axes3D(fig)
-  return pyplot.gca()
+  return fig.gca()
