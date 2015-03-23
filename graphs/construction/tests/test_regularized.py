@@ -32,6 +32,22 @@ class TestRegularized(unittest.TestCase):
     G = sparse_regularized_graph(self.pts, alpha=0.005)
     assert_array_almost_equal(G.matrix(dense=True), expected, decimal=3)
 
+  def test_L1_knn_graph(self):
+    expected = [
+        [0,    0.286,0.352,0.362,0,    0,    0,    0,    0,    0],
+        [0.637,0,    0.209,0,    0.153,0,    0,    0,    0,    0],
+        [0.446,0.133,0,    0,    0.421,0,    0,    0,    0,    0],
+        [0.493,0,    0,    0,    0.507,0,    0,    0,    0,    0],
+        [0,    0,    0.535,0.465,0,    0,    0,    0,    0,    0],
+        [0,    0,    0,    0,    0,    0,    0.924,0,    0.076,0],
+        [0,    0,    0,    0,    0,    0.603,0,    0,    0.136,0.261],
+        [0,    0,    0,    0,    0,    0,    0,    0,    0.454,0.546],
+        [0,    0,    0,    0,    0,    0.138,0.520,0,    0,    0.343],
+        [0,    0,    0,    0,    0,    0,    0.441,0.395,0.164,0]
+    ]
+    G = sparse_regularized_graph(self.pts, alpha=0.005, k=3)
+    assert_array_almost_equal(G.matrix(dense=True), expected, decimal=3)
+
   def test_L1_graph_cv(self):
     expected = [
         [0,    0.231,0.372,0.397,0,    0,    0,    0,    0,    0],
