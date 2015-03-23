@@ -14,10 +14,9 @@ class EmbedMixin(object):
     kpca = KernelPCA(n_components=num_vecs, kernel='precomputed')
     return kpca.fit_transform(W)
 
-  def laplacian_eigenmaps(self, num_vecs=None, return_vals=False,
-                          val_thresh=1e-8):
+  def laplacian_eigenmaps(self, num_vecs=None, val_thresh=1e-8):
     L = self.laplacian(normed=True)
-    return _null_space(L, num_vecs, return_vals, val_thresh, overwrite=True)
+    return _null_space(L, num_vecs, val_thresh, overwrite=True)
 
   def locality_preserving_projections(self, coordinates, num_vecs=None):
     X = np.atleast_2d(coordinates)  # n x d
@@ -143,8 +142,7 @@ class EmbedMixin(object):
     return X
 
 
-def _null_space(X, num_vecs=None, return_vals=False, val_thresh=1e-8,
-                overwrite=False):
+def _null_space(X, num_vecs=None, val_thresh=1e-8, overwrite=False):
   if issparse(X):
     # This is a bit of a hack. Make sure we end up with enough eigenvectors.
     k = X.shape[0] - 1 if num_vecs is None else num_vecs + 1
@@ -166,10 +164,7 @@ def _null_space(X, num_vecs=None, return_vals=False, val_thresh=1e-8,
   if num_vecs is None:
     # take all of them
     num_vecs = vals.shape[0] - i
-  embedding = vecs[:,i:i+num_vecs]
-  if return_vals:
-    return embedding, vals[i:i+num_vecs]
-  return embedding
+  return vecs[:,i:i+num_vecs]
 
 
 def _bounded_norm(X, min_length):

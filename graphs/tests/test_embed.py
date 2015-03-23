@@ -35,10 +35,9 @@ class TestEmbeddings(unittest.TestCase):
     Y = G.laplacian_eigenmaps()
     self.assertEqual(Y.shape, (5, 4))
     assert_array_almost_equal(Y[:,0], expected)
-    # Test sparse case + return_vals
+    # Test sparse case
     G = Graph.from_adj_matrix(csr_matrix(W))
-    Y, vals = G.laplacian_eigenmaps(num_vecs=1, return_vals=True)
-    assert_array_almost_equal(vals, [0.292893])
+    Y = G.laplacian_eigenmaps(num_vecs=1)
     self.assertEqual(Y.shape, (5, 1))
     assert_array_almost_equal(Y[:,0], expected)
 
