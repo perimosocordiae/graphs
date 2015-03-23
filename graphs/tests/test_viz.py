@@ -44,26 +44,27 @@ class TestPlot(unittest.TestCase):
       G.plot(self.coords, weighted=False)
 
   def test_plot_styles(self):
+    x = self.coords[:,:2]  # use 2d coords, 3d _get_axis is slow
     for G in self.graphs:
-      G.plot(self.coords, edge_style='r--')
-      G.plot(self.coords, edge_style=dict(colors=range(4), linestyles=':'))
-      G.plot(self.coords, vertex_style='rx')
-      G.plot(self.coords, vertex_style=dict(c=[(0,0,0),(1,1,1)], marker='o'))
-      G.plot(self.coords, edge_style='k')
-      G.plot(self.coords, edge_style='1')
-      G.plot(self.coords, edge_style='01')
-      G.plot(self.coords, edge_style=' x')
-      G.plot(self.coords, edge_style='-.')
-      G.plot(self.coords, edge_style='k-')
+      G.plot(x, edge_style='r--')
+      G.plot(x, edge_style=dict(colors=range(4), linestyles=':'))
+      G.plot(x, vertex_style='rx')
+      G.plot(x, vertex_style=dict(c=[(0,0,0),(1,1,1)], marker='o'))
+      G.plot(x, edge_style='k')
+      G.plot(x, edge_style='1')
+      G.plot(x, edge_style='01')
+      G.plot(x, edge_style=' x')
+      G.plot(x, edge_style='-.')
+      G.plot(x, edge_style='k-')
       # Make sure we break with bogus styles
       with self.assertRaises(ValueError):
-        G.plot(self.coords, edge_style='5')
+        G.plot(x, edge_style='5')
       with self.assertRaises(ValueError):
-        G.plot(self.coords, edge_style='::')
+        G.plot(x, edge_style='::')
       with self.assertRaises(ValueError):
-        G.plot(self.coords, edge_style='oo')
+        G.plot(x, edge_style='oo')
       with self.assertRaises(ValueError):
-        G.plot(self.coords, edge_style='kk')
+        G.plot(x, edge_style='kk')
 
 
 if __name__ == '__main__':
