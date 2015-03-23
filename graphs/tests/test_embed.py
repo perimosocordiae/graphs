@@ -6,7 +6,9 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from scipy.sparse import csr_matrix
 from sklearn.decomposition import PCA
+from sklearn.manifold import locally_linear_embedding
 from graphs import Graph
+from graphs.construction import neighbor_graph
 
 
 class TestEmbeddings(unittest.TestCase):
@@ -54,6 +56,22 @@ class TestEmbeddings(unittest.TestCase):
     G = Graph.from_adj_matrix(G.matrix()[:3,:3])
     proj = G.locality_preserving_projections(X, num_vecs=1)
     assert_array_almost_equal(proj, np.array([[0.9854859,0.1697574,0,0]]).T)
+
+  def test_locally_linear_embedding(self):
+    np.random.seed(1234)
+    pts = np.random.random((5, 3))
+    expected = locally_linear_embedding(pts, 3, 1)[0]
+    G = neighbor_graph(pts, k=3).barycenter_edge_weights(pts, copy=False)
+    actual = G.locally_linear_embedding(num_vecs=1)
+    assert_array_almost_equal(expected, actual)
+
+  def test_neighborhood_preserving_embedding(self):
+    np.random.seed(1234)
+    pts = np.random.random((5, 3))
+    expected = [[-0.433578], [0.761129], [-0.482382]]
+    G = neighbor_graph(pts, k=3)
+    actual = G.neighborhood_preserving_embedding(pts, num_vecs=1)
+    assert_array_almost_equal(expected, actual)
 
   def test_laplacian_pca(self):
     X = np.array([[1,2],[2,1],[3,1.5],[4,0.5],[5,1]])

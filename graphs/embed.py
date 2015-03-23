@@ -2,7 +2,7 @@ import numpy as np
 import warnings
 from scipy.sparse import issparse
 from scipy.sparse.linalg import eigsh
-from scipy.linalg import eigh
+from scipy.linalg import eig, eigh, solve
 from sklearn.decomposition import KernelPCA
 
 
@@ -17,7 +17,7 @@ class EmbedMixin(object):
   def laplacian_eigenmaps(self, num_vecs=None, return_vals=False,
                           val_thresh=1e-8):
     L = self.laplacian(normed=True)
-    return _lapeig(L, num_vecs, return_vals, val_thresh)
+    return _null_space(L, num_vecs, return_vals, val_thresh, overwrite=True)
 
   def locality_preserving_projections(self, coordinates, num_vecs=None):
     X = np.atleast_2d(coordinates)  # n x d
@@ -30,7 +30,51 @@ class EmbedMixin(object):
     else:  # optimized order: (FX')L(XF')
       T = Fplus.dot(X.T).dot(L).dot(X.dot(Fplus.T))
     L = 0.5*(T+T.T)
-    return _lapeig(L, num_vecs, False, 1e-8)
+    return _null_space(L, num_vecs=num_vecs, overwrite=True)
+
+  def barycenter_edge_weights(self, X, copy=True, reg=1e-3):
+    new_weights = []
+    for i, adj in enumerate(self.adj_list()):
+      C = X[adj] - X[i]
+      G = C.dot(C.T)
+      trace = np.trace(G)
+      r = reg * trace if trace > 0 else reg
+      G.flat[::G.shape[1] + 1] += r
+      w = solve(G, np.ones(G.shape[0]), sym_pos=True,
+                overwrite_a=True, overwrite_b=True)
+      w /= w.sum()
+      new_weights.extend(w.tolist())
+    return self.reweight(new_weights, copy=copy)
+
+  def locally_linear_embedding(self, num_vecs=None):
+    '''LLE algorithm for an existing weighted graph.
+    Note: may need to call barycenter_edge_weights() before this!
+    '''
+    W = self.matrix()
+    # compute M = (I-W)'(I-W)
+    M = W.T.dot(W) - W.T - W
+    if issparse(M):
+      M = M.toarray()
+    M.flat[::M.shape[0] + 1] += 1
+    return _null_space(M, num_vecs=num_vecs, overwrite=True)
+
+  def neighborhood_preserving_embedding(self, X, num_vecs=None, reweight=True):
+    '''NPE algorithm. (Linearized LLE)'''
+    if reweight:
+      W = self.barycenter_edge_weights(X).matrix()
+    else:
+      W = self.matrix()
+    # compute M = (I-W)'(I-W) as in LLE
+    M = W.T.dot(W) - W.T - W
+    if issparse(M):
+      M = M.toarray()
+    M.flat[::M.shape[0] + 1] += 1
+    # solve generalized eig problem: X'MXa = \lambda X'Xa
+    vals, vecs = eig(X.T.dot(M).dot(X), X.T.dot(X), overwrite_a=True,
+                     overwrite_b=True)
+    if num_vecs is None:
+      return vecs
+    return vecs[:,:num_vecs]
 
   def laplacian_pca(self, coordinates, num_vecs=None, beta=0.5):
     '''Graph-Laplacian PCA (CVPR 2013).
@@ -99,19 +143,21 @@ class EmbedMixin(object):
     return X
 
 
-def _lapeig(L, num_vecs, return_vals, val_thresh):
-  if issparse(L):
+def _null_space(X, num_vecs=None, return_vals=False, val_thresh=1e-8,
+                overwrite=False):
+  if issparse(X):
     # This is a bit of a hack. Make sure we end up with enough eigenvectors.
-    k = L.shape[0] - 1 if num_vecs is None else num_vecs + 1
+    k = X.shape[0] - 1 if num_vecs is None else num_vecs + 1
     try:
       # TODO: try using shift-invert mode (sigma=0?) for speed here.
-      vals,vecs = eigsh(L, k, which='SM')
+      vals,vecs = eigsh(X, k, which='SM')
     except:
       warnings.warn('Sparse eigsh failed, falling back to dense version')
-      vals,vecs = eigh(L.A, overwrite_a=True)
-  else:
-    vals,vecs = eigh(L, overwrite_a=True)
-  # vals not guaranteed to be in sorted order
+      X = X.toarray()
+      overwrite = True
+  if not issparse(X):
+    vals,vecs = eigh(X, overwrite_a=overwrite)
+  # vals are not guaranteed to be in sorted order
   idx = np.argsort(vals)
   vecs = vecs.real[:,idx]
   vals = vals.real[idx]
