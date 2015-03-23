@@ -12,10 +12,27 @@ from graphs.construction import sparse_regularized_graph
 
 
 class TestRegularized(unittest.TestCase):
-
-  def test_sparse_regularized_graph(self):
+  def setUp(self):
     np.random.seed(1234)
-    pts = _gaussian_clusters(2, 5, 20)
+    self.pts = _gaussian_clusters(2, 5, 20)
+
+  def test_L1_graph(self):
+    expected = [
+        [0,    0.286,0.352,0.362,0,    0,    0,    0,    0,    0],
+        [0.637,0,    0.209,0,    0.153,0,    0,    0,    0,    0],
+        [0.446,0.133,0,    0,    0.421,0,    0,    0,    0,    0],
+        [0.493,0,    0,    0,    0.507,0,    0,    0,    0,    0],
+        [0,    0.062,0.493,0.444,0,    0,    0,    0,    0,    0],
+        [0,    0,    0,    0,    0,    0,    0.906,0.055,0.039,0],
+        [0,    0,    0,    0,    0,    0.603,0,    0,    0.136,0.261],
+        [0,    0,    0,    0,    0,    0.172,0,    0,    0.332,0.496],
+        [0,    0,    0,    0,    0,    0.007,0.576,0.278,0,    0.139],
+        [0,    0,    0,    0,    0,    0,    0.441,0.395,0.164,0]
+    ]
+    G = sparse_regularized_graph(self.pts, alpha=0.005)
+    assert_array_almost_equal(G.matrix(dense=True), expected, decimal=3)
+
+  def test_L1_graph_cv(self):
     expected = [
         [0,    0.231,0.372,0.397,0,    0,    0,    0,    0,    0],
         [0.670,0,    0.205,0,    0.124,0,    0,    0,    0,    0],
@@ -30,9 +47,26 @@ class TestRegularized(unittest.TestCase):
     ]
     with warnings.catch_warnings():
       warnings.filterwarnings('ignore', category=ConvergenceWarning)
-      G = sparse_regularized_graph(pts)
+      G = sparse_regularized_graph(self.pts)
     assert_array_almost_equal(G.matrix(dense=True), expected, decimal=3)
 
+  def test_SPD_graph(self):
+    expected = [
+        [0,    0.216,0.380,0.404,0,    0,    0,    0,    0,    0],
+        [0.676,0,    0.123,0,    0.202,0,    0,    0,    0,    0],
+        [0.377,0.140,0,    0,    0.483,0,    0,    0,    0,    0],
+        [0.506,0,    0,    0,    0.441,0,    0,    0,    0.053,0],
+        [0.017,0.065,0.454,0.464,0,    0,    0,    0,    0,    0],
+        [0,    0,    0,    0,    0,    0,    0.907,0.093,0,    0],
+        [0,    0,    0,    0,    0,    0.575,0,    0,    0.117,0.308],
+        [0,    0,    0,    0,    0,    0.295,0,    0,    0.319,0.386],
+        [0,    0,    0,    0,    0,    0.010,0.599,0.274,0,    0.117],
+        [0,    0,    0,    0,    0,    0,    0.440,0.386,0.174,0]
+    ]
+    G = sparse_regularized_graph(self.pts, positive=True, alpha=0.002)
+    assert_array_almost_equal(G.matrix(dense=True), expected, decimal=3)
+
+  def test_SPD_graph_cv(self):
     expected = [
         [0,    0.230,0.380,0.390,0,    0,    0,    0,    0,    0],
         [0.603,0,    0.209,0,    0.188,0,    0,    0,    0,    0],
@@ -45,9 +79,8 @@ class TestRegularized(unittest.TestCase):
         [0,    0,    0,    0,    0,    0.052,0.541,0.254,0,    0.153],
         [0,    0,    0,    0,    0,    0,    0.458,0.408,0.134,0]
     ]
-    G = sparse_regularized_graph(pts, positive=True)
-    adj = G.matrix(dense=True)
-    assert_array_almost_equal(adj, expected, decimal=3)
+    G = sparse_regularized_graph(self.pts, positive=True)
+    assert_array_almost_equal(G.matrix(dense=True), expected, decimal=3)
 
 
 def _gaussian_clusters(num_clusters, pts_per_cluster, dim):
