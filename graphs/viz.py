@@ -7,7 +7,7 @@ from mpl_toolkits.mplot3d.art3d import Line3DCollection
 
 class VizMixin(object):
 
-  def plot(self, coordinates, directed=None, weighted=None, fig=None,
+  def plot(self, coordinates, directed=None, weighted=None, fig='current',
            ax=None, edge_style=None, vertex_style=None, title=None, cmap=None):
     '''Plot the graph using matplotlib in 2 or 3 dimensions.
     coordinates : (n,2) or (n,3) array of vertex coordinates
@@ -15,7 +15,8 @@ class VizMixin(object):
                 the result of self.is_directed()
     weighted : if True, edges are colored by their weight. Defaults to the
                 result of self.is_weighted()
-    fig : a matplotlib Figure to use. Defaults to gcf()
+    fig : a matplotlib Figure to use, or one of {new,current}. Defaults to
+          'current', which will call gcf(). Only used when ax=None.
     ax : a matplotlib Axes to use. Defaults to gca()
     edge_style : string or dict of styles for edges. Defaults to 'b-'
     vertex_style : string or dict of styles for vertices. Defaults to 'ko'
@@ -128,8 +129,10 @@ def _undirected_edges(G, X, ax, is_3d, edge_style, cmap):
 
 
 def _get_axis(is_3d, fig):
-  if fig is None:
+  if fig is 'current':
     fig = pyplot.gcf()
+  elif fig is 'new':
+    fig = pyplot.figure()
   # Only make a new Axes3D if we need to.
   if is_3d and not (fig.axes and hasattr(fig.gca(), 'zaxis')):
     from mpl_toolkits.mplot3d import Axes3D
