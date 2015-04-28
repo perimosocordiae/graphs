@@ -49,7 +49,7 @@ class TestSymmEdgePairGraph(unittest.TestCase):
 
   def test_copy(self):
     gg = self.G.copy()
-    self.assertIsNot(gg, self.G)
+    self.assertFalse(gg is self.G)
     assert_array_equal(gg.matrix(dense=True), self.G.matrix(dense=True))
     assert_array_equal(gg.pairs(), self.G.pairs())
 
@@ -59,9 +59,9 @@ class TestSymmEdgePairGraph(unittest.TestCase):
     assert_array_equal(sorted(P.tolist()), expected)
 
   def test_symmetrize(self):
-    self.assertIs(self.G.symmetrize(copy=False), self.G)
+    self.assertTrue(self.G.symmetrize(copy=False) is self.G)
     S = self.G.symmetrize(copy=True)
-    self.assertIsNot(S, self.G)
+    self.assertFalse(S is self.G)
     assert_array_equal(S.matrix(dense=True), self.G.matrix(dense=True))
 
 if __name__ == '__main__':

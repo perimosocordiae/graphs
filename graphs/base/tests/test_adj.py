@@ -37,13 +37,13 @@ class TestAdjacencyMatrixGraphs(unittest.TestCase):
     assert_array_equal(M, ADJ)
     M2 = self.G.matrix(dense=True, copy=True)
     assert_array_equal(M, M2)
-    self.assertIsNot(M, M2)
+    self.assertFalse(M is M2)
     # Sparse case
     M = self.S.matrix(csr=True, copy=False)
     assert_array_equal(M.toarray(), ADJ)
     M2 = self.S.matrix(csr=True, copy=True)
     assert_array_equal(M.toarray(), M2.toarray())
-    self.assertIsNot(M, M2)
+    self.assertFalse(M is M2)
 
 if __name__ == '__main__':
   unittest.main()

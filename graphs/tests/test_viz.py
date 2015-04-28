@@ -56,14 +56,10 @@ class TestPlot(unittest.TestCase):
       G.plot(x, edge_style='-.')
       G.plot(x, edge_style='k-')
       # Make sure we break with bogus styles
-      with self.assertRaises(ValueError):
-        G.plot(x, edge_style='5')
-      with self.assertRaises(ValueError):
-        G.plot(x, edge_style='::')
-      with self.assertRaises(ValueError):
-        G.plot(x, edge_style='oo')
-      with self.assertRaises(ValueError):
-        G.plot(x, edge_style='kk')
+      self.assertRaises(ValueError, G.plot, x, edge_style='5')
+      self.assertRaises(ValueError, G.plot, x, edge_style='::')
+      self.assertRaises(ValueError, G.plot, x, edge_style='oo')
+      self.assertRaises(ValueError, G.plot, x, edge_style='kk')
 
 
 if __name__ == '__main__':
