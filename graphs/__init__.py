@@ -9,8 +9,9 @@ Graphs: a library for efficiently manipulating graphs.
 To create a Graph object, use the static constructors:
  `Graph.from_adj_matrix` or `Graph.from_edge_pairs`.
 '''
+from __future__ import absolute_import
 
-from base import Graph
-import reorder
-import construction
-import generators
+from .base import Graph
+from . import construction
+from . import generators
+from . import reorder
