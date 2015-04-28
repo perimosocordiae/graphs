@@ -76,7 +76,6 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
       self._adj.eliminate_zeros()
 
   def matrix(self, copy=False, **kwargs):
-    assert ss.issparse(self._adj), 'SparseAdjacencyMatrixGraph must be sparse'
     if not kwargs or self._adj.format in kwargs:
       if copy:
         return self._adj.copy()
