@@ -5,6 +5,12 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.sparse import coo_matrix
 from graphs import Graph
 
+try:
+  import igraph
+  HAS_IGRAPH = True
+except ImportError:
+  HAS_IGRAPH = False
+
 PAIRS = np.array([[0,1],[0,2],[1,2],[2,0],[3,4],[4,3]])
 ADJ = [[0,1,1,0,0],
        [0,0,1,0,0],
@@ -62,6 +68,7 @@ class TestAnalysis(unittest.TestCase):
     for G in self.graphs:
       self.assertEqual(G.profile(), 1)
 
+  @unittest.skipIf(not HAS_IGRAPH, 'betweenness requires igraph dependency')
   def test_betweenness(self):
     for G in self.graphs:
       assert_array_equal(G.betweenness(kind='vertex'), [1,0,1,0,0])
