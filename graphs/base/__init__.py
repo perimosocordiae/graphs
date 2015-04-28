@@ -9,8 +9,12 @@ __all__ = ['Graph']
 
 
 def from_edge_pairs(pairs, num_vertices=None, symmetric=False, weights=None):
+  '''Constructor for Graph objects based on edges given as pairs of vertices.
+  pairs : integer array-like with shape (num_edges, 2)
+  '''
   if symmetric:
-    assert weights is None, 'symmetric+weighted from_edge_pairs is NYI'
+    if weights is not None:
+      raise NotImplementedError('symmetric+weighted from_edge_pairs is NYI')
     return SymmEdgePairGraph(pairs, num_vertices=num_vertices)
   G = EdgePairGraph(pairs, num_vertices=num_vertices)
   if weights is None:
@@ -24,8 +28,10 @@ def from_edge_pairs(pairs, num_vertices=None, symmetric=False, weights=None):
   return SparseAdjacencyMatrixGraph(s)
 
 
-def from_adj_matrix(adj, weighted=True):
-  assert weighted, 'Unweighted adj-matrix graphs are NYI'
+def from_adj_matrix(adj):
+  '''Constructor for Graph objects based on a given adjacency matrix.
+  adj : scipy.sparse matrix or array-like, shape (num_vertices, num_vertices)
+  '''
   if ss.issparse(adj):
     return SparseAdjacencyMatrixGraph(adj)
   return DenseAdjacencyMatrixGraph(adj)
