@@ -9,16 +9,19 @@ from sklearn.decomposition import KernelPCA
 class EmbedMixin(object):
 
   def isomap(self, num_vecs=None, directed=True):
+    '''Isomap embedding.'''
     directed = directed and self.is_directed()
     W = -0.5 * self.shortest_path(directed=directed) ** 2
     kpca = KernelPCA(n_components=num_vecs, kernel='precomputed')
     return kpca.fit_transform(W)
 
   def laplacian_eigenmaps(self, num_vecs=None, val_thresh=1e-8):
+    '''Laplacian Eigenmaps embedding.'''
     L = self.laplacian(normed=True)
     return _null_space(L, num_vecs, val_thresh, overwrite=True)
 
   def locality_preserving_projections(self, coordinates, num_vecs=None):
+    '''Locality Preserving Projections (LPP, linearized Laplacian Eigenmaps).'''
     X = np.atleast_2d(coordinates)  # n x d
     L = self.laplacian(normed=True)  # n x n
     u,s,_ = np.linalg.svd(X.T.dot(X))
@@ -32,6 +35,10 @@ class EmbedMixin(object):
     return _null_space(L, num_vecs=num_vecs, overwrite=True)
 
   def barycenter_edge_weights(self, X, copy=True, reg=1e-3):
+    '''Re-weight such that the sum of each vertex's edge weights is 1.
+    The resulting weighted graph is suitable for locally linear embedding.
+    reg : amount of regularization to keep the problem well-posed
+    '''
     new_weights = []
     for i, adj in enumerate(self.adj_list()):
       C = X[adj] - X[i]
@@ -46,7 +53,7 @@ class EmbedMixin(object):
     return self.reweight(new_weights, copy=copy)
 
   def locally_linear_embedding(self, num_vecs=None):
-    '''LLE algorithm for an existing weighted graph.
+    '''Locally Linear Embedding (LLE).
     Note: may need to call barycenter_edge_weights() before this!
     '''
     W = self.matrix()
@@ -58,7 +65,7 @@ class EmbedMixin(object):
     return _null_space(M, num_vecs=num_vecs, overwrite=True)
 
   def neighborhood_preserving_embedding(self, X, num_vecs=None, reweight=True):
-    '''NPE algorithm. (Linearized LLE)'''
+    '''Neighborhood Preserving Embedding (NPE, linearized LLE).'''
     if reweight:
       W = self.barycenter_edge_weights(X).matrix()
     else:
@@ -90,29 +97,30 @@ class EmbedMixin(object):
     return X.T.dot(vecs).dot(vecs.T).T
 
   def layout_circle(self):
+    '''Position vertices evenly around a circle.'''
     n = self.num_vertices()
     t = np.linspace(0, 2*np.pi, n+1)[:n]
     return np.column_stack((np.cos(t), np.sin(t)))
 
   def layout_spring(self, num_dims=2, spring_constant=None, iterations=50,
                     initial_temp=0.1, initial_layout=None):
-    """Position nodes using Fruchterman-Reingold force-directed algorithm.
+    '''Position vertices using the Fruchterman-Reingold (spring) algorithm.
 
     spring_constant : float (default=None)
        Optimal distance between nodes.  If None the distance is set to
        1/sqrt(n) where n is the number of nodes.  Increase this value
        to move nodes farther apart.
 
-    iterations : int  optional (default=50)
+    iterations : int (default=50)
        Number of iterations of spring-force relaxation
 
     initial_temp : float (default=0.1)
        Largest step-size allowed in the dynamics, decays linearly.
        Must be positive, should probably be less than 1.
 
-    initial_layout : array-like of shape (n,num_dims)
-       If provided, serves as initial placement of vertex coordinates.
-    """
+    initial_layout : array-like of shape (n, num_dims)
+       If provided, serves as the initial placement of vertex coordinates.
+    '''
     if initial_layout is None:
       X = np.random.random((self.num_vertices(), num_dims))
     else:

@@ -1,13 +1,3 @@
-from collections import deque
-import numpy as np
-import scipy.sparse.csgraph as ssc
-from graphs import Graph
-
-__all__ = [
-    'permute_graph', 'cuthill_mckee', 'node_centroid_hill_climbing',
-    'laplacian_reordering'
-]
-
 '''Sparse symmetric matrix reordering to reduce bandwidth/diagonalness.
 Methods:
  - cuthill_mckee
@@ -19,9 +9,21 @@ References:
  - https://www.cs.purdue.edu/homes/apothen/env3.pdf (laplacian, NYI sloan alg)
 '''
 
+from collections import deque
+import numpy as np
+import scipy.sparse.csgraph as ssc
+from graphs import Graph
+
+__all__ = [
+    'permute_graph', 'cuthill_mckee', 'node_centroid_hill_climbing',
+    'laplacian_reordering'
+]
+
 
 def permute_graph(G, order):
-  """Reorder the graph's vertices by order. Returns a copy."""
+  '''Reorder the graph's vertices, returning a copy of the input graph.
+  order : integer array-like, some permutation of range(G.num_vertices()).
+  '''
   adj = G.matrix(dense=True)
   adj = adj[np.ix_(order, order)]
   return Graph.from_adj_matrix(adj)
@@ -55,8 +57,12 @@ if hasattr(ssc, 'reverse_cuthill_mckee'):  # pragma: no cover
 else:  # pragma: no cover
   cuthill_mckee = _cuthill_mckee
 
+cuthill_mckee.__doc__ = 'Reorder vertices using the Cuthill-McKee algorithm.'
+
 
 def laplacian_reordering(G):
+  '''Reorder vertices using the eigenvector of the graph Laplacian corresponding
+  to the first positive eigenvalue.'''
   L = G.laplacian()
   vals, vecs = np.linalg.eigh(L)
   min_positive_idx = np.argmax(vals == vals[vals>0].min())
@@ -65,21 +71,23 @@ def laplacian_reordering(G):
 
 
 def node_centroid_hill_climbing(G, relax=1, num_centerings=20, verbose=False):
+  '''Iterative reordering method based on alternating rounds of node-centering
+  and hill-climbing search.'''
   # Initialize order with BFS from a random start node.
-  order = breadth_first_order(G)
+  order = _breadth_first_order(G)
   for it in xrange(num_centerings):
     B = permute_graph(G, order).bandwidth()
-    nc_order = node_center(G, order, relax=relax)
+    nc_order = _node_center(G, order, relax=relax)
     nc_B = permute_graph(G, nc_order).bandwidth()
     if nc_B < B:
       if verbose:  # pragma: no cover
         print 'post-center', B, nc_B
       order = nc_order
-    order = hill_climbing(G, order, verbose=verbose)
+    order = _hill_climbing(G, order, verbose=verbose)
   return permute_graph(G, order)
 
 
-def breadth_first_order(G):
+def _breadth_first_order(G):
   inds = np.arange(G.num_vertices())
   adj = G.matrix(dense=True, csr=True)
   total_order = []
@@ -91,7 +99,7 @@ def breadth_first_order(G):
   return total_order.astype(int)
 
 
-def critical_vertices(G, order, relax=1, bw=None):
+def _critical_vertices(G, order, relax=1, bw=None):
   go = permute_graph(G, order)
   if bw is None:
     bw = go.bandwidth()
@@ -106,11 +114,11 @@ def critical_vertices(G, order, relax=1, bw=None):
         yield u, v
 
 
-def node_center(G, order, relax=0.99):
+def _node_center(G, order, relax=0.99):
   weights = order.copy().astype(float)
   counts = np.ones_like(order)
   inv_order = np.argsort(order)
-  for i, j in critical_vertices(G, order, relax):
+  for i, j in _critical_vertices(G, order, relax):
     u = inv_order[i]
     v = inv_order[j]
     weights[u] += j  # order[v]
@@ -121,11 +129,11 @@ def node_center(G, order, relax=0.99):
   return np.argsort(weights)
 
 
-def hill_climbing(G, order, verbose=False):
+def _hill_climbing(G, order, verbose=False):
   B = permute_graph(G, order).bandwidth()
   while True:
     inv_order = np.argsort(order)
-    for i, j in critical_vertices(G, order, bw=B):
+    for i, j in _critical_vertices(G, order, bw=B):
       u = inv_order[i]
       v = inv_order[j]
       for w,k in enumerate(order):
@@ -145,8 +153,8 @@ def hill_climbing(G, order, verbose=False):
           B = new_B
           break
         elif new_B == B:
-          nc = sum(1 for _ in critical_vertices(G, order, bw=B))
-          new_nc = sum(1 for _ in critical_vertices(G, new_order, bw=B))
+          nc = sum(1 for _ in _critical_vertices(G, order, bw=B))
+          new_nc = sum(1 for _ in _critical_vertices(G, new_order, bw=B))
           if new_nc < nc:
             order = new_order
             if verbose:  # pragma: no cover
