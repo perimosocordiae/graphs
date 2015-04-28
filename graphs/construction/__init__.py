@@ -21,3 +21,4 @@ from msg import *
 from neighbors import *
 from regularized import *
 from spanning_tree import *
+from rand import *
