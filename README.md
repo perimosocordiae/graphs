@@ -1,5 +1,8 @@
 # Graphs
 
+[![PyPI version](https://badge.fury.io/py/graphs.svg)](http://badge.fury.io/py/graphs)
+[![Build Status](https://travis-ci.org/all-umass/graphs.svg?branch=master)](https://travis-ci.org/all-umass/graphs)
+
 A library for Graph-Based Learning in Python.
 
 Provides several types of graphs container objects,
