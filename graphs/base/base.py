@@ -34,9 +34,11 @@ class Graph(AnalysisMixin, EmbedMixin, VizMixin):
     raise NotImplementedError()
 
   def is_weighted(self):
+    '''Returns True if edges have associated weights.'''
     return False
 
   def is_directed(self):
+    '''Returns True if edges *may be* non-symmetric.'''
     return True
 
   def add_self_edges(self, weight=None, copy=False):
@@ -59,10 +61,14 @@ class Graph(AnalysisMixin, EmbedMixin, VizMixin):
     for row in adj:
       yield row.nonzero()[-1]
 
-  def degree(self, kind='out', unweighted=False):
+  def degree(self, kind='out', weighted=True):
+    '''Returns an array of vertex degrees.
+    kind : either 'in' or 'out', useful for directed graphs
+    weighted : controls whether to count edges or sum their weights
+    '''
     axis = 1 if kind == 'out' else 0
     adj = self.matrix(dense=True, csr=1-axis, csc=axis)
-    if unweighted and self.is_weighted():
+    if not weighted and self.is_weighted():
       # With recent numpy and a dense matrix, could do:
       # d = np.count_nonzero(adj, axis=axis)
       d = (adj!=0).sum(axis=axis)

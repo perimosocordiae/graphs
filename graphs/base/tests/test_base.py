@@ -43,14 +43,14 @@ class TestGenericMembers(unittest.TestCase):
 
   def test_degree(self):
     for G in self.graphs:
-      in_degree = G.degree('in', unweighted=True)
-      out_degree = G.degree('out', unweighted=True)
+      in_degree = G.degree('in', weighted=False)
+      out_degree = G.degree('out', weighted=False)
       assert_array_equal(in_degree, [0, 3, 1, 1])
       assert_array_equal(out_degree, [2, 1, 1, 1])
 
   def test_degree_weighted(self):
-    in_degree = self.weighted.degree(kind='in', unweighted=False)
-    out_degree = self.weighted.degree(kind='out', unweighted=False)
+    in_degree = self.weighted.degree(kind='in', weighted=True)
+    out_degree = self.weighted.degree(kind='out', weighted=True)
     assert_array_equal(in_degree, [0, 3, 2, 3])
     assert_array_equal(out_degree, [3, 1, 1, 3])
 
