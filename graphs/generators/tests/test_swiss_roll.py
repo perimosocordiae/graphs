@@ -1,6 +1,3 @@
-import matplotlib
-matplotlib.use('template')
-
 import numpy as np
 import unittest
 

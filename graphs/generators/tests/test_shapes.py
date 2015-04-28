@@ -1,6 +1,3 @@
-import matplotlib
-matplotlib.use('template')
-
 import unittest
 
 from graphs.generators import shapes

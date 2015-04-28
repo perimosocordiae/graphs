@@ -1,6 +1,3 @@
-import matplotlib
-matplotlib.use('template')
-
 import numpy as np
 np.set_printoptions(suppress=True, precision=3)
 import unittest

@@ -1,8 +1,7 @@
-import matplotlib
-matplotlib.use('template')
-
 import numpy as np
 import unittest
+from matplotlib import pyplot
+pyplot.switch_backend('template')
 
 from graphs import Graph
 from graphs.generators import mountain_car as mcar

@@ -1,9 +1,8 @@
-import matplotlib
-matplotlib.use('template')
-
 import unittest
 import numpy as np
 from scipy.sparse import csr_matrix
+from matplotlib import pyplot
+pyplot.switch_backend('template')
 
 from graphs import Graph
 
