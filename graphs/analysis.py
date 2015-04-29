@@ -29,7 +29,6 @@ class AnalysisMixin(object):
     '''
     # ssc.shortest_path requires one of these formats:
     adj = self.matrix(dense=True, lil=True, csr=True, csc=True)
-    print('Trying shortest_path', type(adj), kwargs)
     return ssc.shortest_path(adj, **kwargs)
 
   def greedy_coloring(self):

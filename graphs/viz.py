@@ -1,6 +1,4 @@
 import numpy as np
-import matplotlib
-matplotlib.use('template')
 from matplotlib import pyplot
 from matplotlib.axes import mlines, mcolors
 from matplotlib.collections import LineCollection
