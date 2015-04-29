@@ -1,9 +1,11 @@
+from __future__ import absolute_import
+
 import numpy as np
 import scipy.sparse as ss
 
-from adj import SparseAdjacencyMatrixGraph, DenseAdjacencyMatrixGraph
-from base import Graph
-from pairs import EdgePairGraph, SymmEdgePairGraph
+from .adj import SparseAdjacencyMatrixGraph, DenseAdjacencyMatrixGraph
+from .base import Graph
+from .pairs import EdgePairGraph, SymmEdgePairGraph
 
 __all__ = ['Graph']
 

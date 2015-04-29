@@ -1,5 +1,7 @@
+from __future__ import absolute_import
+
 import numpy as np
-from neighbors import nearest_neighbors
+from .neighbors import nearest_neighbors
 
 __all__ = ['downsample', 'downsample_trajectories']
 

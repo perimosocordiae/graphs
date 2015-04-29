@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import numpy as np
 from scipy.sparse import issparse
 from scipy.sparse.csgraph import dijkstra
@@ -5,7 +7,7 @@ from sklearn.decomposition import PCA
 from sklearn.metrics.pairwise import pairwise_distances
 from graphs import Graph
 
-from neighbors import neighbor_graph, nearest_neighbors
+from .neighbors import neighbor_graph, nearest_neighbors
 
 __all__ = ['manifold_spanning_graph']
 

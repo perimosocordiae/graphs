@@ -1,8 +1,10 @@
+from __future__ import absolute_import
+
 import numpy as np
 import scipy.sparse as ss
 from sklearn import linear_model
 from graphs import Graph
-from graphs.construction.neighbors import nearest_neighbors
+from .neighbors import nearest_neighbors
 
 __all__ = ['sparse_regularized_graph']
 

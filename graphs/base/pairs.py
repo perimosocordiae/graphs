@@ -1,8 +1,10 @@
+from __future__ import absolute_import
+
 import numpy as np
 import scipy.sparse as ss
 import warnings
 
-from base import Graph
+from .base import Graph
 
 
 class EdgePairGraph(Graph):

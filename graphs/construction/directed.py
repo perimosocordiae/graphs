@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+
 import numpy as np
 from sklearn.metrics.pairwise import paired_distances
 from graphs import Graph
-from neighbors import neighbor_graph
+from .neighbors import neighbor_graph
 
 __all__ = ['directed_graph']
 
