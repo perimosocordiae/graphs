@@ -34,7 +34,7 @@ class TestBMatching(unittest.TestCase):
     with warnings.catch_warnings(record=True) as w:
       b_matching(self.dists, 2, max_iter=2)
       self.assertEqual(len(w), 1)
-      self.assertEqual(w[0].message.message,
+      self.assertEqual(str(w[0].message),
                        'Hit iteration limit (2) before converging')
 
   def test_oscillation(self):

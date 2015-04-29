@@ -33,7 +33,8 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
       return self._adj
     if 'csr' in kwargs:
       return ss.csr_matrix(self._adj)
-    raise NotImplementedError('Unknown matrix type(s): %s' % kwargs.keys())
+    raise NotImplementedError('Unknown matrix type(s): %s' % (
+                              tuple(kwargs.keys()),))
 
   def edge_weights(self, copy=False):
     ii,jj = self.pairs().T
@@ -87,7 +88,8 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
         return getattr(self._adj, 'to'+fmt)()
     if 'dense' in kwargs:
       return self._adj.toarray()
-    raise NotImplementedError('Unknown matrix type(s): %s' % kwargs.keys())
+    raise NotImplementedError('Unknown matrix type(s): %s' % (
+                              tuple(kwargs.keys()),))
 
   def edge_weights(self, copy=False):
     W = self._adj.data.ravel()  # assumes correct internal ordering

@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics.pairwise import pairwise_distances
@@ -8,6 +10,7 @@ except ImportError:
   argpartsort = lambda arr, k: np.argpartition(arr, k-1)
 
 from graphs import Graph
+from ..mini_six import range
 
 __all__ = ['neighbor_graph', 'nearest_neighbors']
 
@@ -90,7 +93,7 @@ def _slow_neighbor_graph(X, precomputed, k, epsilon, weighting):
       dist[np.arange(dist.shape[0]), not_nn.T] = np.inf
     dist[dist>epsilon] = 0  # zero out neighbors too far away
   else:
-    for i in xrange(num_pts):
+    for i in range(num_pts):
       dist[i,not_nn[i]] = 0  # zero out neighbors too far away
 
   if weighting is 'binary':

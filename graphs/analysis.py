@@ -1,8 +1,9 @@
-from __future__ import division
+from __future__ import division, absolute_import, print_function
 from itertools import count
 import numpy as np
 import scipy.sparse.csgraph as ssc
 import warnings
+from .mini_six import range
 
 
 class AnalysisMixin(object):
@@ -28,6 +29,7 @@ class AnalysisMixin(object):
     '''
     # ssc.shortest_path requires one of these formats:
     adj = self.matrix(dense=True, lil=True, csr=True, csc=True)
+    print('Trying shortest_path', type(adj), kwargs)
     return ssc.shortest_path(adj, **kwargs)
 
   def greedy_coloring(self):
@@ -76,7 +78,7 @@ class AnalysisMixin(object):
     # start at the uniform distribution Perron vector (phi)
     old_phi = np.ones(n) / n
     # iterate to the fixed point (teleporting random walk)
-    for _ in xrange(max_iter):
+    for _ in range(max_iter):
       phi = eta * old_phi.dot(P) + (1-eta)/n
       if np.abs(phi - old_phi).max() < tol:
         break

@@ -10,7 +10,7 @@ def downsample_trajectories(trajectories, close_distance):
   '''Downsamples all the points together,
      then re-splits into original trajectories.'''
   X = np.vstack(trajectories)
-  traj_lengths = map(len, trajectories)
+  traj_lengths = list(map(len, trajectories))
   inds = np.sort(downsample(X, close_distance))
   new_traj = []
   for stop in np.cumsum(traj_lengths):

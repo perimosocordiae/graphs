@@ -1,7 +1,10 @@
+from __future__ import absolute_import
+
 import numpy as np
 from scipy.sparse.csgraph import minimum_spanning_tree
 from sklearn.metrics.pairwise import pairwise_distances
 from graphs import Graph
+from ..mini_six import range
 
 __all__ = ['mst', 'perturbed_mst', 'disjoint_mst']
 
@@ -24,7 +27,7 @@ def perturbed_mst(X, num_perturbations=20, metric='euclidean', jitter=None):
   W = minimum_spanning_tree(D)
   W = W + W.T
   W.data[:] = 1.0  # binarize
-  for i in xrange(num_perturbations):
+  for i in range(num_perturbations):
     pX = X + np.random.normal(scale=jitter, size=X.shape)
     pW = minimum_spanning_tree(pairwise_distances(pX, metric=metric))
     pW = pW + pW.T
@@ -42,7 +45,7 @@ def disjoint_mst(X, num_spanning_trees=3, metric='euclidean'):
   D = _pdist(X, metric)
   mst = minimum_spanning_tree(D)
   W = mst.copy()
-  for i in xrange(1, num_spanning_trees):
+  for i in range(1, num_spanning_trees):
     ii,jj = mst.nonzero()
     D[ii,jj] = np.inf
     D[jj,ii] = np.inf

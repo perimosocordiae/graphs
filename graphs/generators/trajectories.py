@@ -6,7 +6,7 @@ __all__ = ['chunk_up', 'concat_trajectories']
 
 def chunk_up(trajectories, chunk_size=None, directed=False):
   if chunk_size is None:
-    chunk_lengths = map(len, trajectories)
+    chunk_lengths = list(map(len, trajectories))
   else:
     chunk_lengths = []
     for t in trajectories:

@@ -42,7 +42,8 @@ class EdgePairGraph(Graph):
       return M.tocsr()
     if 'dense' in kwargs:
       return M.toarray()
-    raise NotImplementedError('Unknown matrix type(s): %s' % kwargs.keys())
+    raise NotImplementedError('Unknown matrix type(s): %s' % (
+                              tuple(kwargs.keys()),))
 
   def copy(self):
     return EdgePairGraph(self._pairs.copy(), num_vertices=self._num_vertices)

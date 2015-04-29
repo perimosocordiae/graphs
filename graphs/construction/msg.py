@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import numpy as np
 from scipy.sparse import issparse
@@ -7,6 +7,7 @@ from sklearn.decomposition import PCA
 from sklearn.metrics.pairwise import pairwise_distances
 from graphs import Graph
 
+from ..mini_six import range
 from .neighbors import neighbor_graph, nearest_neighbors
 
 __all__ = ['manifold_spanning_graph']
@@ -27,10 +28,10 @@ def manifold_spanning_graph(X, embed_dim, num_ccs=1, verbose=False):
                   min_shortcircuit=embed_dim+1, verbose=verbose)
   else:
     n, labels = G.connected_components(return_labels=True)
-    for i in xrange(n):
+    for i in range(n):
       mask = labels==i
       if verbose:  # pragma: no cover
-        print 'CC', i, 'has size', np.count_nonzero(mask)
+        print('CC', i, 'has size', np.count_nonzero(mask))
       idx = np.ix_(mask, mask)
       _, tmp_labels = np.unique(CC_labels[mask], return_inverse=True)
       adj[idx] = flesh_out(X[mask], adj[idx], embed_dim, tmp_labels,
@@ -63,7 +64,7 @@ def flesh_out(X, W, embed_dim, CC_labels, dist_mult=2.0, angle_thresh=0.2,
   candidate_edges = ~W & dist_mask & hops_mask & CC_mask
   candidate_points, = np.where(np.any(candidate_edges, axis=0))
   if verbose:  # pragma: no cover
-    print 'before F: %d potentials' % candidate_edges.sum()
+    print('before F:', candidate_edges.sum(), 'potentials')
 
   # calc subspaces
   subspaces, _ = cluster_subspaces(X, embed_dim, CC_labels.max()+1, CC_labels)
@@ -80,7 +81,7 @@ def flesh_out(X, W, embed_dim, CC_labels, dist_mult=2.0, angle_thresh=0.2,
   edge_ii = ii[mask]
   edge_jj = jj[mask]
   if verbose:  # pragma: no cover
-    print 'got %d potential edges' % len(edge_ii)
+    print('got', len(edge_ii), 'potential edges')
   # Prevent any one node from getting a really high degree
   degree = W.sum(axis=0)
   sorted_edges = np.hstack((edge_ii[:,None], edge_jj[:,None])
@@ -107,7 +108,7 @@ def grow_trees(X, G, embed_dim, verbose=False):
     meta_edge_lengths = Dcenter[ninds[:,0],ninds[:,1]]
     dist_thresh = max(dist_thresh, np.max(meta_edge_lengths))
     if verbose:  # pragma: no cover
-      print n, 'CCs. dist thresh:', dist_thresh
+      print(n, 'CCs. dist thresh:', dist_thresh)
     # modify G to connect edges between nearby CCs
     G, num_added = _connect_meta_edges(X, G, None, labels, ninds,
                                        dist_thresh=dist_thresh)[:2]
@@ -131,13 +132,13 @@ def join_CCs(X, G, embed_dim, num_ccs=1, max_angle=0.3, verbose=False):
     meta_edge_lengths = Dcenter[ninds[:,0],ninds[:,1]]
     dist_thresh = np.median(meta_edge_lengths)
     if verbose:  # pragma: no cover
-      print n, 'CCs'
+      print(n, 'CCs')
     # convert ninds to CC_ninds (back to the CC_labels space, via W-space)
     CC_ninds = CC_labels[min_edge_idxs[ninds[:,0],ninds[:,1]]]
     # modify G to connect edges between nearby CCs
     while True:
       if verbose:  # pragma: no cover
-        print 'DT:', dist_thresh, 'AT:', angle_thresh
+        print('DT:', dist_thresh, 'AT:', angle_thresh)
       G, num_added, minD, minF = _connect_meta_edges(
           X, G, CC_planes, CC_labels, CC_ninds,
           dist_thresh=dist_thresh, angle_thresh=angle_thresh)
@@ -150,7 +151,7 @@ def join_CCs(X, G, embed_dim, num_ccs=1, max_angle=0.3, verbose=False):
           max_angle += 0.1  # XXX: hack
           angle_thresh = min(minF, max_angle)
           if verbose:  # pragma: no cover
-            print 'Increasing max_angle to', max_angle
+            print('Increasing max_angle to', max_angle)
         else:
           dist_thresh = minD
       else:
@@ -241,7 +242,7 @@ def edge_cluster_angle(edge_dirs, subspaces1, subspaces2):
 def cluster_subspaces(X, subspace_dim, num_clusters, cluster_labels):
   means = np.empty((num_clusters, X.shape[1]))
   subspaces = np.empty((num_clusters, X.shape[1], subspace_dim))
-  for i in xrange(num_clusters):
+  for i in range(num_clusters):
     CC = X[cluster_labels==i]
     means[i] = CC.mean(axis=0)
     pca = PCA(n_components=subspace_dim).fit(CC)
@@ -257,10 +258,10 @@ def _inter_cluster_distance(X, num_clusters, cluster_labels):
   index_array = np.arange(X.shape[0])
   masks = cluster_labels == np.arange(num_clusters)[:,None]
   indices = [index_array[m] for m in masks]
-  for i in xrange(num_clusters-1):
+  for i in range(num_clusters-1):
     inds = indices[i]
     dists = Dx[masks[i]].T
-    for j in xrange(i+1, num_clusters):
+    for j in range(i+1, num_clusters):
       m2 = masks[j]
       d = dists[m2].T
       min_idx = np.argmin(d)

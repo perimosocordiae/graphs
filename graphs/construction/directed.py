@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import numpy as np
 from sklearn.metrics.pairwise import paired_distances
@@ -30,16 +30,17 @@ def _prune_edges(G, X, traj_lengths, pruning_thresh=0.1, verbose=False):
   i = 0
   num_bad = 0
   for n in traj_lengths:
-    s,t = np.nonzero(W[i:i+n-1])
+    s, t = np.nonzero(W[i:i+n-1])
     graph_edges = X[t] - X[s+i]
     traj_edges = np.diff(X[i:i+n], axis=0)
     traj_edges = np.repeat(traj_edges, degree[i:i+n-1], axis=0)
     theta = paired_distances(graph_edges, traj_edges, 'cosine')
     bad_edges = theta > pruning_thresh
-    W[s[bad_edges],t[bad_edges]] = 0
+    s, t = s[bad_edges], t[bad_edges]
     if verbose:  # pragma: no cover
-      num_bad += np.count_nonzero(bad_edges)
+      num_bad += np.count_nonzero(W[s,t])
+    W[s,t] = 0
     i += n
   if verbose:  # pragma: no cover
-    print 'removed %d bad edges' % num_bad
+    print('removed %d bad edges' % num_bad)
   return Graph.from_adj_matrix(W)

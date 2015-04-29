@@ -5,7 +5,7 @@ __all__ = ['MobiusStrip', 'FigureEight', 'SCurve']
 
 class ParameterizedShape(object):
   def __init__(self, **param_info):
-    for name,(lb,ub,is_monotone) in param_info.iteritems():
+    for name,(lb,ub,is_monotone) in param_info.items():
       assert lb <= ub, 'Lower bound must be <= upper bound for %s' % name
       assert (bool(is_monotone) == is_monotone
               ), 'monoticity must be boolean for %s' % name
@@ -16,7 +16,7 @@ class ParameterizedShape(object):
 
   def point_cloud(self, num_points):
     param_values = {}
-    for name,(lb,ub,is_monotone) in self.param_info.iteritems():
+    for name,(lb,ub,is_monotone) in self.param_info.items():
       if is_monotone:
         vals = np.linspace(lb, ub, num_points)
       else:
@@ -26,7 +26,7 @@ class ParameterizedShape(object):
 
   def trajectories(self, num_traj, points_per_traj):
     param_values = {}
-    for name,(lb,ub,is_monotone) in self.param_info.iteritems():
+    for name,(lb,ub,is_monotone) in self.param_info.items():
       step = float(ub-lb)/points_per_traj
       shape = (num_traj, points_per_traj)
       if is_monotone:

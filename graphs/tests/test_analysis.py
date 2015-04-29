@@ -57,7 +57,7 @@ class TestAnalysis(unittest.TestCase):
     with warnings.catch_warnings(record=True) as w:
       self.graphs[0].directed_laplacian(max_iter=2)
       self.assertEqual(len(w), 1)
-      self.assertEqual(w[0].message.message,
+      self.assertEqual(str(w[0].message),
                        'phi failed to converge after 2 iterations')
 
   def test_bandwidth(self):

@@ -8,11 +8,12 @@ References:
  - http://www.jstor.org/stable/2156090 (profile defn, NYI RCM improvements)
  - https://www.cs.purdue.edu/homes/apothen/env3.pdf (laplacian, NYI sloan alg)
 '''
-
+from __future__ import absolute_import, print_function
 from collections import deque
 import numpy as np
 import scipy.sparse.csgraph as ssc
 from graphs import Graph
+from .mini_six import range
 
 __all__ = [
     'permute_graph', 'cuthill_mckee', 'node_centroid_hill_climbing',
@@ -75,13 +76,13 @@ def node_centroid_hill_climbing(G, relax=1, num_centerings=20, verbose=False):
   and hill-climbing search.'''
   # Initialize order with BFS from a random start node.
   order = _breadth_first_order(G)
-  for it in xrange(num_centerings):
+  for it in range(num_centerings):
     B = permute_graph(G, order).bandwidth()
     nc_order = _node_center(G, order, relax=relax)
     nc_B = permute_graph(G, nc_order).bandwidth()
     if nc_B < B:
       if verbose:  # pragma: no cover
-        print 'post-center', B, nc_B
+        print('post-center', B, nc_B)
       order = nc_order
     order = _hill_climbing(G, order, verbose=verbose)
   return permute_graph(G, order)
@@ -149,7 +150,7 @@ def _hill_climbing(G, order, verbose=False):
         if new_B < B:
           order = new_order
           if verbose:  # pragma: no cover
-            print 'improved B', B, new_B
+            print('improved B', B, new_B)
           B = new_B
           break
         elif new_B == B:
@@ -158,7 +159,7 @@ def _hill_climbing(G, order, verbose=False):
           if new_nc < nc:
             order = new_order
             if verbose:  # pragma: no cover
-              print 'improved nc', nc, new_nc
+              print('improved nc', nc, new_nc)
             break
       else:
         continue

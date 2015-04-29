@@ -1,8 +1,11 @@
+from __future__ import absolute_import
+
 import numpy as np
 from scipy.spatial import Delaunay
 from scipy.sparse import coo_matrix
 from sklearn.metrics.pairwise import pairwise_distances, paired_distances
 from graphs import Graph
+from ..mini_six import range
 
 __all__ = ['delaunay_graph', 'gabriel_graph', 'relative_neighborhood_graph']
 
@@ -44,7 +47,7 @@ def relative_neighborhood_graph(X, metric='euclidean'):
   pairs = []
   for pair in zip(a,b):
     d = D[pair]
-    for i in xrange(n):
+    for i in range(n):
       if i in pair:
         continue
       if (D[pair,i] < d).all():

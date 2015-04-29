@@ -1,6 +1,8 @@
+from __future__ import absolute_import, print_function
 import numpy as np
 import warnings
 from graphs import Graph
+from ..mini_six import range
 
 __all__ = ['b_matching']
 
@@ -41,7 +43,7 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
   # Run Belief Revision
   change = 1.0
   B = W.copy()
-  for n_iter in xrange(1, max_iter+1):
+  for n_iter in range(1, max_iter+1):
     oldB = B.copy()
     updateB(oldB, B, W, degrees, damping, inds, backinds)
 
@@ -69,11 +71,11 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
 
   if verbose:  # pragma: no cover
     if change < conv_thresh:
-      print "Converged to stable beliefs in %d iterations" % n_iter
+      print("Converged to stable beliefs in %d iterations" % n_iter)
     elif oscillation < 1:
-      print "Stopped after reaching oscillation in %d iterations" % n_iter
-      print "No feasible solution found or there are multiple maxima."
-      print "Outputting best approximate solution. Try damping."
+      print("Stopped after reaching oscillation in %d iterations" % n_iter)
+      print("No feasible solution found or there are multiple maxima.")
+      print("Outputting best approximate solution. Try damping.")
 
   # recover result from B
   thresholds = np.zeros(N)
@@ -102,7 +104,7 @@ def _update_change(B, oldB):  # pragma: no cover
   change = 0
   rowsums[rowsums==0] = 1
   oldrowsums[oldrowsums==0] = 1
-  for i in xrange(B.shape[0]):
+  for i in range(B.shape[0]):
     row = expB[i]
     oldrow = expOldB[i]
     rmask = row == 0

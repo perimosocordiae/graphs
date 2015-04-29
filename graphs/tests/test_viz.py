@@ -46,7 +46,7 @@ class TestPlot(unittest.TestCase):
     x = self.coords[:,:2]  # use 2d coords, 3d _get_axis is slow
     for G in self.graphs:
       G.plot(x, edge_style='r--')
-      G.plot(x, edge_style=dict(colors=range(4), linestyles=':'))
+      G.plot(x, edge_style=dict(colors=[0,1,2,3], linestyles=':'))
       G.plot(x, vertex_style='rx')
       G.plot(x, vertex_style=dict(c=[(0,0,0),(1,1,1)], marker='o'))
       G.plot(x, edge_style='k')

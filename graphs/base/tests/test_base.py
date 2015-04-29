@@ -81,7 +81,7 @@ class TestGenericMembers(unittest.TestCase):
     with warnings.catch_warnings(record=True) as w:
       self.graphs[0].add_self_edges(weight=3)
       self.assertEqual(len(w), 1)
-      self.assertIn('ignoring weight argument', w[0].message.message)
+      self.assertIn('ignoring weight argument', str(w[0].message))
 
   def test_add_self_edges_weighted(self):
     wg = [G for G in self.graphs if G.is_weighted()]
@@ -245,7 +245,7 @@ class TestGenericMembers(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
           G.reweight(new_weights)
           self.assertEqual(len(w), 1)
-          self.assertIn('ignoring call to reweight', w[0].message.message)
+          self.assertIn('ignoring call to reweight', str(w[0].message))
 
   def test_reweight_partial(self):
     wg = [G for G in self.graphs if G.is_weighted()]
