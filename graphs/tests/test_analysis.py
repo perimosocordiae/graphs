@@ -68,7 +68,7 @@ class TestAnalysis(unittest.TestCase):
     for G in self.graphs:
       self.assertEqual(G.profile(), 1)
 
-  @unittest.skipIf(not HAS_IGRAPH, 'betweenness requires igraph dependency')
+  @unittest.skipUnless(HAS_IGRAPH, 'requires igraph dependency')
   def test_betweenness(self):
     for G in self.graphs:
       assert_array_equal(G.betweenness(kind='vertex'), [1,0,1,0,0])

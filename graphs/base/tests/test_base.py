@@ -8,6 +8,18 @@ from graphs.base import (
     EdgePairGraph, DenseAdjacencyMatrixGraph, SparseAdjacencyMatrixGraph
 )
 
+try:
+  import igraph
+  HAS_IGRAPH = True
+except ImportError:
+  HAS_IGRAPH = False
+
+try:
+  import graph_tool
+  HAS_GRAPHTOOL = True
+except ImportError:
+  HAS_GRAPHTOOL = False
+
 PAIRS = np.array([[0,1],[0,2],[1,1],[2,1],[3,3]])
 ADJ = [[0,1,1,0],
        [0,1,0,0],
@@ -196,23 +208,19 @@ class TestGenericMembers(unittest.TestCase):
       self.assertEqual(G.num_edges(), 9, msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
 
+  @unittest.skipUnless(HAS_IGRAPH, 'requires igraph dependency')
   def test_to_igraph(self):
-    try:
-      for G in self.graphs + [self.weighted]:
-        ig = G.to_igraph()
-        if G.is_weighted():
-          adj = ig.get_adjacency(attribute='weight')
-        else:
-          adj = ig.get_adjacency()
-        assert_array_equal(G.matrix(dense=True), adj.data)
-    except ImportError:
-      return  # Skip this test.
+    for G in self.graphs + [self.weighted]:
+      ig = G.to_igraph()
+      if G.is_weighted():
+        adj = ig.get_adjacency(attribute='weight')
+      else:
+        adj = ig.get_adjacency()
+      assert_array_equal(G.matrix(dense=True), adj.data)
 
+  @unittest.skipUnless(HAS_GRAPHTOOL, 'requires graph_tool dependency')
   def test_to_graph_tool(self):
-    try:
-      from graph_tool.spectral import adjacency
-    except ImportError:
-      return  # Skip this test.
+    from graph_tool.spectral import adjacency
     for G in self.graphs + [self.weighted]:
       gt = G.to_graph_tool()
       if G.is_weighted():
