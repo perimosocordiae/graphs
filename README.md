@@ -2,6 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/graphs.svg)](http://badge.fury.io/py/graphs)
 [![Build Status](https://travis-ci.org/all-umass/graphs.svg?branch=master)](https://travis-ci.org/all-umass/graphs)
+[![Coverage Status](https://coveralls.io/repos/all-umass/graphs/badge.svg?branch=master&service=github)](https://coveralls.io/github/all-umass/graphs?branch=master)
 
 A library for Graph-Based Learning in Python.
 
