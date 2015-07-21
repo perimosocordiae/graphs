@@ -1,4 +1,5 @@
 from __future__ import division, absolute_import, print_function
+from collections import defaultdict
 from itertools import count
 import numpy as np
 import scipy.sparse.csgraph as ssc
@@ -99,20 +100,30 @@ class AnalysisMixin(object):
   def betweenness(self, kind='vertex', directed=None, weighted=None):
     '''Computes the betweenness centrality of a graph.
     kind : string, either 'vertex' (default) or 'edge'
+    directed : bool, defaults to self.is_directed()
+    weighted : bool, defaults to self.is_weighted()
 
-    NOTE: Current implementation relies on an optional dependency: igraph
+    Note: When igraph is available, its implementation will be used for speed.
     '''
     assert kind in ('vertex', 'edge'), 'Invalid kind argument: ' + kind
-    if weighted is not False and self.is_weighted():
-      w = self.edge_weights()
-    else:
-      w = None
-    ig = self.to_igraph()
+    weighted = weighted is not False and self.is_weighted():
     d = directed if directed is not None else self.is_directed()
-    if kind == 'vertex':
-      btw = ig.betweenness(weights=w, directed=d)
+    try:
+      ig = self.to_igraph()
+    except ImportError:
+      # igraph is not available, fall back to slower version
+      dist, pred = self.shortest_path(directed=d, unweighted=(not weighted),
+                                      return_predecessors=True)
+      if kind == 'vertex':
+        btw = _vertex_betweenness(dist, pred)
+      else:
+        btw = _edge_betweenness(dist, pred)
     else:
-      btw = ig.edge_betweenness(weights=w, directed=d)
+      w = self.edge_weights() if weighted else None
+      if kind == 'vertex':
+        btw = ig.betweenness(weights=w, directed=d)
+      else:
+        btw = ig.edge_betweenness(weights=w, directed=d)
     return np.array(btw)
 
   def eccentricity(self, directed=None, weighted=None):
@@ -130,3 +141,26 @@ class AnalysisMixin(object):
   def radius(self, directed=None, weighted=None):
     '''minimum graph eccentricity'''
     return self.eccentricity(directed, weighted).min()
+
+
+def _vertex_betweenness(dist, pred):
+  btw = np.zeros(dist.shape[0])
+  ii, jj = np.nonzero((~np.isinf(dist)) & (dist > 0))
+  for i,j in zip(ii, jj):
+    v = pred[i, j]
+    while v != i:
+      btw[v] += 1
+      v = pred[i, v]
+  return btw
+
+
+def _edge_betweenness(dist, pred):
+  btw = defaultdict(int)
+  ii, jj = np.nonzero((~np.isinf(dist)) & (dist > 0))
+  for i,j in zip(ii, jj):
+    edge = (pred[i, j], j)
+    while edge[0] != i:
+      btw[edge] += 1
+      edge = (pred[i, edge[0]], edge[0])
+    btw[edge] += 1
+  return [btw[k] for k in sorted(btw.keys())]
