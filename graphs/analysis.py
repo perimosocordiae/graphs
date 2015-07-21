@@ -106,7 +106,7 @@ class AnalysisMixin(object):
     Note: When igraph is available, its implementation will be used for speed.
     '''
     assert kind in ('vertex', 'edge'), 'Invalid kind argument: ' + kind
-    weighted = weighted is not False and self.is_weighted():
+    weighted = weighted is not False and self.is_weighted()
     d = directed if directed is not None else self.is_directed()
     try:
       ig = self.to_igraph()
