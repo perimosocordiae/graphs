@@ -13,13 +13,13 @@ class EdgePairGraph(Graph):
     # Handle empty-input case
     if self._pairs.size == 0:
       self._pairs.shape = (0, 2)
-      self._pairs.dtype = int
+      self._pairs = self._pairs.astype(np.intp, copy=False)
       self._num_vertices = num_vertices if num_vertices is not None else 0
       return
     # Validate shape and dtype
     assert self._pairs.shape[1] == 2
-    if not np.can_cast(self._pairs, int, casting='same_kind'):
-      self._pairs = self._pairs.astype(int)
+    if not np.can_cast(self._pairs, np.intp, casting='same_kind'):
+      self._pairs = self._pairs.astype(np.intp)
     # Set self._num_vertices
     if num_vertices is not None:
       self._num_vertices = num_vertices
@@ -34,7 +34,7 @@ class EdgePairGraph(Graph):
   def matrix(self, copy=False, **kwargs):
     n = self._num_vertices
     row,col = self.pairs().T
-    data = np.ones(len(row), dtype=int)
+    data = np.ones(len(row), dtype=np.intp)
     M = ss.coo_matrix((data, (row,col)), shape=(n,n))
     if not kwargs:
       return M
