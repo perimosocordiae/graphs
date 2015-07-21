@@ -18,6 +18,11 @@ Requires recent versions of:
   * scikit-learn
   * matplotlib
 
+Optional dependencies:
+
+  * python-igraph
+  * graphtool
+
 Testing requires:
 
   * nose
