@@ -113,9 +113,9 @@ def _sparse_neighbor_graph(X, k, binary=False):
   '''Construct a sparse adj matrix from a matrix of points (one per row).
   Non-zeros are unweighted/binary distance values, depending on the binary arg.
   Doesn't include self-edges.'''
-  knn = NearestNeighbors(n_neighbors=k+1).fit(X)
+  knn = NearestNeighbors(n_neighbors=k).fit(X)
   if binary:
-    adj = knn.kneighbors_graph(X)
+    adj = knn.kneighbors_graph(X, n_neighbors=k+1, mode='connectivity')
     adj.setdiag(0)
   else:
     adj = knn.kneighbors_graph(X, mode='distance')
