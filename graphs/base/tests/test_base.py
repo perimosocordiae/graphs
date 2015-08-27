@@ -75,7 +75,7 @@ class TestGenericMembers(unittest.TestCase):
     for G in self.graphs:
       gg = G.add_self_edges()
       self.assertIs(gg, G)
-      self.assertEqual(G.num_edges(), 7)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected))
       assert_array_equal(G.matrix(dense=True), expected,
                          'unweighted (%s)' % type(G))
     with warnings.catch_warnings(record=True) as w:
@@ -89,14 +89,14 @@ class TestGenericMembers(unittest.TestCase):
     np.fill_diagonal(expected, 0.5)
     for G in wg:
       G.add_self_edges(weight=0.5)
-      self.assertEqual(G.num_edges(), 7)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected))
       assert_array_equal(G.matrix(dense=True), expected,
                          'weighted (%s)' % type(G))
     # zeros case
     np.fill_diagonal(expected, 0)
     for G in wg:
       G.add_self_edges(weight=0)
-      self.assertEqual(G.num_edges(), 3)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected))
       assert_array_equal(G.matrix(dense=True), expected,
                          'weighted (%s)' % type(G))
 
@@ -134,14 +134,14 @@ class TestGenericMembers(unittest.TestCase):
 
   def test_add_edges_unweighted(self):
     expected = np.array(ADJ)
-    from_idx = [0,3,2]
+    from_idx = [2,3,0]
     to_idx = [2,2,2]
     expected[from_idx,to_idx] = 1
     for G in self.graphs:
       msg = 'unweighted (%s)' % type(G)
       gg = G.add_edges(from_idx, to_idx)
       self.assertIs(gg, G)
-      self.assertEqual(G.num_edges(), 7, msg)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
     # symmetric version
     expected[to_idx,from_idx] = 1
@@ -149,20 +149,20 @@ class TestGenericMembers(unittest.TestCase):
       msg = 'unweighted symmetric (%s)' % type(G)
       gg = G.add_edges(from_idx, to_idx, symmetric=True)
       self.assertIs(gg, G)
-      self.assertEqual(G.num_edges(), 9, msg)
-      assert_array_equal(G.matrix(dense=True), expected, msg)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected))
+      assert_array_equal(G.matrix(dense=True), expected)
 
   def test_add_edges_weighted(self):
     wg = [G for G in self.graphs if G.is_weighted()]
     expected = np.array(ADJ, dtype=float)
-    from_idx = [0,3,2]
+    from_idx = [2,3,0]
     to_idx = [2,2,2]
     expected[from_idx,to_idx] = 1
     for G in wg:
       msg = 'weighted (%s)' % type(G)
       gg = G.add_edges(from_idx, to_idx, weight=1)
       self.assertIs(gg, G)
-      self.assertEqual(G.num_edges(), 7, msg)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
     # symmetric version
     expected[to_idx,from_idx] = 1
@@ -170,34 +170,34 @@ class TestGenericMembers(unittest.TestCase):
       msg = 'weighted symmetric (%s)' % type(G)
       gg = G.add_edges(from_idx, to_idx, weight=1, symmetric=True)
       self.assertIs(gg, G)
-      self.assertEqual(G.num_edges(), 9, msg)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
 
   def test_add_edges_zeros(self):
     wg = [G for G in self.graphs if G.is_weighted()]
     expected = np.array(ADJ, dtype=float)
-    from_idx = [0,3,2]
+    from_idx = [2,3,0]
     to_idx = [2,2,2]
     expected[from_idx,to_idx] = 0
     for G in wg:
       msg = 'zero-weight (%s)' % type(G)
       gg = G.add_edges(from_idx, to_idx, weight=0)
       self.assertIs(gg, G)
-      self.assertEqual(G.num_edges(), 4, msg)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
 
   def test_add_edges_array_weighted(self):
     wg = [G for G in self.graphs if G.is_weighted()]
     weights = np.linspace(1, 9, 3)
     expected = np.array(ADJ, dtype=float)
-    from_idx = [0,3,2]
+    from_idx = [2,3,0]
     to_idx = [2,2,2]
     expected[from_idx,to_idx] = weights
     for G in wg:
       msg = 'array-weighted (%s)' % type(G)
       gg = G.add_edges(from_idx, to_idx, weight=weights)
       self.assertIs(gg, G)
-      self.assertEqual(G.num_edges(), 7, msg)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
     # symmetric version
     expected[to_idx,from_idx] = weights
@@ -205,7 +205,7 @@ class TestGenericMembers(unittest.TestCase):
       msg = 'array-weighted symmetric (%s)' % type(G)
       gg = G.add_edges(from_idx, to_idx, weight=weights, symmetric=True)
       self.assertIs(gg, G)
-      self.assertEqual(G.num_edges(), 9, msg)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
 
   @unittest.skipUnless(HAS_IGRAPH, 'requires igraph dependency')
@@ -239,7 +239,7 @@ class TestGenericMembers(unittest.TestCase):
         msg = 'reweight (%s)' % type(G)
         gg = G.reweight(new_weights)
         self.assertIs(gg, G)
-        self.assertEqual(G.num_edges(), 5, msg)
+        self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
         assert_array_equal(G.matrix(dense=True), expected, msg)
       else:
         with warnings.catch_warnings(record=True) as w:
@@ -258,7 +258,7 @@ class TestGenericMembers(unittest.TestCase):
       msg = 'reweight partial (%s)' % type(G)
       gg = G.reweight(new_weights, new_weight_inds)
       self.assertIs(gg, G)
-      self.assertEqual(G.num_edges(), 5, msg)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
 
 if __name__ == '__main__':

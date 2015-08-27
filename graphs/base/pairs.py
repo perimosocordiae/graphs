@@ -63,16 +63,16 @@ class EdgePairGraph(Graph):
                     'ignoring weight argument')
     to_add = np.column_stack((from_idx, to_idx))
     if symmetric:
-      to_add = np.vstack((to_add, np.column_stack((to_idx, from_idx))))
+      # add reversed edges, excluding diagonals
+      diag_mask = np.not_equal(*to_add.T)
+      rev = to_add[diag_mask,::-1]
+      to_add = np.vstack((to_add, rev))
+    # select only those edges that are not already present
     flattener = (self._num_vertices, 1)
     flat_inds = self._pairs.dot(flattener)
     flat_add = to_add.dot(flattener)
-    if symmetric:
-      _, idx = np.unique(flat_add, return_index=True)
-      mask = np.zeros_like(flat_add, dtype=bool)
-      mask[idx] = True
-      flat_add = flat_add[mask]
     to_add = to_add[np.in1d(flat_add, flat_inds, invert=True)]
+    # add the new edges
     res = self.copy() if copy else self
     if len(to_add) > 0:
       res._pairs = np.vstack((self._pairs, to_add))
