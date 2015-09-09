@@ -58,7 +58,7 @@ class TestNeighbors(unittest.TestCase):
     assert_array_equal(inds, [[0,3]])
     assert_array_almost_equal(dists, [[0, 1]])
     # Check precomputed
-    D = pairwise_distances(pt, self.pts, metric='l1')
+    D = pairwise_distances(pt[None], self.pts, metric='l1')
     self.assertRaises(AssertionError, nns, pt, self.pts, precomputed=True, k=2)
     assert_array_equal(nns(D, precomputed=True, k=2), [[0,3]])
     # Check 2d query shape
