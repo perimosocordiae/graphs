@@ -143,7 +143,7 @@ def _brandes(adj, weighted):
   sssp = _sssp_weighted if weighted else _sssp_unweighted
   n = adj.shape[0]
   btw = np.zeros(n)
-  for s in xrange(n):
+  for s in range(n):
     S, pred, sigma = sssp(adj, s)
     delta = np.zeros(n)
     while S:
@@ -163,7 +163,7 @@ def _brandes_edges(adj, weighted):
   btw = ss.csr_matrix(adj, dtype=float, copy=True)
   btw.eliminate_zeros()
   btw.data[:] = 0
-  for s in xrange(n):
+  for s in range(n):
     S, pred, sigma = sssp(adj, s)
     delta = np.zeros(n)
     while S:
