@@ -1,7 +1,9 @@
 from __future__ import division, absolute_import, print_function
-from collections import defaultdict
+from collections import deque
+from heapq import heappush, heappop
 from itertools import count
 import numpy as np
+import scipy.sparse as ss
 import scipy.sparse.csgraph as ssc
 import warnings
 from .mini_six import range
@@ -102,29 +104,19 @@ class AnalysisMixin(object):
     kind : string, either 'vertex' (default) or 'edge'
     directed : bool, defaults to self.is_directed()
     weighted : bool, defaults to self.is_weighted()
-
-    Note: When igraph is available, its implementation will be used for speed.
     '''
     assert kind in ('vertex', 'edge'), 'Invalid kind argument: ' + kind
     weighted = weighted is not False and self.is_weighted()
     d = directed if directed is not None else self.is_directed()
-    try:
-      ig = self.to_igraph()
-    except ImportError:
-      # igraph is not available, fall back to slower version
-      dist, pred = self.shortest_path(directed=d, unweighted=(not weighted),
-                                      return_predecessors=True)
-      if kind == 'vertex':
-        btw = _vertex_betweenness(dist, pred)
-      else:
-        btw = _edge_betweenness(dist, pred)
+    adj = self.matrix(dense=True, csr=True)
+    if kind == 'vertex':
+      btw = _brandes(adj, weighted)
     else:
-      w = self.edge_weights() if weighted else None
-      if kind == 'vertex':
-        btw = ig.betweenness(weights=w, directed=d)
-      else:
-        btw = ig.edge_betweenness(weights=w, directed=d)
-    return np.array(btw)
+      btw = _brandes_edges(adj, weighted)
+    # normalize if undirected
+    if not directed:
+      btw /= 2.
+    return btw
 
   def eccentricity(self, directed=None, weighted=None):
     '''Maximum distance from each vertex to any other vertex.'''
@@ -143,24 +135,96 @@ class AnalysisMixin(object):
     return self.eccentricity(directed, weighted).min()
 
 
-def _vertex_betweenness(dist, pred):
-  btw = np.zeros(dist.shape[0])
-  ii, jj = np.nonzero((~np.isinf(dist)) & (dist > 0))
-  for i,j in zip(ii, jj):
-    v = pred[i, j]
-    while v != i:
-      btw[v] += 1
-      v = pred[i, v]
+# TODO: write the below in Cython
+def _brandes(adj, weighted):
+  # Brandes algorithm for vertex betweenness
+  # sigma[v]: number of shortest paths from s->v
+  # delta[v]: dependency of s on v
+  sssp = _sssp_weighted if weighted else _sssp_unweighted
+  n = adj.shape[0]
+  btw = np.zeros(n)
+  for s in xrange(n):
+    S, pred, sigma = sssp(adj, s)
+    delta = np.zeros(n)
+    while S:
+      w = S.pop()
+      coeff = (1 + delta[w]) / sigma[w]
+      for v in pred.get(w, []):
+        delta[v] += sigma[v] * coeff
+      if w != s:
+        btw[w] += delta[w]
   return btw
 
 
-def _edge_betweenness(dist, pred):
-  btw = defaultdict(int)
-  ii, jj = np.nonzero((~np.isinf(dist)) & (dist > 0))
-  for i,j in zip(ii, jj):
-    edge = (pred[i, j], j)
-    while edge[0] != i:
-      btw[edge] += 1
-      edge = (pred[i, edge[0]], edge[0])
-    btw[edge] += 1
-  return [btw[k] for k in sorted(btw.keys())]
+def _brandes_edges(adj, weighted):
+  sssp = _sssp_weighted if weighted else _sssp_unweighted
+  n = adj.shape[0]
+  # set up betweenness container with correct sparsity pattern
+  btw = ss.csr_matrix(adj, dtype=float, copy=True)
+  btw.eliminate_zeros()
+  btw.data[:] = 0
+  for s in xrange(n):
+    S, pred, sigma = sssp(adj, s)
+    delta = np.zeros(n)
+    while S:
+      w = S.pop()
+      coeff = (1 + delta[w]) / sigma[w]
+      for v in pred.get(w, []):
+        c = sigma[v] * coeff
+        btw[v,w] += c
+        delta[v] += c
+  return btw.data
+
+
+def _sssp_unweighted(adj, s):
+  n = adj.shape[0]
+  S = []
+  pred = {}
+  sigma = np.zeros(n)
+  sigma[s] = 1
+  dist = sigma + np.inf
+  dist[s] = 0
+  Q = deque([s])
+  while Q:
+    v = Q.popleft()
+    S.append(v)
+    new_weight = dist[v] + 1
+    neighbors = adj[v].nonzero()[-1]
+    for w in neighbors:
+      if np.isinf(dist[w]):
+        pred[w] = [v]
+        sigma[w] = sigma[v]
+        dist[w] = new_weight
+        Q.append(w)
+      elif dist[w] == new_weight:
+        pred[w].append(v)
+        sigma[w] += sigma[v]
+  return S, pred, sigma
+
+
+def _sssp_weighted(adj, s):
+  n = adj.shape[0]
+  S = []
+  pred = {}
+  sigma = np.zeros(n)
+  sigma[s] = 1
+  dist = sigma + np.inf
+  dist[s] = 0
+  Q = [(0,s)]
+  while Q:
+    dist_v, v = heappop(Q)
+    S.append(v)
+    neighbors = adj[v].nonzero()[-1]
+    for w in neighbors:
+      new_weight = dist_v + adj[v,w]
+      if dist[w] > new_weight:
+        pred[w] = [v]
+        sigma[w] = sigma[v]
+        dist[w] = new_weight
+        heappush(Q, (new_weight, w))
+      elif dist[w] == new_weight:
+        pred[w].append(v)
+        sigma[w] += sigma[v]
+  return S, pred, sigma
+
+

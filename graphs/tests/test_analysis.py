@@ -63,13 +63,28 @@ class TestAnalysis(unittest.TestCase):
       self.assertEqual(G.profile(), 1)
 
   def test_betweenness(self):
+    ef, et = np.ones(8), np.array([3,1,3,3,1,3,2,2])/2.
     for G in self.graphs:
-      assert_array_equal(G.betweenness(kind='vertex'), [1,0,1,0,0])
-      assert_array_equal(G.betweenness(kind='edge'), [2,1,2,3,1,1])
-    # Test the weighted case as well.
-    g = Graph.from_adj_matrix([[0,1,2],[1,0,0],[2,0,0]])
-    assert_array_equal(g.betweenness(kind='vertex'), [2,0,0])
-    assert_array_equal(g.betweenness(kind='edge'), [2,2,2,2])
+      G.symmetrize(copy=False)
+      _test_btw(G, 'vertex', False, False, np.zeros(5))
+      _test_btw(G, 'vertex', False, True, np.zeros(5))
+      _test_btw(G, 'edge', False, False, np.ones(8)/2.)
+      _test_btw(G, 'edge', False, True, np.ones(8))
+      if G.is_weighted():
+        _test_btw(G, 'vertex', True, False, [0,0.5,0,0,0])
+        _test_btw(G, 'vertex', True, True, [0,1,0,0,0])
+        _test_btw(G, 'edge', True, False, np.array([3,1,3,3,1,3,2,2])/4.)
+        _test_btw(G, 'edge', True, True, np.array([3,1,3,3,1,3,2,2])/2.)
+    # test a weighted graph with different kinds of weights
+    G = Graph.from_adj_matrix([[0,1,2],[1,0,0],[2,0,0]])
+    _test_btw(G, 'vertex', False, False, [1,0,0])
+    _test_btw(G, 'vertex', False, True, [2,0,0])
+    _test_btw(G, 'edge', False, False, [1,1,1,1])
+    _test_btw(G, 'edge', False, True, [2,2,2,2])
+    _test_btw(G, 'vertex', True, False, [1,0,0])
+    _test_btw(G, 'vertex', True, True, [2,0,0])
+    _test_btw(G, 'edge', True, False, [1,1,1,1])
+    _test_btw(G, 'edge', True, True, [2,2,2,2])
 
   def test_eccentricity(self):
     for G in self.graphs:
@@ -91,6 +106,12 @@ class TestAnalysis(unittest.TestCase):
       self.assertEqual(G.radius(), np.inf)
     g = Graph.from_adj_matrix([[0,1,2],[1,0,0],[2,0,0]])
     self.assertEqual(g.radius(), 2)
+
+
+
+
+def _test_btw(G, k, w, d, exp):
+  assert_array_equal(G.betweenness(kind=k, weighted=w, directed=d), exp)
 
 if __name__ == '__main__':
   unittest.main()
