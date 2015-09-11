@@ -76,15 +76,15 @@ class TestAnalysis(unittest.TestCase):
         _test_btw(G, 'edge', True, False, np.array([3,1,3,3,1,3,2,2])/4.)
         _test_btw(G, 'edge', True, True, np.array([3,1,3,3,1,3,2,2])/2.)
     # test a weighted graph with different kinds of weights
-    G = Graph.from_adj_matrix([[0,1,2],[1,0,0],[2,0,0]])
-    _test_btw(G, 'vertex', False, False, [1,0,0])
-    _test_btw(G, 'vertex', False, True, [2,0,0])
-    _test_btw(G, 'edge', False, False, [1,1,1,1])
-    _test_btw(G, 'edge', False, True, [2,2,2,2])
-    _test_btw(G, 'vertex', True, False, [1,0,0])
-    _test_btw(G, 'vertex', True, True, [2,0,0])
-    _test_btw(G, 'edge', True, False, [1,1,1,1])
-    _test_btw(G, 'edge', True, True, [2,2,2,2])
+    G = Graph.from_adj_matrix([[0,1,2,0],[1,0,0,3],[2,0,0,1],[0,3,1,0]])
+    _test_btw(G, 'vertex', False, False, [0.5]*4)
+    _test_btw(G, 'vertex', False, True, [1]*4)
+    _test_btw(G, 'vertex', True, False, [1,0,1,0])
+    _test_btw(G, 'vertex', True, True, [2,0,2,0])
+    _test_btw(G, 'edge', False, False, [1,1,1,1,1,1,1,1])
+    _test_btw(G, 'edge', False, True, [2,2,2,2,2,2,2,2])
+    _test_btw(G, 'edge', True, False, np.array([2,3,2,1,3,2,1,2])/2.)
+    _test_btw(G, 'edge', True, True, [2,3,2,1,3,2,1,2])
 
   def test_eccentricity(self):
     for G in self.graphs:
