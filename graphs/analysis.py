@@ -204,7 +204,7 @@ def _sssp_unweighted(adj, s):
 
 def _sssp_weighted(adj, s):
   n = adj.shape[0]
-  S = []
+  S = set()
   pred = {}
   sigma = np.zeros(n)
   sigma[s] = 1
@@ -213,7 +213,7 @@ def _sssp_weighted(adj, s):
   Q = [(0,s)]
   while Q:
     dist_v, v = heappop(Q)
-    S.append(v)
+    S.add(v)
     neighbors = adj[v].nonzero()[-1]
     for w in neighbors:
       new_weight = dist_v + adj[v,w]
@@ -225,6 +225,6 @@ def _sssp_weighted(adj, s):
       elif dist[w] == new_weight:
         pred[w].append(v)
         sigma[w] += sigma[v]
+  S = sorted(S, key=lambda v: dist[v])
   return S, pred, sigma
-
 
