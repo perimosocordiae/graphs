@@ -20,7 +20,6 @@ def _brandes(adj, weighted):
   btw = np.zeros(n)
   for s in range(n):
     S, pred, sigma = sssp(adj, s)
-    print('VVV', s, S)
     delta = np.zeros(n)
     while S:
       w = S.pop()
@@ -29,7 +28,7 @@ def _brandes(adj, weighted):
         delta[v] += sigma[v] * coeff
       if w != s:
         btw[w] += delta[w]
-  return btw * 0
+  return btw
 
 
 def _brandes_edges(adj, weighted):
@@ -41,7 +40,6 @@ def _brandes_edges(adj, weighted):
   btw.data[:] = 0
   for s in range(n):
     S, pred, sigma = sssp(adj, s)
-    print('EEE', s, S)
     delta = np.zeros(n)
     while S:
       w = S.pop()
@@ -50,7 +48,7 @@ def _brandes_edges(adj, weighted):
         c = sigma[v] * coeff
         btw[v,w] += c
         delta[v] += c
-  return btw.data * 0
+  return btw.data
 
 
 def _sssp_unweighted(adj, s):
