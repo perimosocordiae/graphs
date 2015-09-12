@@ -1,6 +1,8 @@
 *.pyc
+*.pyxbldc
 htmlcov/
 .coverage
 build/
 dist/
 *.egg-info/
+*.swp
