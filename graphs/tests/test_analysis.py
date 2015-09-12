@@ -63,7 +63,6 @@ class TestAnalysis(unittest.TestCase):
       self.assertEqual(G.profile(), 1)
 
   def test_betweenness(self):
-    ef, et = np.ones(8), np.array([3,1,3,3,1,3,2,2])/2.
     for G in self.graphs:
       G.symmetrize(copy=False)
       _test_btw(G, 'vertex', False, False, np.zeros(5))
@@ -75,6 +74,8 @@ class TestAnalysis(unittest.TestCase):
         _test_btw(G, 'vertex', True, True, [0,1,0,0,0])
         _test_btw(G, 'edge', True, False, np.array([3,1,3,3,1,3,2,2])/4.)
         _test_btw(G, 'edge', True, True, np.array([3,1,3,3,1,3,2,2])/2.)
+
+  def test_betweenness_weighted(self):
     # test a weighted graph with different kinds of weights
     G = Graph.from_adj_matrix([[0,1,2,0],[1,0,0,3],[2,0,0,1],[0,3,1,0]])
     _test_btw(G, 'vertex', False, False, [0.5]*4)
