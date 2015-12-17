@@ -1,5 +1,4 @@
 from __future__ import division, absolute_import, print_function
-from itertools import count
 import numpy as np
 import scipy.sparse.csgraph as ssc
 import warnings
@@ -31,18 +30,6 @@ class AnalysisMixin(object):
     # ssc.shortest_path requires one of these formats:
     adj = self.matrix(dense=True, csr=True, csc=True)
     return ssc.shortest_path(adj, **kwargs)
-
-  def greedy_coloring(self):
-    '''Returns a greedy vertex coloring, as an array of ints.'''
-    n = self.num_vertices()
-    coloring = np.zeros(n, dtype=int)
-    for i, nbrs in enumerate(self.adj_list()):
-      nbr_colors = set(coloring[nbrs])
-      for c in count(1):
-        if c not in nbr_colors:
-          coloring[i] = c
-          break
-    return coloring
 
   def ave_laplacian(self):
     '''Another kind of laplacian normalization, used in the matlab PVF code.

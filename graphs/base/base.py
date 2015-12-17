@@ -1,9 +1,9 @@
 import numpy as np
 import scipy.sparse as ss
-from graphs.mixins import AnalysisMixin, EmbedMixin, VizMixin
+from graphs.mixins import AnalysisMixin, EmbedMixin, LabelMixin, VizMixin
 
 
-class Graph(AnalysisMixin, EmbedMixin, VizMixin):
+class Graph(AnalysisMixin, EmbedMixin, LabelMixin, VizMixin):
 
   def __init__(self, *args, **kwargs):
     raise NotImplementedError('Graph should not be instantiated directly')
