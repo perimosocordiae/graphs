@@ -1,6 +1,6 @@
 #!/bin/sh
 
-nosetests --with-cov --cov-report html --cov=graphs/ \
-  graphs/tests/ graphs/base/tests/ graphs/construction/tests/  \
-  graphs/generators/tests/ && coverage report
+test_dirs=$(find -type d -name tests | xargs)
+nosetests --with-cov --cov-report html --cov=graphs/ $test_dirs \
+  && coverage report
 

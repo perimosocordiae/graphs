@@ -24,5 +24,5 @@ install:
   - python setup.py install
   - python -c 'import scipy; print(scipy.__version__)'
 script:
-  - nosetests --with-cov --cov=graphs/ graphs/tests/ graphs/base/tests/ graphs/construction/tests/ graphs/generators/tests/
+  - nosetests --with-cov --cov=graphs/ graphs/tests/ graphs/base/tests/ graphs/construction/tests/ graphs/generators/tests/ graphs/mixins/tests/
 after_success: coveralls

@@ -1,8 +1,6 @@
 import numpy as np
 import scipy.sparse as ss
-from graphs.analysis import AnalysisMixin
-from graphs.embed import EmbedMixin
-from graphs.viz import VizMixin
+from graphs.mixins import AnalysisMixin, EmbedMixin, VizMixin
 
 
 class Graph(AnalysisMixin, EmbedMixin, VizMixin):

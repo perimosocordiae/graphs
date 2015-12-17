@@ -3,7 +3,7 @@ from collections import deque
 from heapq import heappush, heappop
 import numpy as np
 import scipy.sparse as ss
-from .mini_six import range
+from ..mini_six import range
 
 
 def _betweenness(adj, weighted, vertex):

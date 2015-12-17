@@ -3,7 +3,7 @@ from itertools import count
 import numpy as np
 import scipy.sparse.csgraph as ssc
 import warnings
-from .mini_six import range
+from ..mini_six import range
 from ._betweenness import betweenness
 
 
