@@ -128,4 +128,3 @@ class AnalysisMixin(object):
   def radius(self, directed=None, weighted=None):
     '''minimum graph eccentricity'''
     return self.eccentricity(directed, weighted).min()
-

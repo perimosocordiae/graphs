@@ -109,8 +109,6 @@ class TestAnalysis(unittest.TestCase):
     self.assertEqual(g.radius(), 2)
 
 
-
-
 def _test_btw(G, k, w, d, exp):
   assert_array_equal(G.betweenness(kind=k, weighted=w, directed=d), exp)
 

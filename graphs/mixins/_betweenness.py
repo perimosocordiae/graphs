@@ -109,4 +109,3 @@ try:
   from ._betweenness_helper import betweenness
 except ImportError:
   betweenness = _betweenness
-
