@@ -1,5 +1,7 @@
 [run]
 branch = true
+omit =
+    *.pyxbld*
 
 [report]
 # Regexes for lines to exclude from consideration
