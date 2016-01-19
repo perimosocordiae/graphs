@@ -1,6 +1,6 @@
 '''Graph construction algorithms, including:
 
- - k-nearest and epsilon-close neighbors
+ - k-nearest and epsilon-close neighbors, with incremental variants
  - b-matching
  - directed graph construction
  - Delaunay and Gabriel graphs
@@ -18,6 +18,7 @@ from .b_matching import *
 from .directed import *
 from .downsample import *
 from .geometric import *
+from .incremental import *
 from .msg import *
 from .neighbors import *
 from .regularized import *
