@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
 from numpy.testing import assert_array_equal
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, issparse
+from sklearn.metrics.cluster import adjusted_rand_score
 from graphs import Graph
 from graphs.construction import neighbor_graph
 
@@ -25,18 +26,38 @@ class TestLabel(unittest.TestCase):
     for G in self.graphs:
       assert_array_equal([1,2,3,1,2], G.greedy_coloring())
 
+  def test_kernel_matrix(self):
+    for G in self.graphs:
+      for kernel in ('none', 'binary'):
+        K = G._kernel_matrix(kernel)
+        if issparse(K):
+          K = K.toarray()
+        assert_array_equal(K, ADJ)
+      self.assertRaises(ValueError, G._kernel_matrix, 'foobar')
+
   def test_spectral_clustering(self):
     pts = np.random.random(size=(20, 2))
     pts[10:] += 2
     expected = np.zeros(20)
     expected[10:] = 1
     G = neighbor_graph(pts, k=11).symmetrize()
-    for kernel in ('rbf', 'none', 'binary'):
-      labels = G.spectral_clustering(2, kernel='rbf')
-      if labels[0] == 0:
-        assert_array_equal(labels, expected)
-      else:
-        assert_array_equal(labels, 1-expected)
+
+    labels = G.spectral_clustering(2, kernel='rbf')
+    self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
+
+  def test_spread_labels(self):
+    pts = np.random.random(size=(20, 2))
+    pts[10:] += 2
+    expected = np.zeros(20)
+    expected[10:] = 1
+    partial = expected.copy()
+    partial[1:-1] = -1
+    G = neighbor_graph(pts, k=11).symmetrize()
+
+    labels = G.spread_labels(partial, kernel='rbf', alpha=0.2, tol=1e-3,
+                             max_iter=30)
+    self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -50,7 +50,8 @@ class LabelMixin(object):
     for it in range(max_iter):
       old_label_dists = label_dists
       label_dists = gram.dot(label_dists)
-      label_dists = np.multiply(clamp_weights, label_dists) + y_static
+      label_dists *= clamp_weights[:,None]
+      label_dists += y_static
       # check convergence
       if np.abs(label_dists - old_label_dists).sum() <= tol:
         break
