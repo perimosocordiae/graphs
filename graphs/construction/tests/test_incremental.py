@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from itertools import izip_longest
 from numpy.testing import assert_array_almost_equal
+from sklearn.metrics import pairwise_distances
 
 from graphs.construction import neighbor_graph
 from graphs.construction.incremental import incremental_neighbor_graph
@@ -51,6 +52,14 @@ class TestNeighbors(unittest.TestCase):
     incr_gen = incremental_neighbor_graph(self.pts, k=3, epsilon=eps_range)
     for eps, G in izip_longest(eps_range, incr_gen):
       expected = ngraph(self.pts, k=3, epsilon=eps)
+      assert_array_almost_equal(G.matrix(dense=True), expected)
+
+  def test_l1_precomputed(self):
+    dist = pairwise_distances(self.pts, metric='l1')
+    k_range = range(1, 5)
+    incr_gen = incremental_neighbor_graph(dist, precomputed=True, k=k_range)
+    for k, G in izip_longest(k_range, incr_gen):
+      expected = ngraph(dist, precomputed=True, k=k)
       assert_array_almost_equal(G.matrix(dense=True), expected)
 
 
