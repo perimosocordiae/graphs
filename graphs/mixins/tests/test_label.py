@@ -58,6 +58,20 @@ class TestLabel(unittest.TestCase):
                              max_iter=30)
     self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
 
+  def test_regression(self):
+    t = np.linspace(0, 1, 31)
+    pts = np.column_stack((np.sin(t), np.cos(t)))
+    G = neighbor_graph(pts, k=3).symmetrize()
+    y_mask = slice(None, None, 2)
+
+    # test the interpolated case
+    x = G.regression(t[y_mask], y_mask)
+    assert_array_equal(t, np.linspace(0, 1, 31))  # ensure t hasn't changed
+    self.assertLess(np.linalg.norm(t - x), 0.15)
+
+    # test the penalized case
+    x = G.regression(t[y_mask], y_mask, smoothness_penalty=1e-4)
+    self.assertLess(np.linalg.norm(t - x), 0.15)
 
 if __name__ == '__main__':
   unittest.main()
