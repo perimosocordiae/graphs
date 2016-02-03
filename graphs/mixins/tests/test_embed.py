@@ -9,7 +9,7 @@ from graphs.construction import neighbor_graph
 
 
 def assert_signless_array_almost_equal(a, b):
-  if (a < 0 and b > 0) or (a > 0 and b < 0):
+  if (a[0] < 0 and b[0] > 0) or (a[0] > 0 and b[0] < 0):
     assert_array_almost_equal(a, -b)
   else:
     assert_array_almost_equal(a, b)
