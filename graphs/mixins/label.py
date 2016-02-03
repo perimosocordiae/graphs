@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.linalg as sl
 import scipy.sparse as ss
 import scipy.sparse.csgraph as ssc
 import warnings
@@ -95,26 +96,36 @@ class LabelMixin(object):
     # use the normalized Laplacian for the smoothness matrix
     S = ssc.laplacian(self._kernel_matrix(kernel), normed=True)
     if ss.issparse(S):
-      S = S.toarray()
+      S = S.tocsr()
 
     if smoothness_penalty == 0:
       # see Algorithm 2: Interpolated Regularization
       unlabeled_mask = ~y_mask
-      S_23 = S[unlabeled_mask]
-      S_2t = S_23[:, y_mask]
+      S_23 = S[unlabeled_mask, :]
       S_3 = S_23[:, unlabeled_mask]
-      f_unlabeled = np.linalg.lstsq(S_3, S_2t.dot(y))[0]
+      rhs = S_23[:, y_mask].dot(y)
+      if ss.issparse(S):
+        f_unlabeled = ss.linalg.spsolve(S_3, rhs)
+        if f_unlabeled.ndim == 1:
+          f_unlabeled = f_unlabeled[:,None]
+      else:
+        f_unlabeled = sl.solve(S_3, rhs, sym_pos=True, overwrite_a=True,
+                               overwrite_b=True)
       f = np.zeros((n, d))
       f[y_mask] = y
       f[unlabeled_mask] = -f_unlabeled
     else:
       # see Algorithm 1: Tikhonov Regularization in the paper
-      I = y_mask.astype(float)  # only one label per vertex
-      lhs = k * smoothness_penalty * S
-      lhs.flat[::n+1] += I
       y_hat = np.zeros((n, d))
       y_hat[y_mask] = y
-      f = np.linalg.lstsq(lhs, y_hat)[0]
+      I = y_mask.astype(float)  # only one label per vertex
+      lhs = k * smoothness_penalty * S
+      if ss.issparse(lhs):
+        lhs.setdiag(lhs.diagonal() + I)
+        f = ss.linalg.lsqr(lhs, y_hat)[0]
+      else:
+        lhs.flat[::n+1] += I
+        f = np.linalg.lstsq(lhs, y_hat)[0]
 
     # re-add the mean
     f += y_mean
