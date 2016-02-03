@@ -69,9 +69,31 @@ class TestLabel(unittest.TestCase):
     assert_array_equal(t, np.linspace(0, 1, 31))  # ensure t hasn't changed
     self.assertLess(np.linalg.norm(t - x), 0.15)
 
+    # test the boolean mask case
+    y_mask = np.zeros_like(t, dtype=bool)
+    y_mask[::2] = True
+    x = G.regression(t[y_mask], y_mask)
+    self.assertLess(np.linalg.norm(t - x), 0.15)
+
     # test the penalized case
     x = G.regression(t[y_mask], y_mask, smoothness_penalty=1e-4)
     self.assertLess(np.linalg.norm(t - x), 0.15)
+
+    # test no kernel + dense laplacian case
+    dG = Graph.from_adj_matrix(G.matrix(dense=True))
+    x = dG.regression(t[y_mask], y_mask, kernel='none')
+    self.assertLess(np.linalg.norm(t - x), 0.25)
+    x = dG.regression(t[y_mask], y_mask, smoothness_penalty=1e-4, kernel='none')
+    self.assertLess(np.linalg.norm(t - x), 0.25)
+
+    # test the multidimensional regression case
+    tt = np.column_stack((t, t[::-1]))
+    x = G.regression(tt[y_mask], y_mask)
+    self.assertLess(np.linalg.norm(tt - x), 0.2)
+
+    # check for bad inputs
+    with self.assertRaisesRegexp(ValueError, r'^Invalid shape of y array'):
+      G.regression([], y_mask)
 
 if __name__ == '__main__':
   unittest.main()

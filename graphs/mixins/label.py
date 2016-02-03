@@ -79,7 +79,7 @@ class LabelMixin(object):
     if y.ndim == 1:
       y = y[:,None]
       ravel_f = True
-    elif y.ndim != 2:
+    if y.ndim != 2 or y.size == 0:
       raise ValueError('Invalid shape of y array: %s' % (y.shape,))
     k, d = y.shape
 
