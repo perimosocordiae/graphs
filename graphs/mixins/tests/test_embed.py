@@ -8,6 +8,13 @@ from graphs import Graph
 from graphs.construction import neighbor_graph
 
 
+def assert_signless_array_almost_equal(a, b):
+  if (a < 0 and b > 0) or (a > 0 and b < 0):
+    assert_array_almost_equal(a, -b)
+  else:
+    assert_array_almost_equal(a, b)
+
+
 class TestEmbeddings(unittest.TestCase):
   def test_isomap(self):
     expected = [-np.sqrt(8), -np.sqrt(2), 0, np.sqrt(2), np.sqrt(8)]
@@ -27,16 +34,16 @@ class TestEmbeddings(unittest.TestCase):
     G = Graph.from_adj_matrix(W)
     Y = G.laplacian_eigenmaps(num_vecs=1)
     self.assertEqual(Y.shape, (5, 1))
-    assert_array_almost_equal(Y[:,0], expected)
+    assert_signless_array_almost_equal(Y[:,0], expected)
     # Test num_vecs=None case
     Y = G.laplacian_eigenmaps()
     self.assertEqual(Y.shape, (5, 4))
-    assert_array_almost_equal(Y[:,0], expected)
+    assert_signless_array_almost_equal(Y[:,0], expected)
     # Test sparse case
     G = Graph.from_adj_matrix(csr_matrix(W))
     Y = G.laplacian_eigenmaps(num_vecs=1)
     self.assertEqual(Y.shape, (5, 1))
-    assert_array_almost_equal(Y[:,0], expected)
+    assert_signless_array_almost_equal(Y[:,0], expected)
 
   def test_locality_preserving_projections(self):
     X = np.array([[1,2],[2,1],[3,1.5],[4,0.5],[5,1]])
