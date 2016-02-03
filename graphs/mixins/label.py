@@ -122,10 +122,13 @@ class LabelMixin(object):
       lhs = k * smoothness_penalty * S
       if ss.issparse(lhs):
         lhs.setdiag(lhs.diagonal() + I)
-        f = ss.linalg.lsqr(lhs, y_hat)[0]
+        f = ss.linalg.spsolve(lhs, y_hat)
+        if f.ndim == 1:
+          f = f[:,None]
       else:
         lhs.flat[::n+1] += I
-        f = np.linalg.lstsq(lhs, y_hat)[0]
+        f = sl.solve(lhs, y_hat, sym_pos=True, overwrite_a=True,
+                     overwrite_b=True)
 
     # re-add the mean
     f += y_mean
@@ -138,10 +141,13 @@ class LabelMixin(object):
       return self.matrix(csr=True, dense=True)
     # make a copy to modify with the kernel
     aff = self.matrix(csr=True, copy=True)
+    x = aff.data  # a view that we'll modify in-place
     if kernel == 'rbf':
-      aff.data = np.exp(-aff.data / aff.data.std())
+      gamma = x.std()
+      x /= -gamma
+      np.exp(x, out=x)
     elif kernel == 'binary':
-      aff.data[:] = 1
+      x[:] = 1
     else:
       raise ValueError('Invalid kernel type: %r' % kernel)
     return aff
