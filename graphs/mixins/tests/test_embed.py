@@ -66,7 +66,7 @@ class TestEmbeddings(unittest.TestCase):
     expected = locally_linear_embedding(pts, 3, 1)[0]
     G = neighbor_graph(pts, k=3).barycenter_edge_weights(pts, copy=False)
     actual = G.locally_linear_embedding(num_vecs=1)
-    assert_array_almost_equal(expected, actual)
+    assert_signless_array_almost_equal(expected, actual)
 
   def test_neighborhood_preserving_embedding(self):
     np.random.seed(1234)
