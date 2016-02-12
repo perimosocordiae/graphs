@@ -75,7 +75,7 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     self._adj = adj
     assert self._adj.shape[0] == self._adj.shape[1]
     # Things go wrong if we have explicit zeros in the graph.
-    if adj.format in ('csr', 'csc'):
+    if hasattr(self._adj, 'eliminate_zeros'):
       self._adj.eliminate_zeros()
 
   def matrix(self, copy=False, **kwargs):
