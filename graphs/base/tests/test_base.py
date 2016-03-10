@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import warnings
 from numpy.testing import assert_array_equal
-from scipy.sparse import csr_matrix
+from scipy.sparse import lil_matrix
 
 from graphs.base import (
     EdgePairGraph, DenseAdjacencyMatrixGraph, SparseAdjacencyMatrixGraph
@@ -29,7 +29,7 @@ ADJ = [[0,1,1,0],
 
 class TestGenericMembers(unittest.TestCase):
   def setUp(self):
-    spadj = csr_matrix(ADJ)
+    spadj = lil_matrix(ADJ)
     spadj[0,0] = 0  # Add an explicit zero
     self.graphs = [
         EdgePairGraph(PAIRS),
@@ -257,6 +257,19 @@ class TestGenericMembers(unittest.TestCase):
     for G in wg:
       msg = 'reweight partial (%s)' % type(G)
       gg = G.reweight(new_weights, new_weight_inds)
+      self.assertIs(gg, G)
+      self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
+      assert_array_equal(G.matrix(dense=True), expected, msg)
+
+  def test_reweight_by_distance(self):
+    wg = [G for G in self.graphs if G.is_weighted()]
+    expected = np.array(ADJ, dtype=float)
+    mask = expected != 0
+    coords = np.arange(np.count_nonzero(mask))[:,None]
+    expected[mask] = np.abs(PAIRS[:,0] - PAIRS[:,1])
+    for G in wg:
+      msg = 'reweight_by_distance (%s)' % type(G)
+      gg = G.reweight_by_distance(coords, metric='l2')
       self.assertIs(gg, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)

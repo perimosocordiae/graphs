@@ -1,5 +1,7 @@
 import numpy as np
 import scipy.sparse as ss
+import warnings
+from sklearn.metrics.pairwise import paired_distances
 from graphs.mixins import AnalysisMixin, EmbedMixin, LabelMixin, VizMixin
 
 
@@ -37,7 +39,7 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, VizMixin):
     return False
 
   def is_directed(self):
-    '''Returns True if edges *may be* non-symmetric.'''
+    '''Returns True if edges *may be* asymmetric.'''
     return True
 
   def add_self_edges(self, weight=None, copy=False):
@@ -48,10 +50,28 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, VizMixin):
   def reweight(self, weight, edges=None, copy=False):
     '''Replaces existing edge weights. weight may be a scalar or 1d array.
     edges is a mask or index array that specifies a subset of edges to modify'''
+    if not self.is_weighted():
+      warnings.warn('Cannot supply weights for unweighted graph; '
+                    'ignoring call to reweight')
+      return self
     P = self.pairs()
     if edges is not None:
       P = P[edges]
     return self.add_edges(*P.T, weight=weight, symmetric=False, copy=copy)
+
+  def reweight_by_distance(self, coords, metric='l2', copy=False):
+    '''Replaces existing edge weights by distances between connected vertices.
+    The new weight of edge (i,j) is given by: metric(coords[i], coords[j]).
+    coords : (num_vertices x d) array of coordinates, in vertex order
+    metric : str or callable, see sklearn.metrics.pairwise.paired_distances'''
+    if not self.is_weighted():
+      warnings.warn('Cannot supply weights for unweighted graph; '
+                    'ignoring call to reweight_by_distance')
+      return self
+    # TODO: take advantage of symmetry of metric function
+    ii, jj = self.pairs().T
+    d = paired_distances(coords[ii], coords[jj], metric=metric)
+    return self.add_edges(ii, jj, weight=d, symmetric=False, copy=copy)
 
   def adj_list(self):
     '''Generates a sequence of lists of neighbor indices:
@@ -111,4 +131,3 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, VizMixin):
     if ss.issparse(adj):
       return nx.from_scipy_sparse_matrix(adj, create_using=cls())
     return nx.from_numpy_matrix(adj, create_using=cls())
-

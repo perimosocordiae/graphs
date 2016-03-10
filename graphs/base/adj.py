@@ -72,11 +72,12 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
 class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
   def __init__(self, adj):
     assert ss.issparse(adj), 'SparseAdjacencyMatrixGraph input must be sparse'
+    if not hasattr(adj, 'eliminate_zeros'):
+      adj = adj.tocsr()
     self._adj = adj
     assert self._adj.shape[0] == self._adj.shape[1]
     # Things go wrong if we have explicit zeros in the graph.
-    if hasattr(self._adj, 'eliminate_zeros'):
-      self._adj.eliminate_zeros()
+    self._adj.eliminate_zeros()
 
   def matrix(self, copy=False, **kwargs):
     if not kwargs or self._adj.format in kwargs:
@@ -139,10 +140,9 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     return self._adj
 
   def _post_weighting(self, adj, weight, copy):
+    # Check if we might have changed the sparsity structure by adding zeros
     if np.any(weight == 0):
       # TODO: be smarter about avoiding writing explicit zeros
-      # We changed the sparsity structure, possibly.
-      assert hasattr(adj, 'eliminate_zeros'), 'Other formats NYI'
       adj.eliminate_zeros()
     if copy:
       return SparseAdjacencyMatrixGraph(adj)

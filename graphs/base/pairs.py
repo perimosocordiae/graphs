@@ -78,11 +78,6 @@ class EdgePairGraph(Graph):
       res._pairs = np.vstack((self._pairs, to_add))
     return res
 
-  def reweight(self, weight, edges=None, copy=False):
-    warnings.warn('Cannot supply weights for unweighted graph; '
-                  'ignoring call to reweight')
-    return self
-
   def symmetrize(self, method=None, copy=False):
     '''Symmetrizes (ignores method). Returns a copy if copy=True.'''
     if copy:
