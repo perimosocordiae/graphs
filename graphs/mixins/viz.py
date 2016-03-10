@@ -24,7 +24,9 @@ class VizMixin(object):
     cmap : a matplotlib Colormap to use for edge weight coloring
     '''
     X = np.atleast_2d(coordinates)
-    assert X.shape[1] in (2,3), 'can only plot graph for 2d or 3d coordinates'
+    assert 0 < X.shape[1] <= 3, 'too many dimensions to plot'
+    if X.shape[1] == 1:
+      X = np.column_stack((np.arange(X.shape[0]), X))
     if weighted is None:
       weighted = self.is_weighted()
     if directed is None:

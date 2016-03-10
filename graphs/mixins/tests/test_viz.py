@@ -25,8 +25,9 @@ class TestPlot(unittest.TestCase):
 
   def test_plot_default(self):
     for G in self.graphs:
-      G.plot(self.coords[:,:2])
-      G.plot(self.coords)
+      G.plot(self.coords[:,:1])  # 1d plotting
+      G.plot(self.coords[:,:2])  # 2d plotting
+      G.plot(self.coords)        # 3d plotting
 
   def test_plot_direction(self):
     for G in self.graphs:
