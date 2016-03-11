@@ -69,12 +69,14 @@ class TestEmbeddings(unittest.TestCase):
     assert_signless_array_almost_equal(expected, actual)
 
   def test_neighborhood_preserving_embedding(self):
-    np.random.seed(1234)
-    pts = np.random.random((5, 3))
-    expected = [[-0.433578], [0.761129], [-0.482382]]
-    G = neighbor_graph(pts, k=3)
-    actual = G.neighborhood_preserving_embedding(pts, num_vecs=1)
-    assert_array_almost_equal(expected, actual)
+    X = np.array([[1,2],[2,1],[3,1.5],[4,0.5],[5,1]])
+    G = Graph.from_adj_matrix([[0, 1, 1, 0, 0],
+                               [1, 0, 1, 0, 0],
+                               [1, 1, 0, 1, 1],
+                               [0, 0, 1, 0, 1],
+                               [0, 0, 1, 1, 0]])
+    proj = G.neighborhood_preserving_embedding(X, num_vecs=1)
+    assert_array_almost_equal(proj, [[-0.99763], [-0.068804]])
 
   def test_laplacian_pca(self):
     X = np.array([[1,2],[2,1],[3,1.5],[4,0.5],[5,1]])
