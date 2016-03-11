@@ -9,7 +9,9 @@ from graphs.construction import neighbor_graph
 
 
 def assert_signless_array_almost_equal(a, b):
-  if (a[0] < 0 and b[0] > 0) or (a[0] > 0 and b[0] < 0):
+  a = np.asarray(a)
+  b = np.asarray(b)
+  if (a.flat[0] < 0 and b.flat[0] > 0) or (a.flat[0] > 0 and b.flat[0] < 0):
     assert_array_almost_equal(a, -b)
   else:
     assert_array_almost_equal(a, b)
@@ -76,7 +78,7 @@ class TestEmbeddings(unittest.TestCase):
                                [0, 0, 1, 0, 1],
                                [0, 0, 1, 1, 0]])
     proj = G.neighborhood_preserving_embedding(X, num_vecs=1)
-    assert_array_almost_equal(proj, [[-0.99763], [-0.068804]])
+    assert_signless_array_almost_equal(proj, [[0.99763], [0.068804]])
 
   def test_laplacian_pca(self):
     X = np.array([[1,2],[2,1],[3,1.5],[4,0.5],[5,1]])
