@@ -20,6 +20,12 @@ try:
 except ImportError:
   HAS_GRAPHTOOL = False
 
+try:
+  import networkx
+  HAS_NETWORKX = True
+except ImportError:
+  HAS_NETWORKX = False
+
 PAIRS = np.array([[0,1],[0,2],[1,1],[2,1],[3,3]])
 ADJ = [[0,1,1,0],
        [0,1,0,0],
@@ -227,6 +233,13 @@ class TestGenericMembers(unittest.TestCase):
         adj = adjacency(gt, weight=gt.ep['weight']).A.T
       else:
         adj = adjacency(gt).A.T
+      assert_array_equal(G.matrix(dense=True), adj)
+
+  @unittest.skipUnless(HAS_NETWORKX, 'requires networkx dependency')
+  def test_to_networkx(self):
+    for G in self.graphs + [self.weighted]:
+      nx = G.to_networkx()
+      adj = networkx.to_numpy_matrix(nx)
       assert_array_equal(G.matrix(dense=True), adj)
 
   def test_reweight(self):
