@@ -72,12 +72,12 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
 class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
   def __init__(self, adj):
     assert ss.issparse(adj), 'SparseAdjacencyMatrixGraph input must be sparse'
-    if not hasattr(adj, 'eliminate_zeros'):
+    if adj.format not in ('coo', 'csr', 'csc'):
       adj = adj.tocsr()
     self._adj = adj
     assert self._adj.shape[0] == self._adj.shape[1]
     # Things go wrong if we have explicit zeros in the graph.
-    self._adj.eliminate_zeros()
+    _eliminate_zeros(self._adj)
 
   def matrix(self, copy=False, **kwargs):
     if not kwargs or self._adj.format in kwargs:
@@ -143,7 +143,7 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     # Check if we might have changed the sparsity structure by adding zeros
     if np.any(weight == 0):
       # TODO: be smarter about avoiding writing explicit zeros
-      adj.eliminate_zeros()
+      _eliminate_zeros(adj)
     if copy:
       return SparseAdjacencyMatrixGraph(adj)
     self._adj = adj
@@ -170,3 +170,16 @@ def _symmetrize(A, method):
   else:
     S = (A + A.T) / 2.0
   return S
+
+
+def _eliminate_zeros(A):
+  if hasattr(A, 'eliminate_zeros'):
+    A.eliminate_zeros()
+  elif A.format == 'coo':
+    # old scipy doesn't provide coo_matrix.eliminate_zeros
+    nz_mask = A.data != 0
+    A.data = A.data[nz_mask]
+    A.row = A.row[nz_mask]
+    A.col = A.col[nz_mask]
+  else:
+    raise ValueError("Can't eliminate_zeros from type: %s" % type(A))
