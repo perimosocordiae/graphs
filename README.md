@@ -22,6 +22,7 @@ Optional dependencies:
 
   * python-igraph
   * graphtool
+  * networkx
 
 Testing requires:
 
