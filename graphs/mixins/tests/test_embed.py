@@ -8,13 +8,13 @@ from graphs import Graph
 from graphs.construction import neighbor_graph
 
 
-def assert_signless_array_almost_equal(a, b):
+def assert_signless_array_almost_equal(a, b, **kwargs):
   a = np.asarray(a)
   b = np.asarray(b)
   if (a.flat[0] < 0 and b.flat[0] > 0) or (a.flat[0] > 0 and b.flat[0] < 0):
-    assert_array_almost_equal(a, -b)
+    assert_array_almost_equal(a, -b, **kwargs)
   else:
-    assert_array_almost_equal(a, b)
+    assert_array_almost_equal(a, b, **kwargs)
 
 
 class TestEmbeddings(unittest.TestCase):
@@ -91,7 +91,8 @@ class TestEmbeddings(unittest.TestCase):
     mX = X - X.mean(axis=0)
     expected = PCA(n_components=1).fit_transform(mX)
     actual = G.laplacian_pca(mX, num_vecs=1, beta=0)[:,:1]
-    self.assertTrue(np.abs(expected - actual).sum() < 0.5)
+    self.assertEqual(expected.shape, actual.shape)
+    assert_signless_array_almost_equal(expected[:,0], actual[:,0], decimal=1)
 
   def test_circular_layout(self):
     G = Graph.from_edge_pairs([], num_vertices=4)
