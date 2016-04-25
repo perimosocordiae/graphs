@@ -10,7 +10,6 @@ except ImportError:
   argpartsort = lambda arr, k: np.argpartition(arr, k-1)
 
 from graphs import Graph
-from ..mini_six import range
 
 __all__ = ['neighbor_graph', 'nearest_neighbors']
 
@@ -23,12 +22,13 @@ def neighbor_graph(X, precomputed=False, k=None, epsilon=None,
   assert ((k is not None) or (epsilon is not None)
           ), "Must provide `k` or `epsilon`"
   assert weighting in ('binary','none'), "Invalid weighting param: " + weighting
+  binary = weighting == 'binary'
 
   # Try the fast path, if possible.
   if not precomputed and epsilon is None:
-    G = _sparse_neighbor_graph(X, k, weighting == 'binary')
+    G = _sparse_neighbor_graph(X, k, binary)
   else:
-    G = _slow_neighbor_graph(X, precomputed, k, epsilon, weighting)
+    G = _slow_neighbor_graph(X, precomputed, k, epsilon, binary)
   return G
 
 
@@ -77,29 +77,37 @@ def nearest_neighbors(query_pts, target_pts=None, precomputed=False,
   return nns
 
 
-def _slow_neighbor_graph(X, precomputed, k, epsilon, weighting):
+def _slow_neighbor_graph(X, precomputed, k, epsilon, binary):
   num_pts = X.shape[0]
   if precomputed:
-    dist = X.copy()
+    dist = X
   else:
     dist = pairwise_distances(X, metric='euclidean')
 
   if k is not None:
     k = min(k+1, num_pts)
     nn, not_nn = _min_k_indices(dist, k, inv_ind=True)
+    I = np.arange(num_pts)
 
   if epsilon is not None:
+    mask = dist <= epsilon
     if k is not None:
-      dist[np.arange(dist.shape[0]), not_nn.T] = np.inf
-    dist[dist>epsilon] = 0  # zero out neighbors too far away
+      mask[I, not_nn.T] = False
+    if binary:
+      np.fill_diagonal(mask, False)
+      W = mask.astype(float)
+    else:
+      W = np.where(mask, dist, 0)
   else:
-    for i in range(num_pts):
-      dist[i,not_nn[i]] = 0  # zero out neighbors too far away
+    inv_mask = np.eye(num_pts, dtype=bool)
+    inv_mask[I, not_nn.T] = True
+    if binary:
+      W = 1.0 - inv_mask
+    else:
+      W = np.where(inv_mask, 0, dist)
 
-  if weighting is 'binary':
-    dist = dist.astype(bool).astype(float)
-  # dist = scipy.sparse.csr_matrix(dist)
-  return Graph.from_adj_matrix(dist)
+  # W = scipy.sparse.csr_matrix(W)
+  return Graph.from_adj_matrix(W)
 
 
 def _min_k_indices(arr, k, inv_ind=False):
