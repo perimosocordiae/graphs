@@ -36,11 +36,11 @@ class VizMixin(object):
       ax = _get_axis(is_3d, fig)
     edge_kwargs = dict(colors='b', linestyles='-', zorder=1)
     vertex_kwargs = dict(marker='o', c='k', s=20, edgecolor='none', zorder=2)
-    if edge_style:
+    if edge_style is not None:
       if not isinstance(edge_style, dict):
         edge_style = _parse_fmt(edge_style, color_key='colors')
       edge_kwargs.update(edge_style)
-    if vertex_style:
+    if vertex_style is not None:
       if not isinstance(vertex_style, dict):
         vertex_style = _parse_fmt(vertex_style, color_key='c')
       vertex_kwargs.update(vertex_style)
@@ -116,8 +116,9 @@ def _directed_edges(G, X, ax, is_3d, edge_style, cmap):
       ax.quiver(x, y, z, dx, dy, dz, cmap=cmap)
     else:
       args = (x, y, dx, dy)
-      ax.quiver(*args, angles='xy', scale_units='xy', scale=1, headwidth=5,
-                cmap=cmap)
+      ax.quiver(*args, angles='xy', scale_units='xy', scale=1, headwidth=3,
+                cmap=cmap, headlength=3, headaxislength=3, width=0.002,
+                alpha=edge_style.get('alpha', 1))
 
 
 def _undirected_edges(G, X, ax, is_3d, edge_style, cmap):
