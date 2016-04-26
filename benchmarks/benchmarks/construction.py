@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('template')
 import numpy as np
 from sklearn.metrics import pairwise_distances
 import graphs.construction as gc
