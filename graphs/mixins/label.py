@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import numpy as np
 import scipy.linalg as sl
 import scipy.sparse as ss
@@ -5,6 +6,8 @@ import scipy.sparse.csgraph as ssc
 import warnings
 from itertools import count
 from sklearn.cluster import spectral_clustering
+
+from ..mini_six import range
 
 
 class LabelMixin(object):
