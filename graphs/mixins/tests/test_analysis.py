@@ -27,10 +27,6 @@ class TestAnalysis(unittest.TestCase):
       self.assertEqual(2, n)
       assert_array_equal(labels, [0,0,0,1,1])
 
-  def test_greedy_coloring(self):
-    for G in self.graphs:
-      assert_array_equal([1,2,3,1,2], G.symmetrize().greedy_coloring())
-
   def test_ave_laplacian(self):
     g = Graph.from_adj_matrix([[0,1,2],[1,0,0],[2,0,0]])
     expected = np.array([[1,-0.5,0],[-0.5,1,0],[0,0,1]])
