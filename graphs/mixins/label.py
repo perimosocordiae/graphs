@@ -119,7 +119,7 @@ class LabelMixin(object):
 
     Lul = L[:,~unlabeled]
     Luu = L[:,unlabeled]
-    fu = np.linalg.multi_dot((-np.linalg.inv(Luu), Lul, fl))
+    fu = -np.linalg.solve(Luu, Lul.dot(fl))
 
     if use_CMN:
       scale = (1 + fl.sum(axis=0)) / fu.sum(axis=0)
