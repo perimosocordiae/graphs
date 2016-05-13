@@ -22,9 +22,17 @@ class TestLabel(unittest.TestCase):
         Graph.from_adj_matrix(coo_matrix(ADJ)),
     ]
 
+  def _make_blobs_graph(self, k=11):
+    pts = np.random.random(size=(20, 2))
+    pts[10:] += 2
+    labels = np.zeros(20)
+    labels[10:] = 1
+    G = neighbor_graph(pts, k=k).symmetrize()
+    return G, labels
+
   def test_greedy_coloring(self):
     for G in self.graphs:
-      assert_array_equal([1,2,3,1,2], G.greedy_coloring())
+      assert_array_equal([1,2,3,1,2], G.color_greedy())
 
   def test_kernel_matrix(self):
     for G in self.graphs:
@@ -36,26 +44,33 @@ class TestLabel(unittest.TestCase):
       self.assertRaises(ValueError, G._kernel_matrix, 'foobar')
 
   def test_spectral_clustering(self):
-    pts = np.random.random(size=(20, 2))
-    pts[10:] += 2
-    expected = np.zeros(20)
-    expected[10:] = 1
-    G = neighbor_graph(pts, k=11).symmetrize()
-
-    labels = G.spectral_clustering(2, kernel='rbf')
+    G, expected = self._make_blobs_graph(k=11)
+    labels = G.cluster_spectral(2, kernel='rbf')
     self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
 
-  def test_spread_labels(self):
-    pts = np.random.random(size=(20, 2))
-    pts[10:] += 2
-    expected = np.zeros(20)
-    expected[10:] = 1
+  def test_nn_classifier(self):
+    G, expected = self._make_blobs_graph(k=4)
     partial = expected.copy()
     partial[1:-1] = -1
-    G = neighbor_graph(pts, k=11).symmetrize()
 
-    labels = G.spread_labels(partial, kernel='rbf', alpha=0.2, tol=1e-3,
-                             max_iter=30)
+    labels = G.classify_nearest(partial)
+    self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
+
+  def test_lgc_classifier(self):
+    G, expected = self._make_blobs_graph(k=11)
+    partial = expected.copy()
+    partial[1:-1] = -1
+
+    labels = G.classify_lgc(partial, kernel='rbf', alpha=0.2, tol=1e-3,
+                            max_iter=30)
+    self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
+
+  def test_harmonic_classifier(self):
+    G, expected = self._make_blobs_graph(k=4)
+    partial = expected.copy()
+    partial[1:-1] = -1
+
+    labels = G.classify_harmonic(partial, use_CMN=True)
     self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
 
   def test_regression(self):
