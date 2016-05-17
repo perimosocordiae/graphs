@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from numpy.testing import assert_array_equal
-from scipy.sparse import coo_matrix, issparse
+from scipy.sparse import coo_matrix
 from sklearn.metrics.cluster import adjusted_rand_score
 from graphs import Graph
 from graphs.construction import neighbor_graph
@@ -22,56 +22,60 @@ class TestLabel(unittest.TestCase):
         Graph.from_adj_matrix(coo_matrix(ADJ)),
     ]
 
-  def _make_blobs_graph(self, k=11):
+  def _make_blob_graphs(self, k=11):
     pts = np.random.random(size=(20, 2))
     pts[10:] += 2
     labels = np.zeros(20)
     labels[10:] = 1
-    G = neighbor_graph(pts, k=k).symmetrize()
-    return G, labels
+    G_sparse = neighbor_graph(pts, k=k).symmetrize()
+    G_dense = Graph.from_adj_matrix(G_sparse.matrix(dense=True))
+    return (G_sparse, G_dense), labels
 
   def test_greedy_coloring(self):
     for G in self.graphs:
       assert_array_equal([1,2,3,1,2], G.color_greedy())
 
-  def test_kernel_matrix(self):
+  def test_kernelize(self):
     for G in self.graphs:
       for kernel in ('none', 'binary'):
-        K = G._kernel_matrix(kernel)
-        if issparse(K):
-          K = K.toarray()
-        assert_array_equal(K, ADJ)
-      self.assertRaises(ValueError, G._kernel_matrix, 'foobar')
+        K = G._kernelize(kernel)
+        assert_array_equal(K.matrix(dense=True), ADJ)
+      self.assertRaises(ValueError, G._kernelize, 'foobar')
 
   def test_spectral_clustering(self):
-    G, expected = self._make_blobs_graph(k=11)
-    labels = G.cluster_spectral(2, kernel='rbf')
-    self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
+    blob_graphs, expected = self._make_blob_graphs(k=11)
+
+    for g in blob_graphs:
+      labels = g.cluster_spectral(2, kernel='rbf')
+      self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
 
   def test_nn_classifier(self):
-    G, expected = self._make_blobs_graph(k=4)
+    blob_graphs, expected = self._make_blob_graphs(k=4)
     partial = expected.copy()
     partial[1:-1] = -1
 
-    labels = G.classify_nearest(partial)
-    self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
+    for g in blob_graphs:
+      labels = g.classify_nearest(partial)
+      self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
 
   def test_lgc_classifier(self):
-    G, expected = self._make_blobs_graph(k=11)
+    blob_graphs, expected = self._make_blob_graphs(k=11)
     partial = expected.copy()
     partial[1:-1] = -1
 
-    labels = G.classify_lgc(partial, kernel='rbf', alpha=0.2, tol=1e-3,
-                            max_iter=30)
-    self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
+    for g in blob_graphs:
+      labels = g.classify_lgc(partial, kernel='rbf', alpha=0.2, tol=1e-3,
+                              max_iter=30)
+      self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
 
   def test_harmonic_classifier(self):
-    G, expected = self._make_blobs_graph(k=4)
+    blob_graphs, expected = self._make_blob_graphs(k=4)
     partial = expected.copy()
     partial[1:-1] = -1
 
-    labels = G.classify_harmonic(partial, use_CMN=True)
-    self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
+    for g in blob_graphs:
+      labels = g.classify_harmonic(partial, use_CMN=True)
+      self.assertGreater(adjusted_rand_score(expected, labels), 0.95)
 
   def test_regression(self):
     t = np.linspace(0, 1, 31)

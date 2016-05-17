@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import numpy as np
 import scipy.linalg as sl
 import scipy.sparse as ss
-import scipy.sparse.csgraph as ssc
 import warnings
 from itertools import count
 from sklearn.cluster import spectral_clustering
@@ -25,7 +24,7 @@ class LabelMixin(object):
     return coloring
 
   def cluster_spectral(self, num_clusters, kernel='rbf'):
-    aff = self._kernel_matrix(kernel)
+    aff = self._kernelize(kernel).matrix()
     return spectral_clustering(aff, n_clusters=num_clusters)
 
   def classify_nearest(self, partial_labels):
@@ -62,7 +61,7 @@ class LabelMixin(object):
     Based on the LabelSpreading implementation in scikit-learn.
     '''
     # compute the gram matrix
-    gram = -ssc.laplacian(self._kernel_matrix(kernel), normed=True)
+    gram = -self._kernelize(kernel).laplacian(normed=True)
     if ss.issparse(gram):
       gram.data[gram.row == gram.col] = 0
     else:
@@ -161,7 +160,7 @@ class LabelMixin(object):
     y -= y_mean
 
     # use the normalized Laplacian for the smoothness matrix
-    S = ssc.laplacian(self._kernel_matrix(kernel), normed=True)
+    S = self._kernelize(kernel).laplacian(normed=True)
     if ss.issparse(S):
       S = S.tocsr()
 
@@ -201,18 +200,18 @@ class LabelMixin(object):
       return f.ravel()
     return f
 
-  def _kernel_matrix(self, kernel):
+  def _kernelize(self, kernel):
     if kernel == 'none':
-      return self.matrix(csr=True, dense=True)
-    # make a copy to modify with the kernel
-    aff = self.matrix(csr=True, copy=True)
+      return self
+    if kernel == 'binary':
+      if self.is_weighted():
+        return self._update_edges(1, copy=True)
+      return self
     if kernel == 'rbf':
-      aff.data = np.exp(-aff.data / aff.data.std())
-    elif kernel == 'binary':
-      aff.data[:] = 1
-    else:
-      raise ValueError('Invalid kernel type: %r' % kernel)
-    return aff
+      w = self.edge_weights()
+      r = np.exp(-w / w.std())
+      return self._update_edges(r, copy=True)
+    raise ValueError('Invalid kernel type: %r' % kernel)
 
 
 def _onehot(labels, mask=Ellipsis):
