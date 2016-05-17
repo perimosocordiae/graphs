@@ -116,8 +116,8 @@ def _directed_edges(G, X, ax, is_3d, edge_style, cmap):
       ax.quiver(x, y, z, dx, dy, dz, cmap=cmap)
     else:
       args = (x, y, dx, dy)
-      ax.quiver(*args, angles='xy', scale_units='xy', scale=1, headwidth=3,
-                cmap=cmap, headlength=3, headaxislength=3, width=0.002,
+      ax.quiver(*args, angles='xy', scale_units='xy', scale=1, cmap=cmap,
+                headwidth=3, headlength=3, headaxislength=3,
                 alpha=edge_style.get('alpha', 1))
 
 
