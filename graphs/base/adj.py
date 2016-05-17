@@ -60,6 +60,18 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     self._adj = adj
     return self
 
+  def remove_edges(self, from_idx, to_idx, symmetric=False, copy=False):
+    '''Removes all from->to edges, without making sure they already exist.
+    If symmetric=True, also removes to->from edges.'''
+    adj = self._adj.copy() if copy else self._adj
+    adj[from_idx, to_idx] = 0
+    if symmetric:
+      adj[to_idx, from_idx] = 0
+    if copy:
+      return DenseAdjacencyMatrixGraph(adj)
+    self._adj = adj
+    return self
+
   def _update_edges(self, weights, copy=False):
     weights = np.asarray(weights)
     res_dtype = np.promote_types(weights.dtype, self._adj.dtype)
@@ -117,10 +129,23 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     '''Adds all from->to edges. weight may be a scalar or 1d array.
     If symmetric=True, also adds to->from edges with the same weights.'''
     adj = self._weightable_adj(weight, copy)
+    if adj.format == 'coo':
+      adj = adj.tocsr()
     adj[from_idx, to_idx] = weight
     if symmetric:
       adj[to_idx, from_idx] = weight
     return self._post_weighting(adj, weight, copy)
+
+  def remove_edges(self, from_idx, to_idx, symmetric=False, copy=False):
+    '''Removes all from->to edges, without making sure they already exist.
+    If symmetric=True, also removes to->from edges.'''
+    adj = self._adj.copy() if copy else self._adj
+    if adj.format == 'coo':
+      adj = adj.tocsr()
+    adj[from_idx, to_idx] = 0
+    if symmetric:
+      adj[to_idx, from_idx] = 0
+    return self._post_weighting(adj, 0, copy)
 
   def _update_edges(self, weights, copy=False):
     adj = self._weightable_adj(weights, copy)

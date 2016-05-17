@@ -31,6 +31,9 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, VizMixin):
   def add_edges(self, from_idx, to_idx, weight=1, symmetric=False, copy=False):
     raise NotImplementedError()
 
+  def remove_edges(self, from_idx, to_idx, symmetric=False, copy=False):
+    raise NotImplementedError()
+
   def _update_edges(self, weights, copy=False):
     raise NotImplementedError()
 

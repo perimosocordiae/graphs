@@ -57,7 +57,7 @@ class EdgePairGraph(Graph):
   def add_edges(self, from_idx, to_idx,
                 weight=None, symmetric=False, copy=False):
     '''Adds all from->to edges.
-    If symmetric=True, also adds to->from edges as well.'''
+    If symmetric=True, also adds to->from edges.'''
     if weight is not None:
       warnings.warn('Cannot supply weights for unweighted graph; '
                     'ignoring weight argument')
@@ -76,6 +76,19 @@ class EdgePairGraph(Graph):
     res = self.copy() if copy else self
     if len(to_add) > 0:
       res._pairs = np.vstack((self._pairs, to_add))
+    return res
+
+  def remove_edges(self, from_idx, to_idx, symmetric=False, copy=False):
+    '''Removes all from->to edges.
+    If symmetric=True, also removes to->from edges.'''
+    flat_inds = self._pairs.dot((self._num_vertices, 1))
+    to_remove = from_idx * self._num_vertices + to_idx
+    if symmetric:
+      to_remove = np.concatenate((to_remove,
+                                  to_idx * self._num_vertices + from_idx))
+    mask = np.in1d(flat_inds, to_remove, invert=True)
+    res = self.copy() if copy else self
+    res._pairs = res._pairs[mask]
     return res
 
   def symmetrize(self, method=None, copy=False):
@@ -114,6 +127,19 @@ class SymmEdgePairGraph(EdgePairGraph):
     return SymmEdgePairGraph(self._pairs.copy(),
                              num_vertices=self._num_vertices,
                              ensure_format=False)
+
+  def remove_edges(self, from_idx, to_idx, symmetric=False, copy=False):
+    '''Removes all from->to and to->from edges.
+    Note: the symmetric kwarg is unused.'''
+    flat_inds = self._pairs.dot((self._num_vertices, 1))
+    # convert to sorted order and flatten
+    to_remove = (np.minimum(from_idx, to_idx) * self._num_vertices
+                 + np.maximum(from_idx, to_idx))
+    mask = np.in1d(flat_inds, to_remove, invert=True)
+    res = self.copy() if copy else self
+    res._pairs = res._pairs[mask]
+    res._offdiag_mask = res._offdiag_mask[mask]
+    return res
 
   def symmetrize(self, method=None, copy=False):
     if not copy:
