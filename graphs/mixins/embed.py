@@ -93,7 +93,10 @@ class EmbedMixin(object):
     kernel /= eigsh(kernel, k=1, which='LM', return_eigenvectors=False)
     L /= eigsh(L, k=1, which='LM', return_eigenvectors=False)
     W = (1-beta)*(np.identity(kernel.shape[0]) - kernel) + beta*L
-    vals, vecs = eigh(W, eigvals=(0, num_vecs-1), overwrite_a=True)
+    if num_vecs is None:
+      vals, vecs = np.linalg.eigh(W)
+    else:
+      vals, vecs = eigh(W, eigvals=(0, num_vecs-1), overwrite_a=True)
     return X.T.dot(vecs).dot(vecs.T).T
 
   def layout_circle(self):
