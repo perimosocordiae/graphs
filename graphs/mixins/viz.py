@@ -65,8 +65,8 @@ def _parse_fmt(fmt, color_key='colors', ls_key='linestyles',
   except ValueError:
     pass  # No, not just a color.
   else:
-    # Yes, just a color (or maybe tri_down marker '1')
-    if fmt != '1':
+    # Either a color or a numeric marker style
+    if fmt not in mlines.lineMarkers:
       return {color_key:color}
 
   result = dict()
