@@ -60,6 +60,16 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     self._adj = adj
     return self
 
+  def _update_edges(self, weights, copy=False):
+    weights = np.asarray(weights)
+    res_dtype = np.promote_types(weights.dtype, self._adj.dtype)
+    adj = self._adj.astype(res_dtype, copy=copy)
+    adj[adj != 0] = weights
+    if copy:
+      return DenseAdjacencyMatrixGraph(adj)
+    self._adj = adj
+    return self
+
   def symmetrize(self, method='sum', copy=False):
     '''Symmetrizes with the given method \in {sum,max,avg}'''
     adj = _symmetrize(self._adj, method)
@@ -70,14 +80,15 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
 
 
 class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
-  def __init__(self, adj):
+  def __init__(self, adj, may_have_zeros=True):
     assert ss.issparse(adj), 'SparseAdjacencyMatrixGraph input must be sparse'
     if adj.format not in ('coo', 'csr', 'csc'):
       adj = adj.tocsr()
     self._adj = adj
     assert self._adj.shape[0] == self._adj.shape[1]
-    # Things go wrong if we have explicit zeros in the graph.
-    _eliminate_zeros(self._adj)
+    if may_have_zeros:
+      # Things go wrong if we have explicit zeros in the graph.
+      _eliminate_zeros(self._adj)
 
   def matrix(self, copy=False, **kwargs):
     if not kwargs or self._adj.format in kwargs:
@@ -111,6 +122,11 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
       adj[to_idx, from_idx] = weight
     return self._post_weighting(adj, weight, copy)
 
+  def _update_edges(self, weights, copy=False):
+    adj = self._weightable_adj(weights, copy)
+    adj.data[:] = weights
+    return self._post_weighting(adj, weights, copy)
+
   def add_self_edges(self, weight=1, copy=False):
     '''Adds all i->i edges. weight may be a scalar or 1d array.'''
     adj = self._weightable_adj(weight, copy)
@@ -134,19 +150,20 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
 
   def _weightable_adj(self, weight, copy):
     weight = np.atleast_1d(weight)
-    res_dtype = np.promote_types(weight.dtype, self._adj.dtype)
-    if copy or res_dtype is not self._adj.dtype:
-      return self._adj.astype(res_dtype)
-    return self._adj
+    adj = self._adj
+    res_dtype = np.promote_types(weight.dtype, adj.dtype)
+    if copy:
+      adj = adj.copy()
+    if res_dtype is not adj.dtype:
+      adj.data = adj.data.astype(res_dtype)
+    return adj
 
   def _post_weighting(self, adj, weight, copy):
     # Check if we might have changed the sparsity structure by adding zeros
-    if np.any(weight == 0):
-      # TODO: be smarter about avoiding writing explicit zeros
-      _eliminate_zeros(adj)
+    has_zeros = np.any(weight == 0)
     if copy:
-      return SparseAdjacencyMatrixGraph(adj)
-    self._adj = adj
+      return SparseAdjacencyMatrixGraph(adj, may_have_zeros=has_zeros)
+    self._adj = _eliminate_zeros(adj) if has_zeros else adj
     return self
 
   def symmetrize(self, method='sum', copy=False):
@@ -154,7 +171,7 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     Returns a copy if overwrite=False.'''
     adj = _symmetrize(self._adj.tocsr(), method)
     if copy:
-      return SparseAdjacencyMatrixGraph(adj)
+      return SparseAdjacencyMatrixGraph(adj, may_have_zeros=False)
     self._adj = adj
     return self
 
@@ -183,3 +200,4 @@ def _eliminate_zeros(A):
     A.col = A.col[nz_mask]
   else:
     raise ValueError("Can't eliminate_zeros from type: %s" % type(A))
+  return A

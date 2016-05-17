@@ -31,6 +31,9 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, VizMixin):
   def add_edges(self, from_idx, to_idx, weight=1, symmetric=False, copy=False):
     raise NotImplementedError()
 
+  def _update_edges(self, weights, copy=False):
+    raise NotImplementedError()
+
   def copy(self):
     raise NotImplementedError()
 
@@ -54,10 +57,10 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, VizMixin):
       warnings.warn('Cannot supply weights for unweighted graph; '
                     'ignoring call to reweight')
       return self
-    P = self.pairs()
-    if edges is not None:
-      P = P[edges]
-    return self.add_edges(*P.T, weight=weight, symmetric=False, copy=copy)
+    if edges is None:
+      return self._update_edges(weight, copy=copy)
+    ii, jj = self.pairs()[edges].T
+    return self.add_edges(ii, jj, weight=weight, symmetric=False, copy=copy)
 
   def reweight_by_distance(self, coords, metric='l2', copy=False):
     '''Replaces existing edge weights by distances between connected vertices.
@@ -71,7 +74,7 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, VizMixin):
     # TODO: take advantage of symmetry of metric function
     ii, jj = self.pairs().T
     d = paired_distances(coords[ii], coords[jj], metric=metric)
-    return self.add_edges(ii, jj, weight=d, symmetric=False, copy=copy)
+    return self._update_edges(d, copy=copy)
 
   def adj_list(self):
     '''Generates a sequence of lists of neighbor indices:
