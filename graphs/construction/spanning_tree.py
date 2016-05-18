@@ -11,7 +11,7 @@ __all__ = ['mst', 'perturbed_mst', 'disjoint_mst']
 
 def mst(X, metric='euclidean'):
   D = _pdist(X, metric)
-  mst = minimum_spanning_tree(D)
+  mst = minimum_spanning_tree(D, overwrite=True)
   return Graph.from_adj_matrix(mst + mst.T)
 
 
