@@ -2,10 +2,11 @@ import numpy as np
 import scipy.sparse as ss
 import warnings
 from sklearn.metrics.pairwise import paired_distances
-from graphs.mixins import AnalysisMixin, EmbedMixin, LabelMixin, VizMixin
+from graphs.mixins import (
+    AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin)
 
 
-class Graph(AnalysisMixin, EmbedMixin, LabelMixin, VizMixin):
+class Graph(AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin):
 
   def __init__(self, *args, **kwargs):
     raise NotImplementedError('Graph should not be instantiated directly')

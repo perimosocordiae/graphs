@@ -24,7 +24,7 @@ class LabelMixin(object):
     return coloring
 
   def cluster_spectral(self, num_clusters, kernel='rbf'):
-    aff = self._kernelize(kernel).matrix()
+    aff = self.kernelize(kernel).matrix()
     return spectral_clustering(aff, n_clusters=num_clusters)
 
   def classify_nearest(self, partial_labels):
@@ -61,7 +61,7 @@ class LabelMixin(object):
     Based on the LabelSpreading implementation in scikit-learn.
     '''
     # compute the gram matrix
-    gram = -self._kernelize(kernel).laplacian(normed=True)
+    gram = -self.kernelize(kernel).laplacian(normed=True)
     if ss.issparse(gram):
       gram.data[gram.row == gram.col] = 0
     else:
@@ -160,7 +160,7 @@ class LabelMixin(object):
     y -= y_mean
 
     # use the normalized Laplacian for the smoothness matrix
-    S = self._kernelize(kernel).laplacian(normed=True)
+    S = self.kernelize(kernel).laplacian(normed=True)
     if ss.issparse(S):
       S = S.tocsr()
 
@@ -199,19 +199,6 @@ class LabelMixin(object):
     if ravel_f:
       return f.ravel()
     return f
-
-  def _kernelize(self, kernel):
-    if kernel == 'none':
-      return self
-    if kernel == 'binary':
-      if self.is_weighted():
-        return self._update_edges(1, copy=True)
-      return self
-    if kernel == 'rbf':
-      w = self.edge_weights()
-      r = np.exp(-w / w.std())
-      return self._update_edges(r, copy=True)
-    raise ValueError('Invalid kernel type: %r' % kernel)
 
 
 def _onehot(labels, mask=Ellipsis):

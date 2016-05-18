@@ -35,13 +35,6 @@ class TestLabel(unittest.TestCase):
     for G in self.graphs:
       assert_array_equal([1,2,3,1,2], G.color_greedy())
 
-  def test_kernelize(self):
-    for G in self.graphs:
-      for kernel in ('none', 'binary'):
-        K = G._kernelize(kernel)
-        assert_array_equal(K.matrix(dense=True), ADJ)
-      self.assertRaises(ValueError, G._kernelize, 'foobar')
-
   def test_spectral_clustering(self):
     blob_graphs, expected = self._make_blob_graphs(k=11)
 
