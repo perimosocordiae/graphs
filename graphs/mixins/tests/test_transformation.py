@@ -37,44 +37,49 @@ class TestTransformation(unittest.TestCase):
       self.assertRaises(ValueError, G.kernelize, 'foobar')
 
   def test_shortest_path_subtree(self):
+    n = X.shape[0]
     G = neighbor_graph(X, k=4)
+    e_data = [0.163, 0.199, 0.079, 0.188, 0.173, 0.122, 0.136, 0.136, 0.197]
+    e_row = [3, 0, 14, 0, 0, 3, 0, 3, 3]
+    e_col = [1, 3, 5, 7, 10, 13, 14, 18, 19]
+    expected = np.zeros((n,n))
+    expected[e_row, e_col] = e_data
+
     spt = G.shortest_path_subtree(0, directed=True)
-    expected = np.column_stack([[3,0,14,0,0,3,0,3,3],[1,3,5,7,10,13,14,18,19]])
-    expected_w = [0.163,0.199,0.079,0.188,0.173,0.122,0.136,0.136,0.197]
-    assert_array_equal(spt.pairs(), expected)
-    assert_array_almost_equal(spt.edge_weights(), expected_w, decimal=3)
+    assert_array_almost_equal(spt.matrix(dense=True), expected, decimal=3)
 
     # test undirected case
     G.symmetrize(method='max', copy=False)
+    e_data = [0.185,0.379,0.199,0.32,0.205,0.255,0.188,0.508,0.192,0.173,0.279,
+              0.258,0.122,0.136,0.316,0.326,0.278,0.136,0.197,0.185,0.379,0.199,
+              0.32,0.205,0.255,0.188,0.508,0.192,0.173,0.279,0.258,0.122,0.136,
+              0.316,0.326,0.278,0.136,0.197]
+    e_row = [10,8,0,6,0,1,0,5,6,0,0,6,3,0,17,8,1,3,3,1,2,3,4,5,6,7,8,9,10,11,12,
+             13,14,15,16,17,18,19]
+    e_col = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,10,8,0,6,0,1,0,5,6,
+             0,0,6,3,0,17,8,1,3,3]
+    expected[:] = 0
+    expected[e_row, e_col] = e_data
+
     spt = G.shortest_path_subtree(0, directed=False)
-    expected = np.column_stack([
-        [10,8,0,6,0,1,0,5,6,0,0,6,3,0,17,8,1,3,3,1,2,3,4,5,6,7,8,9,10,11,12,13,
-         14,15,16,17,18,19],
-        [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,10,8,0,6,0,1,0,5,6,0,0,
-         6,3,0,17,8,1,3,3]])
-    expected_w = [
-        0.185,0.379,0.199,0.32,0.205,0.255,0.188,0.508,0.192,0.173,0.279,0.258,
-        0.122,0.136,0.316,0.326,0.278,0.136,0.197,0.185,0.379,0.199,0.32,0.205,
-        0.255,0.188,0.508,0.192,0.173,0.279,0.258,0.122,0.136,0.316,0.326,0.278,
-        0.136,0.197]
-    assert_array_equal(spt.pairs(), expected)
-    assert_array_almost_equal(spt.edge_weights(), expected_w, decimal=3)
+    assert_array_almost_equal(spt.matrix(dense=True), expected, decimal=3)
 
   def test_minimum_spanning_subtree(self):
-    G = neighbor_graph(X, k=4).symmetrize(method='max')
+    n = X.shape[0]
+    G = neighbor_graph(X, k=4)
+    e_data = [0.279,0.136,0.255,0.041,0.124,0.186,0.131,0.122,0.136,0.185,0.226,
+              0.061,0.255,0.022,0.061,0.054,0.053,0.326,0.185,0.191,0.054,0.177,
+              0.279,0.226,0.224,0.041,0.122,0.177,0.136,0.053,0.186,0.224,0.131,
+              0.326,0.022,0.191,0.136,0.124]
+    e_row = [0,0,1,1,1,2,2,3,3,4,4,5,6,6,7,7,7,8,9,9,10,10,11,12,12,13,13,13,14,
+             14,15,15,16,16,17,17,18,19]
+    e_col = [11,14,6,13,19,15,16,13,18,9,12,7,1,17,5,10,14,16,4,17,7,13,0,4,15,
+             1,3,10,0,7,2,12,2,8,6,9,3,1]
+    expected = np.zeros((n,n))
+    expected[e_row, e_col] = e_data
+
     mst = G.minimum_spanning_subtree()
-    expected = np.column_stack([
-        [0,0,1,1,1,2,2,3,3,4,4,5,6,6,7,7,7,8,9,9,10,10,11,12,12,13,13,13,14,14,
-         15,15,16,16,17,17,18,19],
-        [11,14,6,13,19,15,16,13,18,9,12,7,1,17,5,10,14,16,4,17,7,13,0,4,15,1,3,
-         10,0,7,2,12,2,8,6,9,3,1]])
-    expected_w = [
-        0.279,0.136,0.255,0.041,0.124,0.186,0.131,0.122,0.136,0.185,0.226,0.061,
-        0.255,0.022,0.061,0.054,0.053,0.326,0.185,0.191,0.054,0.177,0.279,0.226,
-        0.224,0.041,0.122,0.177,0.136,0.053,0.186,0.224,0.131,0.326,0.022,0.191,
-        0.136,0.124]
-    assert_array_equal(mst.pairs(), expected)
-    assert_array_almost_equal(mst.edge_weights(), expected_w, decimal=3)
+    assert_array_almost_equal(mst.matrix(dense=True), expected, decimal=3)
 
 if __name__ == '__main__':
   unittest.main()
