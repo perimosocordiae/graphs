@@ -26,7 +26,13 @@ class EdgePairGraph(Graph):
     else:
       self._num_vertices = self._pairs.max() + 1
 
-  def pairs(self, copy=False):
+  def pairs(self, copy=False, directed=True):
+    if not directed:
+      canonical = np.sort(self._pairs, axis=1)
+      n = self._num_vertices
+      _, uniq_idx = np.unique(np.ravel_multi_index(canonical, (n,n)),
+                              return_index=True)
+      return canonical[uniq_idx]
     if copy:
       return self._pairs.copy()
     return self._pairs
@@ -56,8 +62,6 @@ class EdgePairGraph(Graph):
 
   def add_edges(self, from_idx, to_idx,
                 weight=None, symmetric=False, copy=False):
-    '''Adds all from->to edges.
-    If symmetric=True, also adds to->from edges.'''
     if weight is not None:
       warnings.warn('Cannot supply weights for unweighted graph; '
                     'ignoring weight argument')
@@ -79,8 +83,6 @@ class EdgePairGraph(Graph):
     return res
 
   def remove_edges(self, from_idx, to_idx, symmetric=False, copy=False):
-    '''Removes all from->to edges.
-    If symmetric=True, also removes to->from edges.'''
     flat_inds = self._pairs.dot((self._num_vertices, 1))
     to_remove = from_idx * self._num_vertices + to_idx
     if symmetric:
@@ -101,6 +103,11 @@ class EdgePairGraph(Graph):
                            np.ravel_multi_index(self._pairs.T[::-1], shape))
     self._pairs = np.transpose(np.unravel_index(flat_inds, shape))
     return self
+
+  pairs.__doc__ = Graph.pairs.__doc__
+  matrix.__doc__ = Graph.matrix.__doc__
+  add_edges.__doc__ = Graph.add_edges.__doc__
+  remove_edges.__doc__ = Graph.remove_edges.__doc__
 
 
 class SymmEdgePairGraph(EdgePairGraph):
@@ -142,6 +149,7 @@ class SymmEdgePairGraph(EdgePairGraph):
     return res
 
   def symmetrize(self, method=None, copy=False):
+    '''Alias for copy()'''
     if not copy:
       return self
     return SymmEdgePairGraph(self._pairs, num_vertices=self._num_vertices,

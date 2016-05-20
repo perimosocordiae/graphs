@@ -8,9 +8,6 @@ from .base import Graph
 
 class AdjacencyMatrixGraph(Graph):
 
-  def pairs(self, copy=False):
-    return np.transpose(np.nonzero(self._adj))
-
   def copy(self):
     return self.__class__(self._adj.copy())
 
@@ -25,6 +22,10 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
   def __init__(self, adj):
     self._adj = np.atleast_2d(adj)
     assert self._adj.shape[0] == self._adj.shape[1]
+
+  def pairs(self, copy=False, directed=True):
+    adj = self._adj if directed else np.triu(self._adj)
+    return np.transpose(np.nonzero(adj))
 
   def matrix(self, copy=False, **kwargs):
     if not kwargs or 'dense' in kwargs:
@@ -47,8 +48,6 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     return np.count_nonzero(self._adj)
 
   def add_edges(self, from_idx, to_idx, weight=1, symmetric=False, copy=False):
-    '''Adds all from->to edges. weight may be a scalar or 1d array.
-    If symmetric=True, also adds to->from edges with the same weights.'''
     weight = np.atleast_1d(1 if weight is None else weight)
     res_dtype = np.promote_types(weight.dtype, self._adj.dtype)
     adj = self._adj.astype(res_dtype, copy=copy)
@@ -61,8 +60,6 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     return self
 
   def remove_edges(self, from_idx, to_idx, symmetric=False, copy=False):
-    '''Removes all from->to edges, without making sure they already exist.
-    If symmetric=True, also removes to->from edges.'''
     adj = self._adj.copy() if copy else self._adj
     adj[from_idx, to_idx] = 0
     if symmetric:
@@ -83,12 +80,18 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     return self
 
   def symmetrize(self, method='sum', copy=False):
-    '''Symmetrizes with the given method \in {sum,max,avg}'''
     adj = _symmetrize(self._adj, method)
     if copy:
       return DenseAdjacencyMatrixGraph(adj)
     self._adj = adj
     return self
+
+  pairs.__doc__ = Graph.pairs.__doc__
+  matrix.__doc__ = Graph.matrix.__doc__
+  edge_weights.__doc__ = Graph.edge_weights.__doc__
+  add_edges.__doc__ = Graph.add_edges.__doc__
+  remove_edges.__doc__ = Graph.remove_edges.__doc__
+  symmetrize.__doc__ = Graph.symmetrize.__doc__
 
 
 class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
@@ -101,6 +104,10 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     if may_have_zeros:
       # Things go wrong if we have explicit zeros in the graph.
       _eliminate_zeros(self._adj)
+
+  def pairs(self, copy=False, directed=True):
+    adj = self._adj if directed else ss.triu(self._adj)
+    return np.transpose(adj.nonzero())
 
   def matrix(self, copy=False, **kwargs):
     if not kwargs or self._adj.format in kwargs:
@@ -126,8 +133,6 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     return self._adj.nnz
 
   def add_edges(self, from_idx, to_idx, weight=1, symmetric=False, copy=False):
-    '''Adds all from->to edges. weight may be a scalar or 1d array.
-    If symmetric=True, also adds to->from edges with the same weights.'''
     adj = self._weightable_adj(weight, copy)
     if adj.format == 'coo':
       adj = adj.tocsr()
@@ -137,8 +142,6 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     return self._post_weighting(adj, weight, copy)
 
   def remove_edges(self, from_idx, to_idx, symmetric=False, copy=False):
-    '''Removes all from->to edges, without making sure they already exist.
-    If symmetric=True, also removes to->from edges.'''
     adj = self._adj.copy() if copy else self._adj
     if adj.format == 'coo':
       adj = adj.tocsr()
@@ -153,7 +156,6 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     return self._post_weighting(adj, weights, copy)
 
   def add_self_edges(self, weight=1, copy=False):
-    '''Adds all i->i edges. weight may be a scalar or 1d array.'''
     adj = self._weightable_adj(weight, copy)
     try:
       adj.setdiag(weight)
@@ -164,8 +166,6 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     return self._post_weighting(adj, weight, copy)
 
   def reweight(self, weight, edges=None, copy=False):
-    '''Replaces existing edge weights. weight may be a scalar or 1d array.
-    edges is a mask or index array that specifies a subset of edges to modify'''
     adj = self._weightable_adj(weight, copy)
     if edges is None:
       adj.data[:] = weight
@@ -192,13 +192,20 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     return self
 
   def symmetrize(self, method='sum', copy=False):
-    '''Symmetrizes with the given method. {sum,max,avg}
-    Returns a copy if overwrite=False.'''
     adj = _symmetrize(self._adj.tocsr(), method)
     if copy:
       return SparseAdjacencyMatrixGraph(adj, may_have_zeros=False)
     self._adj = adj
     return self
+
+  pairs.__doc__ = Graph.pairs.__doc__
+  matrix.__doc__ = Graph.matrix.__doc__
+  edge_weights.__doc__ = Graph.edge_weights.__doc__
+  add_edges.__doc__ = Graph.add_edges.__doc__
+  remove_edges.__doc__ = Graph.remove_edges.__doc__
+  symmetrize.__doc__ = Graph.symmetrize.__doc__
+  add_self_edges.__doc__ = Graph.add_self_edges.__doc__
+  reweight.__doc__ = Graph.reweight.__doc__
 
 
 def _symmetrize(A, method):

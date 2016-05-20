@@ -11,13 +11,21 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin):
   def __init__(self, *args, **kwargs):
     raise NotImplementedError('Graph should not be instantiated directly')
 
-  def pairs(self, copy=False):
+  def pairs(self, copy=False, directed=True):
+    '''Returns a (num_edges,2)-array of vertex indices (s,t).
+    When directed=False, only pairs with s <= t are returned.'''
     raise NotImplementedError()
 
   def matrix(self, copy=False, **kwargs):
+    '''Returns a (num_vertices,num_vertices) array or sparse matrix, M,
+    where M[s,t] is the weight of edge (s,t).
+
+    TODO: explain the kwargs situation.
+    '''
     raise NotImplementedError()
 
   def edge_weights(self, copy=False):
+    '''Returns a (num_edges,)-array of edge weights.'''
     raise NotImplementedError()
 
   def num_edges(self):
@@ -27,12 +35,18 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin):
     raise NotImplementedError()
 
   def symmetrize(self, method='sum', copy=False):
+    '''Symmetrizes with the given method. {sum,max,avg}
+    Returns a copy if overwrite=False.'''
     raise NotImplementedError()
 
   def add_edges(self, from_idx, to_idx, weight=1, symmetric=False, copy=False):
+    '''Adds all from->to edges. weight may be a scalar or 1d array.
+    If symmetric=True, also adds to->from edges with the same weights.'''
     raise NotImplementedError()
 
   def remove_edges(self, from_idx, to_idx, symmetric=False, copy=False):
+    '''Removes all from->to edges, without making sure they already exist.
+    If symmetric=True, also removes to->from edges.'''
     raise NotImplementedError()
 
   def _update_edges(self, weights, copy=False):
