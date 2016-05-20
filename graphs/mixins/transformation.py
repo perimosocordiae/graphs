@@ -53,21 +53,27 @@ class TransformMixin(object):
     '''
     # make the initial spanning tree graph
     if spanning_tree == 'mst':
-      G = self.minimum_spanning_subtree()
+      tree = self.minimum_spanning_subtree().matrix()
     elif spanning_tree == 'spt':
       if idx is None:
         idx = np.random.choice(self.num_vertices())
-      G = self.shortest_path_subtree(idx, directed=False)
+      tree = self.shortest_path_subtree(idx, directed=False).matrix()
 
     # find edges in self but not in the tree
-    potential_edges = np.argwhere(ss.triu(self.matrix() - G.matrix()))
+    potential_edges = np.argwhere(ss.triu(self.matrix() - tree))
 
     # remove edges that induce large cycles
-    path_dist = ssc.dijkstra(G.matrix(), directed=False,
-                             return_predecessors=False, unweighted=True)
+    ii, jj = _find_cycle_inducers(tree, potential_edges, cycle_len_thresh)
+    return self.remove_edges(ii, jj, symmetric=True, copy=True)
+
+
+def _find_cycle_inducers(adj, potential_edges, length_thresh, directed=False):
+    # remove edges that induce large cycles
+    path_dist = ssc.dijkstra(adj, directed=directed, return_predecessors=False,
+                             unweighted=True)
     remove_ii, remove_jj = [], []
     for i,j in potential_edges:
-      if path_dist[i,j] > cycle_len_thresh:
+      if length_thresh < path_dist[i,j] < np.inf:
         remove_ii.append(i)
         remove_jj.append(j)
       else:
@@ -76,7 +82,6 @@ class TransformMixin(object):
         ii, jj = np.nonzero(tmp < path_dist)
         new_lengths = tmp[ii, jj]
         path_dist[ii,jj] = new_lengths
-        path_dist[jj,ii] = new_lengths
-
-    # remove the edges all at once
-    return self.remove_edges(remove_ii, remove_jj, symmetric=True, copy=True)
+        if not directed:
+          path_dist[jj,ii] = new_lengths
+    return remove_ii, remove_jj
