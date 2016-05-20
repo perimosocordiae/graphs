@@ -81,5 +81,22 @@ class TestTransformation(unittest.TestCase):
     mst = G.minimum_spanning_subtree()
     assert_array_almost_equal(mst.matrix(dense=True), expected, decimal=3)
 
+  def test_circle_tear(self):
+    G = neighbor_graph(X, k=4).symmetrize(method='max', copy=False)
+
+    # test MST start
+    res = G.circle_tear(spanning_tree='mst', cycle_len_thresh=5)
+    diff = G.matrix(dense=True) - res.matrix(dense=True)
+    ii, jj = np.nonzero(diff)
+    assert_array_equal(ii, [5,8,8,11])
+    assert_array_equal(jj, [8,5,11,8])
+
+    # test SPT start with a fixed starting vertex
+    res = G.circle_tear(spanning_tree='spt', cycle_len_thresh=5, idx=8)
+    diff = G.matrix(dense=True) - res.matrix(dense=True)
+    ii, jj = np.nonzero(diff)
+    assert_array_equal(ii, [1,1,6,17])
+    assert_array_equal(jj, [6,17,1,1])
+
 if __name__ == '__main__':
   unittest.main()
