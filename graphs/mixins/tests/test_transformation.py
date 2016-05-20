@@ -92,7 +92,7 @@ class TestTransformation(unittest.TestCase):
     assert_array_equal(jj, [8,5,11,8])
 
     # test SPT start with a fixed starting vertex
-    res = G.circle_tear(spanning_tree='spt', cycle_len_thresh=5, idx=8)
+    res = G.circle_tear(spanning_tree='spt', cycle_len_thresh=5, spt_idx=8)
     diff = G.matrix(dense=True) - res.matrix(dense=True)
     ii, jj = np.nonzero(diff)
     assert_array_equal(ii, [1,1,6,17])
