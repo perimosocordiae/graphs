@@ -2,6 +2,7 @@ from __future__ import division, absolute_import, print_function
 import numpy as np
 import scipy.sparse as ss
 import scipy.sparse.csgraph as ssc
+from collections import deque
 
 
 class TransformMixin(object):
@@ -65,6 +66,89 @@ class TransformMixin(object):
     # remove edges that induce large cycles
     ii, jj = _find_cycle_inducers(tree, potential_edges, cycle_len_thresh)
     return self.remove_edges(ii, jj, symmetric=True, copy=True)
+
+  def cycle_cut(self, cycle_len_thresh=12, directed=False, copy=True):
+    '''CycleCut algorithm: removes bottleneck edges.
+    Paper DOI: 10.1.1.225.5335
+    '''
+    symmetric = not directed
+    adj = self.kernelize('binary').matrix(csr=True, dense=True, copy=True)
+    if symmetric:
+      adj = adj + adj.T
+
+    removed_edges = []
+    while True:
+      c = _atomic_cycle(adj, cycle_len_thresh, directed=directed)
+      if c is None:
+        break
+      # remove edges in the cycle
+      ii, jj = c.T
+      adj[ii,jj] = 0
+      if symmetric:
+        adj[jj,ii] = 0
+      removed_edges.extend(c)
+
+    #XXX: if _atomic_cycle changes, may need to do this on each loop
+    if ss.issparse(adj):
+      adj.eliminate_zeros()
+
+    # select only the necessary cuts
+    ii, jj = _find_cycle_inducers(adj, removed_edges, cycle_len_thresh,
+                                  directed=directed)
+    # remove the bad edges
+    return self.remove_edges(ii, jj, symmetric=symmetric, copy=copy)
+
+
+def _atomic_cycle(adj, length_thresh, directed=False):
+  start_vertex = np.random.choice(adj.shape[0])
+  # run BFS
+  q = deque([start_vertex])
+  visited_vertices = set([start_vertex])
+  visited_edges = set()
+  while q:
+    a = q.popleft()
+    nbrs = adj[a].nonzero()[-1]
+    for b in nbrs:
+      if b not in visited_vertices:
+        q.append(b)
+        visited_vertices.add(b)
+        visited_edges.add((a,b))
+        if not directed:
+          visited_edges.add((b,a))
+        continue
+      # run an inner BFS
+      inner_q = deque([b])
+      inner_visited = set([b])
+      parent_vertices = {b: -1}
+      while inner_q:
+        c = inner_q.popleft()
+        inner_nbrs = adj[c].nonzero()[-1]
+        for d in inner_nbrs:
+          if d in inner_visited or (d,c) not in visited_edges:
+            continue
+          parent_vertices[d] = c
+          inner_q.append(d)
+          inner_visited.add(d)
+          if d != a:
+            continue
+          # atomic cycle found
+          cycle = []
+          while parent_vertices[d] != -1:
+            x, d = d, parent_vertices[d]
+            cycle.append((x, d))
+          cycle.append((d, a))
+          if len(cycle) >= length_thresh:
+            return np.array(cycle)
+          else:
+            # abort the inner BFS
+            inner_q.clear()
+            break
+      # finished considering edge a->b
+      visited_edges.add((a,b))
+      if not directed:
+        visited_edges.add((b,a))
+  # no cycles found
+  return None
 
 
 def _find_cycle_inducers(adj, potential_edges, length_thresh, directed=False):

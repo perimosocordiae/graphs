@@ -98,5 +98,16 @@ class TestTransformation(unittest.TestCase):
     assert_array_equal(ii, [1,1,6,17])
     assert_array_equal(jj, [6,17,1,1])
 
+  def test_cycle_cut(self):
+    G = neighbor_graph(X, k=4).symmetrize(method='max', copy=False)
+
+    # hack: the atomic cycle finder chooses a random vertex to start from
+    np.random.seed(1234)
+    res = G.cycle_cut(cycle_len_thresh=5, directed=False)
+    diff = G.matrix(dense=True) - res.matrix(dense=True)
+    ii, jj = np.nonzero(diff)
+    assert_array_equal(ii, [1,1,6,17])
+    assert_array_equal(jj, [6,17,1,1])
+
 if __name__ == '__main__':
   unittest.main()
