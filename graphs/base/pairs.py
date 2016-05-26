@@ -30,7 +30,7 @@ class EdgePairGraph(Graph):
     if not directed:
       canonical = np.sort(self._pairs, axis=1)
       n = self._num_vertices
-      _, uniq_idx = np.unique(np.ravel_multi_index(canonical, (n,n)),
+      _, uniq_idx = np.unique(np.ravel_multi_index(canonical.T, (n,n)),
                               return_index=True)
       return canonical[uniq_idx]
     if copy:
@@ -83,6 +83,7 @@ class EdgePairGraph(Graph):
     return res
 
   def remove_edges(self, from_idx, to_idx, symmetric=False, copy=False):
+    from_idx, to_idx = np.atleast_1d(from_idx, to_idx)
     flat_inds = self._pairs.dot((self._num_vertices, 1))
     to_remove = from_idx * self._num_vertices + to_idx
     if symmetric:

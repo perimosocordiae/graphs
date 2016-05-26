@@ -5,7 +5,8 @@ from numpy.testing import assert_array_equal
 from scipy.sparse import lil_matrix
 
 from graphs.base import (
-    EdgePairGraph, DenseAdjacencyMatrixGraph, SparseAdjacencyMatrixGraph
+    EdgePairGraph, SymmEdgePairGraph,
+    DenseAdjacencyMatrixGraph, SparseAdjacencyMatrixGraph
 )
 
 try:
@@ -43,6 +44,7 @@ class TestGenericMembers(unittest.TestCase):
         SparseAdjacencyMatrixGraph(spadj)
     ]
     self.weighted = DenseAdjacencyMatrixGraph(np.array(ADJ)*np.arange(4)[None])
+    self.sym = SymmEdgePairGraph(PAIRS.copy(), num_vertices=4)
 
   def test_properties(self):
     for G in self.graphs:
@@ -286,6 +288,18 @@ class TestGenericMembers(unittest.TestCase):
       self.assertIs(gg, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
+
+  def test_remove_edges(self):
+    for G in self.graphs:
+      gg = G.remove_edges(0, 2, copy=True)
+      assert_array_equal(gg.pairs(), [[0,1],[1,1],[2,1],[3,3]])
+      gg = G.remove_edges([0,1], [2,2], symmetric=True, copy=True)
+      assert_array_equal(gg.pairs(), [[0,1],[1,1],[3,3]])
+      # make sure we didn't modify G
+      assert_array_equal(G.pairs(), PAIRS)
+    gg = self.sym.remove_edges([0,1], [2,2], copy=True)
+    assert_array_equal(gg.pairs(), [[0,1],[1,0],[1,1],[3,3]])
+
 
 if __name__ == '__main__':
   unittest.main()

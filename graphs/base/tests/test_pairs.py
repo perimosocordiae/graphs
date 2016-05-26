@@ -15,13 +15,16 @@ class TestEdgePairGraph(unittest.TestCase):
   def setUp(self):
     self.epg = EdgePairGraph(PAIRS)
 
-  def test_epg_pairs(self):
+  def test_pairs(self):
     self.assert_(self.epg.pairs(copy=False) is PAIRS)
     P = self.epg.pairs(copy=True)
     self.assert_(P is not PAIRS)
     assert_array_equal(P, PAIRS)
+    # test the directed case
+    P = self.epg.pairs(directed=False)
+    assert_array_equal(P, [[0,1],[0,2],[1,1],[1,2],[3,3]])
 
-  def test_epg_matrix(self):
+  def test_matrix(self):
     M = self.epg.matrix()
     assert_array_equal(M.toarray(), ADJ)
     M = self.epg.matrix(dense=True)
