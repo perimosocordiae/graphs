@@ -90,8 +90,19 @@ class LabelMixin(object):
 
     return classes[label_dists.argmax(axis=1)]
 
+  def classify_local(self, partial_labels, C_l=10.0, C_u=1e-6):
+    '''Local Learning Regularization for semi-supervised classification.
+
+    partial_labels: (n,) array of integer labels, -1 for unlabeled.
+
+    From "Transductive Classification via Local Learning Regularization"
+      by Wu & Scholkopf in 2007.
+    '''
+    raise NotImplementedError('NYI')
+
   def classify_harmonic(self, partial_labels, use_CMN=True):
-    '''Harmonic function method for semi-supervised classification.
+    '''Harmonic function method for semi-supervised classification,
+    also known as the Gaussian Mean Fields algorithm.
 
     partial_labels: (n,) array of integer labels, -1 for unlabeled.
     use_CMN : when True, apply Class Mass Normalization

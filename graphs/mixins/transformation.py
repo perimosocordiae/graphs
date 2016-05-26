@@ -101,6 +101,7 @@ class TransformMixin(object):
 
 
 def _atomic_cycle(adj, length_thresh, directed=False):
+  # TODO: make this more efficient
   start_vertex = np.random.choice(adj.shape[0])
   # run BFS
   q = deque([start_vertex])
