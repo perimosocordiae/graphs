@@ -9,7 +9,7 @@ def plot_mcar_basis(G, X, title='Mountain Car graph'):
   _, axes = plt.subplots(nrows=2, ncols=2)
   G.plot(X, title=title, ax=axes[0,0])
 
-  emb = G.laplacian_eigenmaps(num_vecs=3)
+  emb = G.laplacian_eigenmaps(num_dims=3)
 
   x, y = X.T
   # Set up grids for a contour plot

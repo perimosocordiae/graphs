@@ -2,25 +2,25 @@ import numpy as np
 import warnings
 from scipy.sparse import issparse
 from scipy.sparse.linalg import eigsh
-from scipy.linalg import eig, eigh, solve
+from scipy.linalg import eig, eigh
 from sklearn.decomposition import KernelPCA
 
 
 class EmbedMixin(object):
 
-  def isomap(self, num_vecs=None, directed=True):
+  def isomap(self, num_dims=None, directed=True):
     '''Isomap embedding.'''
     directed = directed and self.is_directed()
     W = -0.5 * self.shortest_path(directed=directed) ** 2
-    kpca = KernelPCA(n_components=num_vecs, kernel='precomputed')
+    kpca = KernelPCA(n_components=num_dims, kernel='precomputed')
     return kpca.fit_transform(W)
 
-  def laplacian_eigenmaps(self, num_vecs=None, val_thresh=1e-8):
+  def laplacian_eigenmaps(self, num_dims=None, val_thresh=1e-8):
     '''Laplacian Eigenmaps embedding.'''
     L = self.laplacian(normed=True)
-    return _null_space(L, num_vecs, val_thresh, overwrite=True)
+    return _null_space(L, num_dims, val_thresh, overwrite=True)
 
-  def locality_preserving_projections(self, coordinates, num_vecs=None):
+  def locality_preserving_projections(self, coordinates, num_dims=None):
     '''Locality Preserving Projections (LPP, linearized Laplacian Eigenmaps).'''
     X = np.atleast_2d(coordinates)  # n x d
     L = self.laplacian(normed=True)  # n x n
@@ -32,27 +32,9 @@ class EmbedMixin(object):
     else:  # optimized order: (FX')L(XF')
       T = Fplus.dot(X.T).dot(L).dot(X.dot(Fplus.T))
     L = 0.5*(T+T.T)
-    return _null_space(L, num_vecs=num_vecs, overwrite=True)
+    return _null_space(L, num_vecs=num_dims, overwrite=True)
 
-  def barycenter_edge_weights(self, X, copy=True, reg=1e-3):
-    '''Re-weight such that the sum of each vertex's edge weights is 1.
-    The resulting weighted graph is suitable for locally linear embedding.
-    reg : amount of regularization to keep the problem well-posed
-    '''
-    new_weights = []
-    for i, adj in enumerate(self.adj_list()):
-      C = X[adj] - X[i]
-      G = C.dot(C.T)
-      trace = np.trace(G)
-      r = reg * trace if trace > 0 else reg
-      G.flat[::G.shape[1] + 1] += r
-      w = solve(G, np.ones(G.shape[0]), sym_pos=True,
-                overwrite_a=True, overwrite_b=True)
-      w /= w.sum()
-      new_weights.extend(w.tolist())
-    return self.reweight(new_weights, copy=copy)
-
-  def locally_linear_embedding(self, num_vecs=None):
+  def locally_linear_embedding(self, num_dims=None):
     '''Locally Linear Embedding (LLE).
     Note: may need to call barycenter_edge_weights() before this!
     '''
@@ -62,9 +44,9 @@ class EmbedMixin(object):
     if issparse(M):
       M = M.toarray()
     M.flat[::M.shape[0] + 1] += 1
-    return _null_space(M, num_vecs=num_vecs, overwrite=True)
+    return _null_space(M, num_vecs=num_dims, overwrite=True)
 
-  def neighborhood_preserving_embedding(self, X, num_vecs=None, reweight=True):
+  def neighborhood_preserving_embedding(self, X, num_dims=None, reweight=True):
     '''Neighborhood Preserving Embedding (NPE, linearized LLE).'''
     if reweight:
       W = self.barycenter_edge_weights(X).matrix()
@@ -78,14 +60,14 @@ class EmbedMixin(object):
     # solve generalized eig problem: X'MXa = \lambda X'Xa
     vals, vecs = eig(X.T.dot(M).dot(X), X.T.dot(X), overwrite_a=True,
                      overwrite_b=True)
-    if num_vecs is None:
+    if num_dims is None:
       return vecs
-    return vecs[:,:num_vecs]
+    return vecs[:,:num_dims]
 
-  def laplacian_pca(self, coordinates, num_vecs=None, beta=0.5):
+  def laplacian_pca(self, coordinates, num_dims=None, beta=0.5):
     '''Graph-Laplacian PCA (CVPR 2013).
-    Assumes coordinates are mean-centered.
-    Parameter beta in [0,1], scales how much PCA/LapEig contributes.
+    coordinates : (n,d) array-like, assumed to be mean-centered.
+    beta : float in [0,1], scales how much PCA/LapEig contributes.
     Returns an approximation of input coordinates, ala PCA.'''
     X = np.atleast_2d(coordinates)
     L = self.laplacian(normed=True)
@@ -93,10 +75,10 @@ class EmbedMixin(object):
     kernel /= eigsh(kernel, k=1, which='LM', return_eigenvectors=False)
     L /= eigsh(L, k=1, which='LM', return_eigenvectors=False)
     W = (1-beta)*(np.identity(kernel.shape[0]) - kernel) + beta*L
-    if num_vecs is None:
+    if num_dims is None:
       vals, vecs = np.linalg.eigh(W)
     else:
-      vals, vecs = eigh(W, eigvals=(0, num_vecs-1), overwrite_a=True)
+      vals, vecs = eigh(W, eigvals=(0, num_dims-1), overwrite_a=True)
     return X.T.dot(vecs).dot(vecs.T).T
 
   def layout_circle(self):
@@ -108,6 +90,9 @@ class EmbedMixin(object):
   def layout_spring(self, num_dims=2, spring_constant=None, iterations=50,
                     initial_temp=0.1, initial_layout=None):
     '''Position vertices using the Fruchterman-Reingold (spring) algorithm.
+
+    num_dims : int (default=2)
+       Number of dimensions to embed vertices in.
 
     spring_constant : float (default=None)
        Optimal distance between nodes.  If None the distance is set to

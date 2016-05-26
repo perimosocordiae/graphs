@@ -2,12 +2,19 @@ from __future__ import division, absolute_import, print_function
 import numpy as np
 import scipy.sparse as ss
 import scipy.sparse.csgraph as ssc
+from scipy.linalg import solve
 from collections import deque
 
 
 class TransformMixin(object):
 
   def kernelize(self, kernel):
+    '''Re-weight according to a specified kernel function.
+    kernel : str, {none, binary, rbf}
+      none   -> no reweighting
+      binary -> all edges are given weight 1
+      rbf    -> applies a gaussian function to edge weights
+    '''
     if kernel == 'none':
       return self
     if kernel == 'binary':
@@ -19,6 +26,24 @@ class TransformMixin(object):
       r = np.exp(-w / w.std())
       return self._update_edges(r, copy=True)
     raise ValueError('Invalid kernel type: %r' % kernel)
+
+  def barycenter_edge_weights(self, X, copy=True, reg=1e-3):
+    '''Re-weight such that the sum of each vertex's edge weights is 1.
+    The resulting weighted graph is suitable for locally linear embedding.
+    reg : amount of regularization to keep the problem well-posed
+    '''
+    new_weights = []
+    for i, adj in enumerate(self.adj_list()):
+      C = X[adj] - X[i]
+      G = C.dot(C.T)
+      trace = np.trace(G)
+      r = reg * trace if trace > 0 else reg
+      G.flat[::G.shape[1] + 1] += r
+      w = solve(G, np.ones(G.shape[0]), sym_pos=True,
+                overwrite_a=True, overwrite_b=True)
+      w /= w.sum()
+      new_weights.extend(w.tolist())
+    return self.reweight(new_weights, copy=copy)
 
   def shortest_path_subtree(self, start_idx, directed=True):
     '''Returns a subgraph containing only the shortest paths from start_idx to
