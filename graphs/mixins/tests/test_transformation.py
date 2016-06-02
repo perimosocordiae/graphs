@@ -36,6 +36,18 @@ class TestTransformation(unittest.TestCase):
         assert_array_equal(K.matrix(dense=True), ADJ)
       self.assertRaises(ValueError, G.kernelize, 'foobar')
 
+  def test_connected_subgraphs(self):
+    G = Graph.from_edge_pairs(PAIRS)
+    subgraphs = list(G.connected_subgraphs(directed=False, ordered=False))
+    self.assertEqual(len(subgraphs), 2)
+    assert_array_equal(subgraphs[0].pairs(), PAIRS[:6])
+    assert_array_equal(subgraphs[1].pairs(), [[0,1],[1,0]])
+
+    G = neighbor_graph(X, k=2)
+    subgraphs = list(G.connected_subgraphs(directed=True, ordered=True))
+    self.assertEqual(len(subgraphs), 3)
+    self.assertEqual([g.num_vertices() for g in subgraphs], [9,6,5])
+
   def test_shortest_path_subtree(self):
     n = X.shape[0]
     G = neighbor_graph(X, k=4)

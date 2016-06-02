@@ -5,6 +5,8 @@ import scipy.sparse.csgraph as ssc
 from scipy.linalg import solve
 from collections import deque
 
+from ..mini_six import range
+
 
 class TransformMixin(object):
 
@@ -44,6 +46,23 @@ class TransformMixin(object):
       w /= w.sum()
       new_weights.extend(w.tolist())
     return self.reweight(new_weights, copy=copy)
+
+  def connected_subgraphs(self, directed=True, ordered=False):
+    '''Generates connected components as subgraphs.
+    When ordered=True, subgraphs are ordered by number of vertices.
+    '''
+    num_ccs, labels = self.connected_components(directed=directed)
+    if num_ccs > 1 and ordered:
+      # sort by descending size (num vertices)
+      order = np.argsort(np.bincount(labels))[::-1]
+    else:
+      order = range(num_ccs)
+
+    adj = self.matrix(dense=True, csr=True, csc=True)
+    for c in order:
+      mask = labels == c
+      sub_adj = adj[mask][:,mask]
+      yield self.__class__.from_adj_matrix(sub_adj)
 
   def shortest_path_subtree(self, start_idx, directed=True):
     '''Returns a subgraph containing only the shortest paths from start_idx to
