@@ -92,6 +92,8 @@ def saffron(X, q=32, k=4, tangent_dim=1, curv_thresh=0.95, decay_rate=0.9,
     indptr.append(len(nbrs))
     data.extend(dist[i, nbrs])
   indptr = np.cumsum(indptr)
+  data = np.array(data)
+  indices = np.array(indices)
   W = ss.csr_matrix((data, indices, indptr), shape=W.shape)
   return Graph.from_adj_matrix(W)
 
