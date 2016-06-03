@@ -38,7 +38,7 @@ def saffron(X, q=32, k=4, tangent_dim=1, curv_thresh=0.95, decay_rate=0.9,
 
   # make candidate graph + weights
   W = neighbor_graph(dist, precomputed=True, epsilon=r).matrix(csr=True)
-  # no abs() needed, because we're using L2 distance
+  # NOTE: this differs from the paper, where W.data[:] = 1 initially
   W.data[:] = 1 / W.data
   # row normalize
   normalize(W, norm='l1', axis=1, copy=False)
@@ -74,7 +74,7 @@ def saffron(X, q=32, k=4, tangent_dim=1, curv_thresh=0.95, decay_rate=0.9,
       # update goodness measure (weighted alignment)
       goodness += x.dot(W[i,nbrs])
 
-    if verbose:
+    if verbose:  # pragma: no cover
       goodness /= n
       print(it, goodness, goodness / prev_goodness)
     if goodness / prev_goodness <= 1.0001:
