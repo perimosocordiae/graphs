@@ -22,6 +22,7 @@ from .incremental import *
 from .msg import *
 from .neighbors import *
 from .regularized import *
+from .saffron import *
 from .spanning_tree import *
 from .rand import *
 
@@ -42,6 +43,8 @@ __all__ = [
     'neighbor_graph', 'nearest_neighbors',
     # regularized
     'sparse_regularized_graph',
+    # saffron
+    'saffron',
     # spanning_tree
     'mst', 'perturbed_mst', 'disjoint_mst',
     # rand
