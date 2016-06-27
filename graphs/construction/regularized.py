@@ -47,7 +47,7 @@ def _l1_graph_solve_full(clf, X):
     B[i] = x
     # Extract edge weights (first n-1 coefficients)
     a = ss.csr_matrix(clf.coef_[:n-1])
-    a = np.abs(a)
+    a = abs(a)
     a /= a.sum()
     # Add a zero on the diagonal
     a.indices[np.searchsorted(a.indices, i):] += 1
@@ -73,7 +73,7 @@ def _l1_graph_solve_k(clf, X, k):
     # Extract edge weights (first k coefficients)
     a = ss.csr_matrix((clf.coef_[:k], idx, [0, k]), shape=(1, n))
     a.eliminate_zeros()  # some of the first k might be zeros
-    a = np.abs(a)
+    a = abs(a)
     a /= a.sum()
     W.append(a)
   return ss.vstack(W)
