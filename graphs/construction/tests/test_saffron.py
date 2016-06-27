@@ -41,6 +41,19 @@ class TestSaffron(unittest.TestCase):
     # just a smoke test for now, to test the tangent_dim > 1 case
     saffron(X, q=16, k=3, tangent_dim=2, decay_rate=0.75, max_iter=30)
 
+  # XXX: This test doesn't pass, though it's unclear if that's due to a bug.
+  '''
+  def test_helix(self):
+    # attempt to replicate the squashed helix example from the paper
+    t = np.linspace(0, 7*np.pi, 439)
+    X = np.column_stack((np.sin(t), np.cos(t), 0.001*t))
+    G = saffron(X, q=32, k=4, tangent_dim=1, curv_thresh=0.95, decay_rate=0.9,
+                max_iter=100)
+    # check that G doesn't short circuit across loops of the helix
+    ii, jj = G.pairs().T
+    diag_offsets = np.unique(np.abs(ii - jj))
+    assert_array_equal(diag_offsets, [1, 2])'''
+
 
 if __name__ == '__main__':
   unittest.main()
