@@ -17,6 +17,13 @@ class AdjacencyMatrixGraph(Graph):
   def is_weighted(self):
     return True
 
+  def subgraph(self, mask):
+    adj = self.matrix(dense=True, csr=True, csc=True)
+    sub_adj = adj[mask][:,mask]
+    return Graph.from_adj_matrix(sub_adj)
+
+  subgraph.__doc__ = Graph.subgraph.__doc__
+
 
 class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
   def __init__(self, adj):

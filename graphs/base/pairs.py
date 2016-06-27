@@ -105,10 +105,20 @@ class EdgePairGraph(Graph):
     self._pairs = np.transpose(np.unravel_index(flat_inds, shape))
     return self
 
+  def subgraph(self, mask):
+    nv = self.num_vertices()
+    idx = np.arange(nv)[mask]
+    idx_map = np.full(nv, -1)
+    idx_map[idx] = np.arange(len(idx))
+    pairs = idx_map[self._pairs]
+    pairs = pairs[(pairs >= 0).all(axis=1)]
+    return EdgePairGraph(pairs, num_vertices=len(idx))
+
   pairs.__doc__ = Graph.pairs.__doc__
   matrix.__doc__ = Graph.matrix.__doc__
   add_edges.__doc__ = Graph.add_edges.__doc__
   remove_edges.__doc__ = Graph.remove_edges.__doc__
+  subgraph.__doc__ = Graph.subgraph.__doc__
 
 
 class SymmEdgePairGraph(EdgePairGraph):
@@ -155,3 +165,10 @@ class SymmEdgePairGraph(EdgePairGraph):
       return self
     return SymmEdgePairGraph(self._pairs, num_vertices=self._num_vertices,
                              ensure_format=False)
+
+  def subgraph(self, mask):
+    g = EdgePairGraph.subgraph(mask)
+    return SymmEdgePairGraph(g._pairs, num_vertices=g._num_vertices,
+                             ensure_format=False)
+
+  subgraph.__doc__ = Graph.subgraph.__doc__

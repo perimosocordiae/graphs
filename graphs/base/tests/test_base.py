@@ -300,6 +300,25 @@ class TestGenericMembers(unittest.TestCase):
     gg = self.sym.remove_edges([0,1], [2,2], copy=True)
     assert_array_equal(gg.pairs(), [[0,1],[1,0],[1,1],[3,3]])
 
+  def test_subgraph(self):
+    adj = np.array(ADJ, dtype=float)
+    for G in self.graphs:
+      # entire graph in the subgraph
+      gg = G.subgraph(Ellipsis)
+      self.assertEqual(type(gg), type(G))
+      assert_array_equal(gg.matrix(dense=True), adj)
+
+      # half the graph
+      mask = slice(0, 2)
+      gg = G.subgraph(mask)
+      self.assertEqual(type(gg), type(G))
+      assert_array_equal(gg.matrix(dense=True), adj[mask][:,mask])
+
+      mask = np.array([False, True, True, False])
+      gg = G.subgraph(mask)
+      self.assertEqual(type(gg), type(G))
+      assert_array_equal(gg.matrix(dense=True), adj[mask][:,mask])
+
 
 if __name__ == '__main__':
   unittest.main()

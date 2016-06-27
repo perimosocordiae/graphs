@@ -52,6 +52,11 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin):
   def _update_edges(self, weights, copy=False):
     raise NotImplementedError()
 
+  def subgraph(self, mask):
+    '''Returns the subgraph with vertices V[mask].
+    mask : boolean mask, index, or slice'''
+    raise NotImplementedError()
+
   def copy(self):
     raise NotImplementedError()
 
