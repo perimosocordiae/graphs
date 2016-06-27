@@ -52,12 +52,17 @@ class TransformMixin(object):
     When ordered=True, subgraphs are ordered by number of vertices.
     '''
     num_ccs, labels = self.connected_components(directed=directed)
-    if num_ccs > 1 and ordered:
+    # check the trivial case first
+    if num_ccs == 1:
+      yield self
+      raise StopIteration
+    if ordered:
       # sort by descending size (num vertices)
       order = np.argsort(np.bincount(labels))[::-1]
     else:
       order = range(num_ccs)
 
+    # don't use self.subgraph() here, because we can reuse adj
     adj = self.matrix(dense=True, csr=True, csc=True)
     for c in order:
       mask = labels == c
