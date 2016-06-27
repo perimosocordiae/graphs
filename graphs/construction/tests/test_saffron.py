@@ -1,6 +1,6 @@
 import numpy as np
 import unittest
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal
 
 from graphs.construction import saffron
 
@@ -10,6 +10,7 @@ class TestSaffron(unittest.TestCase):
   def test_x(self):
     theta = np.concatenate((np.linspace(-0.25, 0.3, 8),
                             np.linspace(2.86, 3.4, 8)))
+    n = theta.shape[0]
     X = np.column_stack((np.sin(theta), np.sin(theta) * np.cos(theta)))
 
     G = saffron(X, q=5, k=2, tangent_dim=1, curv_thresh=0.9, decay_rate=0.5)
@@ -22,10 +23,10 @@ class TestSaffron(unittest.TestCase):
                   0.111, 0.11, 0.107, 0.107, 0.102, 0.208, 0.102, 0.207, 0.101,
                   0.213, 0.105, 0.217, 0.105, 0.213, 0.217, 0.109, 0.215, 0.209,
                   0.108, 0.106, 0.103, 0.209, 0.103]
-    ii, jj = G.pairs().T
-    assert_array_equal(ii, expected_ii)
-    assert_array_equal(jj, expected_jj)
-    assert_array_almost_equal(G.edge_weights(), expected_w, decimal=3)
+    exp = np.zeros((n, n), dtype=float)
+    exp[expected_ii, expected_jj] = expected_w
+
+    assert_array_almost_equal(G.matrix(dense=True), exp, decimal=3)
 
   def test_intersecting_planes(self):
     n1 = np.array([-0.25, -1, 1])
