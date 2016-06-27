@@ -45,7 +45,7 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
   B = W.copy()
   for n_iter in range(1, max_iter+1):
     oldB = B.copy()
-    updateB(oldB, B, W, degrees, damping, inds, backinds)
+    update_belief(oldB, B, W, degrees, damping, inds, backinds)
 
     # check for convergence
     if n_iter % INTERVAL == 0:
@@ -58,7 +58,7 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
       cbuff[cbuffpos] = c
       cbuffpos = (cbuffpos + 1) % len(cbuff)
 
-      change = update_change(B, oldB)
+      change = diff_belief(B, oldB)
       if np.isnan(change):
         warnings.warn("change is NaN! "
                       "BP will quit but solution could be invalid. "
@@ -86,7 +86,7 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
     elif d < 1:
       thresholds[i] = np.inf
     else:
-      thresholds[i] = Brow[quickselect(Brow, d-1)]
+      thresholds[i] = Brow[quickselect(-Brow, d-1)]
 
   ii,jj = np.where(B >= thresholds[:,None])
   pairs = np.column_stack((ii, inds[ii,jj]))
@@ -117,7 +117,7 @@ def _update_change(B, oldB):  # pragma: no cover
 
 
 def _quickselect(B_row, *ks):  # pragma: no cover
-  order = np.argpartition(-B_row, ks)
+  order = np.argpartition(B_row, ks)
   if len(ks) == 1:
     return order[ks[0]]
   return [order[k] for k in ks]
@@ -136,10 +136,10 @@ def _updateB(oldB, B, W, degrees, damping, inds, backinds):  # pragma: no cover
     belief = W[kk,bk] + W[j]
     oldBj = oldB[j]
     if d == oldBj.shape[0]:
-      bth = quickselect(oldBj, d-1)
+      bth = quickselect(-oldBj, d-1)
       bplus = -1
     else:
-      bth,bplus = quickselect(oldBj, d-1, d)
+      bth,bplus = quickselect(-oldBj, d-1, d)
 
     belief -= np.where(oldBj >= oldBj[bth], oldBj[bplus], oldBj[bth])
     B[kk,bk] = damping*belief + (1-damping)*oldB[kk,bk]
@@ -148,8 +148,8 @@ def _updateB(oldB, B, W, degrees, damping, inds, backinds):  # pragma: no cover
 try:
   import pyximport
   pyximport.install(setup_args={'include_dirs': np.get_include()})
-  from b_matching_helper import quickselect, updateB, update_change
+  from ._fast_paths import quickselect, update_belief, diff_belief
 except ImportError:
   quickselect = _quickselect
-  updateB = _updateB
-  update_change = _update_change
+  update_belief = _updateB
+  diff_belief = _update_change
