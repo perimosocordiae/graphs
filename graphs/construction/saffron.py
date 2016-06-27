@@ -87,7 +87,8 @@ def saffron(X, q=32, k=4, tangent_dim=1, curv_thresh=0.95, decay_rate=0.9,
   indptr, indices, data = [0], [], []
   for i, row in enumerate(W):
     nbrs = row.nonzero()[-1]
-    nbrs = nbrs[np.argpartition(row[nbrs], len(nbrs)-k)[-k:]]
+    if len(nbrs) > k:
+      nbrs = nbrs[np.argpartition(row[nbrs], len(nbrs)-k)[-k:]]
     indices.extend(nbrs)
     indptr.append(len(nbrs))
     data.extend(dist[i, nbrs])
