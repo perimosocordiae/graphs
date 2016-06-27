@@ -6,10 +6,39 @@ import numpy as np
 cimport numpy as np
 cimport cython
 from libcpp cimport bool
-from sklearn.metric import pairwise_distances
+from sklearn.metrics import pairwise_distances
 
 IDX_DTYPE = np.intp
 ctypedef Py_ssize_t IDX_DTYPE_t
+
+
+def find_relative_neighbors(D):
+  cdef IDX_DTYPE_t n = D.shape[0]
+  cdef IDX_DTYPE_t max_num_pairs = n * (n-1) // 2
+  pairs = np.empty((max_num_pairs, 2), dtype=IDX_DTYPE)
+  cdef IDX_DTYPE_t end_idx = _fill_rn_pairs(D, n, pairs)
+  return pairs[:end_idx]
+
+
+cdef IDX_DTYPE_t _fill_rn_pairs(double[:,::1] D,
+                                IDX_DTYPE_t n,
+                                IDX_DTYPE_t[:,::1] pairs):
+  cdef IDX_DTYPE_t idx = 0
+  cdef IDX_DTYPE_t r, c, i
+  cdef double d
+  for r in range(n-1):
+    for c in range(r+1, n):
+      d = D[r,c]
+      for i in range(n):
+        if i == r or i == c:
+          continue
+        if D[r,i] < d and D[c,i] < d:
+          break  # Point in lune, this is not an edge
+      else:
+        pairs[idx,0] = r
+        pairs[idx,1] = c
+        idx += 1
+  return idx
 
 
 def inter_cluster_distance(X, num_clusters, cluster_labels):

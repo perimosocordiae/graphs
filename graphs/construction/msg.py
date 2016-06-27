@@ -276,6 +276,6 @@ def _inter_cluster_distance(X, num_clusters, cluster_labels):
 try:
   import pyximport
   pyximport.install(setup_args={'include_dirs': np.get_include()})
-  from msg_helper import inter_cluster_distance
-except:
+  from ._fast_paths import inter_cluster_distance
+except ImportError:
   inter_cluster_distance = _inter_cluster_distance

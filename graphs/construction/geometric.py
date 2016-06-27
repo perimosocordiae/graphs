@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import numpy as np
 from scipy.spatial import Delaunay
@@ -40,18 +40,31 @@ def gabriel_graph(X, metric='euclidean'):
 
 
 def relative_neighborhood_graph(X, metric='euclidean'):
-  n = X.shape[0]
-  a,b = np.triu_indices(n, k=1)
   D = pairwise_distances(X, metric=metric)
+  pairs = find_relative_neighbors(D)
+  return Graph.from_edge_pairs(pairs, num_vertices=D.shape[0], symmetric=True)
+
+
+def _find_relative_neighbors(D):
   # Naive algorithm, but it's generic to any D (doesn't depend on delaunay).
+  n = D.shape[0]
   pairs = []
-  for pair in zip(a,b):
-    d = D[pair]
-    for i in range(n):
-      if i in pair:
-        continue
-      if (D[pair,i] < d).all():
-        break  # Point in lune, this is not an edge
-    else:
-      pairs.append(pair)
-  return Graph.from_edge_pairs(pairs, num_vertices=X.shape[0], symmetric=True)
+  for r in range(n-1):
+    for c in range(r+1, n):
+      d = D[r,c]
+      for i in range(n):
+        if i == r or i == c:
+          continue
+        if D[r,i] < d and D[c,i] < d:
+          break  # Point in lune, this is not an edge
+      else:
+        pairs.append((r,c))
+  return pairs
+
+
+try:
+  import pyximport
+  pyximport.install(setup_args={'include_dirs': np.get_include()})
+  from ._fast_paths import find_relative_neighbors
+except ImportError:
+  find_relative_neighbors = _find_relative_neighbors
