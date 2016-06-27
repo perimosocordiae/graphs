@@ -107,7 +107,7 @@ cdef IDX_DTYPE_t[::1] where_eq(int[::1] x, IDX_DTYPE_t val):
   return result
 
 
-cpdef IDX_DTYPE_t quickselect(double[::1] B_row, IDX_DTYPE_t k):
+cpdef IDX_DTYPE_t quickselect(B_row, IDX_DTYPE_t k):
   cdef IDX_DTYPE_t[::1] order = np.argpartition(B_row, k)
   return order[k]
 
