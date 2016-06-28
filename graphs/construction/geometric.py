@@ -2,47 +2,42 @@ from __future__ import absolute_import, print_function
 
 import numpy as np
 from scipy.spatial import Delaunay
-from scipy.sparse import coo_matrix
-from sklearn.metrics.pairwise import pairwise_distances, paired_distances
+from sklearn.metrics.pairwise import (
+    pairwise_distances, paired_distances, pairwise_distances_argmin_min)
 from graphs import Graph
 from ..mini_six import range
 
 __all__ = ['delaunay_graph', 'gabriel_graph', 'relative_neighborhood_graph']
 
 
-def delaunay_graph(X):
+def delaunay_graph(X, weighted=False):
   tri = Delaunay(X)
   n = X.shape[0]
-  rows = np.empty(2*np.product(tri.simplices.shape), dtype=np.intp)
-  cols = np.empty_like(rows)
-  data = np.ones_like(rows, dtype=bool)
-  i = 0
-  d = tri.simplices.shape[1]
-  for corners in tri.simplices:
-    rows[i:i+d] = corners
-    cols[i:i+d-1] = corners[1:]
-    i += d
-    cols[i-1] = corners[0]
-  rows[i:] = cols[:i]
-  cols[i:] = rows[:i]
-  adj = coo_matrix((data, (rows, cols)), shape=(n,n))
-  return Graph.from_adj_matrix(adj)
+  e1 = tri.simplices.ravel()
+  e2 = np.roll(tri.simplices, 1, axis=1).ravel()
+  pairs = np.column_stack((e1, e2))
+  w = paired_distances(X[e1], X[e2]) if weighted else None
+  return Graph.from_edge_pairs(pairs, num_vertices=n, symmetric=True, weights=w)
 
 
-def gabriel_graph(X, metric='euclidean'):
-  a,b = np.triu_indices(X.shape[0], k=1)
+def gabriel_graph(X, metric='euclidean', weighted=False):
+  n = X.shape[0]
+  a, b = np.triu_indices(n, k=1)
   midpoints = (X[a] + X[b]) / 2
-  Dmid = pairwise_distances(midpoints, X, metric=metric).min(axis=1)
+  _, Dmid = pairwise_distances_argmin_min(midpoints, X, metric=metric)
   Dedge = paired_distances(X[a], X[b], metric=metric)
   mask = (Dedge - Dmid * 2) < 1e-10
-  pairs = np.transpose((a[mask],b[mask]))
-  return Graph.from_edge_pairs(pairs, num_vertices=X.shape[0], symmetric=True)
+  pairs = np.column_stack((a[mask], b[mask]))
+  w = Dedge[mask] if weighted else None
+  return Graph.from_edge_pairs(pairs, num_vertices=n, symmetric=True, weights=w)
 
 
-def relative_neighborhood_graph(X, metric='euclidean'):
+def relative_neighborhood_graph(X, metric='euclidean', weighted=False):
   D = pairwise_distances(X, metric=metric)
-  pairs = find_relative_neighbors(D)
-  return Graph.from_edge_pairs(pairs, num_vertices=D.shape[0], symmetric=True)
+  n = D.shape[0]
+  pairs = np.asarray(find_relative_neighbors(D))
+  w = D[pairs[:,0],pairs[:,1]] if weighted else None
+  return Graph.from_edge_pairs(pairs, num_vertices=n, symmetric=True, weights=w)
 
 
 def _find_relative_neighbors(D):

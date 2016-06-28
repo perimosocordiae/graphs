@@ -1,6 +1,6 @@
 import numpy as np
 import unittest
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from graphs.construction import (
     delaunay_graph, gabriel_graph, relative_neighborhood_graph)
@@ -27,6 +27,18 @@ class TestGeometric(unittest.TestCase):
     G = delaunay_graph(self.pts)
     assert_array_equal(G.matrix(dense=True), expected)
 
+    # with edge weights
+    G = delaunay_graph(self.pts, weighted=True)
+    expected = [
+        0.198635, 0.205419, 0.188162, 0.682924, 0.16289, 0.255361,
+        0.234094, 0.34904, 0.628723, 0.479654, 0.450565, 0.379223,
+        0.198635, 0.16289, 0.258683, 0.503557, 0.628723, 0.319678,
+        0.185132, 0.205419, 0.479654, 0.388032, 0.061188, 0.508128,
+        0.255361, 0.450565, 0.319678, 0.388032, 0.347955, 0.192354,
+        0.188162, 0.234094, 0.258683, 0.061188, 0.347955, 0.682924,
+        0.379223, 0.508128, 0.34904, 0.503557, 0.185132, 0.192354]
+    assert_array_almost_equal(G.edge_weights(), expected)
+
   def test_gabriel(self):
     expected = np.array([
         [0,3], [0,7], [1,3], [1,6], [1,7], [2,5], [2,6], [2,8], [3,7], [4,9],
@@ -35,12 +47,31 @@ class TestGeometric(unittest.TestCase):
     G = gabriel_graph(self.pts)
     assert_array_equal(G.pairs(), expected)
 
+    # with edge weights
+    G = gabriel_graph(self.pts, weighted=True)
+    expected = [
+        0.198635, 0.188162, 0.16289, 0.255361, 0.234094, 0.479654,
+        0.450565, 0.379223, 0.198635, 0.16289, 0.258683, 0.185132,
+        0.479654, 0.061188, 0.508128, 0.255361, 0.450565, 0.192354,
+        0.188162, 0.234094, 0.258683, 0.061188, 0.379223, 0.508128,
+        0.185132, 0.192354]
+    assert_array_almost_equal(G.edge_weights(), expected)
+
   def test_relative_neighborhood(self):
     expected = np.array([
         [0,3], [0,7], [1,3], [1,6], [1,7], [2,6], [2,8], [4,9], [5,7], [6,9]])
     expected = np.vstack((expected, expected[:,::-1]))
     G = relative_neighborhood_graph(self.pts)
     assert_array_equal(G.pairs(), expected)
+
+    # with edge weights
+    G = relative_neighborhood_graph(self.pts, weighted=True)
+    expected = [
+        0.198635, 0.188162, 0.16289, 0.255361, 0.234094, 0.450565,
+        0.379223, 0.198635, 0.16289, 0.185132, 0.061188, 0.255361,
+        0.450565, 0.192354, 0.188162, 0.234094, 0.061188, 0.379223,
+        0.185132, 0.192354]
+    assert_array_almost_equal(G.edge_weights(), expected)
 
 if __name__ == '__main__':
   unittest.main()
