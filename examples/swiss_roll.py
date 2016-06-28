@@ -4,7 +4,6 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from sklearn.metrics import pairwise_distances
 from time import time
-from viztricks import axes_grid
 
 from graphs.generators.swiss_roll import swiss_roll
 from graphs.construction import (
@@ -29,9 +28,9 @@ def main():
     _c('dMST', disjoint_mst, D, metric='precomputed'),
   ]
 
-  print('Plotting', len(graph_info), 'graphs + embeddings')
-  fig1, axes1 = axes_grid(len(graph_info), subplot_kw=dict(projection='3d'))
-  fig2, axes2 = axes_grid(len(graph_info))
+  print('Plotting graphs & embeddings')
+  fig1, axes1 = plt.subplots(nrows=3, ncols=3, subplot_kw=dict(projection='3d'))
+  fig2, axes2 = plt.subplots(nrows=3, ncols=3)
   fig1.suptitle('Original Coordinates')
   fig2.suptitle('Isomap Embeddings')
   plot_kwargs = dict(directed=False, weighted=False, edge_style='k-')
