@@ -51,9 +51,11 @@ class TestStaticConstructors(unittest.TestCase):
     expected = [[0,1,0,0,0],[1,0,1,0,0],[0,2,0,0.1,0],[0,0,3.1,0,2],[0,0,0,4,0]]
     G = Graph.from_edge_pairs(p, weights=w, num_vertices=5)
     assert_array_almost_equal(G.matrix(dense=True), expected)
-    # weighted + symmetric is NYI for now
-    self.assertRaises(NotImplementedError, Graph.from_edge_pairs, PAIRS,
-                      symmetric=True, weights=w)
+
+    # weighted + symmetric
+    expected = [[0,1,2,0],[1,3,4,0],[2,4,0,0],[0,0,0,5]]
+    G = Graph.from_edge_pairs(PAIRS, symmetric=True, weights=np.arange(1,6))
+    assert_array_equal(G.matrix(dense=True), expected)
 
   def test_from_adj(self):
     m = Graph.from_adj_matrix(ADJ)
