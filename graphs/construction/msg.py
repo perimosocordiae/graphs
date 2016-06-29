@@ -91,7 +91,7 @@ def flesh_out(X, W, embed_dim, CC_labels, dist_mult=2.0, angle_thresh=0.2,
       W[e[0],e[1]] = True
       W[e[1],e[0]] = True
       degree[e] += 1
-  return Graph.from_adj_matrix(W.astype(int))
+  return Graph.from_adj_matrix(np.where(W, np.sqrt(D), 0))
 
 
 def grow_trees(X, G, embed_dim, verbose=False):
