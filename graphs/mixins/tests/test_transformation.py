@@ -93,6 +93,22 @@ class TestTransformation(unittest.TestCase):
     mst = G.minimum_spanning_subtree()
     assert_array_almost_equal(mst.matrix(dense=True), expected, decimal=3)
 
+  def test_neighborhood_subgraph(self):
+    G = neighbor_graph(X, k=4)
+
+    # simple 1-neighbor subgraph
+    g, mask = G.neighborhood_subgraph(0, radius=1, weighted=False,
+                                      return_mask=True)
+    assert_array_equal(mask.nonzero()[0], [0,3,7,10,14])
+    self.assertEqual(g.num_vertices(), 5)
+    self.assertEqual(g.num_edges(), 13)
+
+    # distance-based subgraph
+    g, mask = G.neighborhood_subgraph(12, radius=0.5, return_mask=True)
+    assert_array_equal(mask.nonzero()[0], [2,4,6,9,12,15,17])
+    self.assertEqual(g.num_vertices(), 7)
+    self.assertEqual(g.num_edges(), 23)
+
   def test_circle_tear(self):
     G = neighbor_graph(X, k=4).symmetrize(method='max', copy=False)
 
