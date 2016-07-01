@@ -63,10 +63,9 @@ cpdef betweenness(adj, bint weighted, bint vertex):
 
 
 cdef dict _sssp_unweighted(adj, intc s, intc[::1] sigma, double[::1] dist, stack[intc]& S):
-  cdef intc n, v, w = adj.shape[0]
-  cdef dict pred = {}
+  cdef intc v, w, i, j, widx
   cdef double new_weight
-  cdef intc[::1] neighbors
+  cdef dict pred = {}
   sigma[:] = 0
   sigma[s] = 1
   dist[:] = INF
@@ -78,8 +77,10 @@ cdef dict _sssp_unweighted(adj, intc s, intc[::1] sigma, double[::1] dist, stack
     Q.pop_front()
     S.push(v)
     new_weight = dist[v] + 1
-    neighbors = adj[v].nonzero()[-1].astype(np.int)
-    for w in neighbors:
+    i = adj.indptr[v]
+    j = adj.indptr[v+1]
+    for widx in range(i, j):
+      w = adj.indices[widx]
       if dist[w] > new_weight:
         pred[w] = [v]
         sigma[w] = sigma[v]
@@ -92,10 +93,11 @@ cdef dict _sssp_unweighted(adj, intc s, intc[::1] sigma, double[::1] dist, stack
 
 
 cdef dict _sssp_weighted(adj, intc s, intc[::1] sigma, double[::1] dist, stack[intc]& S):
-  cdef intc v, w, n = adj.shape[0]
-  cdef double dist_v, new_weight
+  cdef intc v, w, i, j, widx
+  cdef double dist_v, new_weight, d
   cdef set SS = set()
   cdef dict pred = {}
+  sigma[:] = 0
   sigma[s] = 1
   dist[:] = INF
   dist[s] = 0
@@ -107,9 +109,12 @@ cdef dict _sssp_weighted(adj, intc s, intc[::1] sigma, double[::1] dist, stack[i
     dist_v = tmp.first
     v = tmp.second
     SS.add(v)
-    neighbors = adj[v].nonzero()[-1].astype(np.int)
-    for w in neighbors:
-      new_weight = dist_v + adj[v,w]
+    i = adj.indptr[v]
+    j = adj.indptr[v+1]
+    for widx in range(i, j):
+      w = adj.indices[widx]
+      d = adj.data[widx]
+      new_weight = dist_v + d
       if dist[w] > new_weight:
         pred[w] = [v]
         sigma[w] = sigma[v]
@@ -123,4 +128,3 @@ cdef dict _sssp_weighted(adj, intc s, intc[::1] sigma, double[::1] dist, stack[i
   for _,w in sorted(foo):
     S.push(w)
   return pred
-

@@ -93,7 +93,7 @@ class AnalysisMixin(object):
     assert kind in ('vertex', 'edge'), 'Invalid kind argument: ' + kind
     weighted = weighted is not False and self.is_weighted()
     directed = directed if directed is not None else self.is_directed()
-    adj = self.matrix(dense=True, csr=True)
+    adj = self.matrix(csr=True)
     btw = betweenness(adj, weighted, kind=='vertex')
     # normalize if undirected
     if not directed:
