@@ -60,6 +60,9 @@ class TestSymmEdgePairGraph(unittest.TestCase):
     expected = [[0,1], [0,2], [1,0], [1,1], [1,2], [2,0], [2,1], [3,3]]
     P = self.G.pairs()
     assert_array_equal(sorted(P.tolist()), expected)
+    # test the directed case
+    P = self.G.pairs(directed=False)
+    assert_array_equal(P, [[0,1],[0,2],[1,1],[1,2],[3,3]])
 
   def test_symmetrize(self):
     self.assertIs(self.G.symmetrize(copy=False), self.G)

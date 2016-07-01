@@ -134,8 +134,12 @@ class SymmEdgePairGraph(EdgePairGraph):
       self._pairs = self._pairs[idx]
     self._offdiag_mask = np.not_equal(*self._pairs.T)
 
-  def pairs(self, copy=False):
-    return np.vstack((self._pairs[self._offdiag_mask], self._pairs[:,::-1]))
+  def pairs(self, copy=False, directed=True):
+    if directed:
+      return np.vstack((self._pairs[self._offdiag_mask], self._pairs[:,::-1]))
+    if copy:
+      return self._pairs.copy()
+    return self._pairs
 
   def num_edges(self):
     num_offdiag_edges = np.count_nonzero(self._offdiag_mask)
@@ -171,4 +175,5 @@ class SymmEdgePairGraph(EdgePairGraph):
     return SymmEdgePairGraph(g._pairs, num_vertices=g._num_vertices,
                              ensure_format=False)
 
+  pairs.__doc__ = Graph.pairs.__doc__
   subgraph.__doc__ = Graph.subgraph.__doc__
