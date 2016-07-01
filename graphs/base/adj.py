@@ -44,12 +44,9 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     raise NotImplementedError('Unknown matrix type(s): %s' % (
                               tuple(kwargs.keys()),))
 
-  def edge_weights(self, copy=False):
-    ii,jj = self.pairs().T
-    W = self._adj[ii,jj]
-    if copy:
-      return W.copy()
-    return W
+  def edge_weights(self, copy=False, directed=True):
+    ii,jj = self.pairs(directed=directed).T
+    return self._adj[ii,jj]
 
   def num_edges(self):
     return np.count_nonzero(self._adj)
@@ -129,12 +126,15 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     raise NotImplementedError('Unknown matrix type(s): %s' % (
                               tuple(kwargs.keys()),))
 
-  def edge_weights(self, copy=False):
-    W = self._adj.data.ravel()  # assumes correct internal ordering
-    # Also assumes no explicit zeros
+  def edge_weights(self, copy=False, directed=True):
+    if not directed:
+      ii, jj = ss.triu(self._adj).nonzero()
+      return np.asarray(self._adj[ii, jj]).ravel()
+    # XXX: assumes correct internal ordering and no explicit zeros
+    w = self._adj.data.ravel()
     if copy:
-      return W.copy()
-    return W
+      return w.copy()
+    return w
 
   def num_edges(self):
     return self._adj.nnz

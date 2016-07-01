@@ -24,8 +24,10 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin):
     '''
     raise NotImplementedError()
 
-  def edge_weights(self, copy=False):
-    '''Returns a (num_edges,)-array of edge weights.'''
+  def edge_weights(self, copy=False, directed=True):
+    '''Returns a (num_edges,)-array of edge weights.
+    Weights correspond to the (s,t) pairs returned by pairs().
+    When directed=False, only weights with s <= t are returned.'''
     raise NotImplementedError()
 
   def num_edges(self):
