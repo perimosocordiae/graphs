@@ -62,7 +62,6 @@ def flesh_out(X, W, embed_dim, CC_labels, dist_mult=2.0, angle_thresh=0.2,
   # candidate edges must not already be connected, or in the same initial CC
   CC_mask = CC_labels != CC_labels[:,None]
   candidate_edges = ~W & dist_mask & hops_mask & CC_mask
-  candidate_points, = np.where(np.any(candidate_edges, axis=0))
   if verbose:  # pragma: no cover
     print('before F:', candidate_edges.sum(), 'potentials')
 
@@ -80,12 +79,12 @@ def flesh_out(X, W, embed_dim, CC_labels, dist_mult=2.0, angle_thresh=0.2,
   mask = F < angle_thresh
   edge_ii = ii[mask]
   edge_jj = jj[mask]
+  edge_order = np.argsort(F[mask])
   if verbose:  # pragma: no cover
     print('got', len(edge_ii), 'potential edges')
   # Prevent any one node from getting a really high degree
   degree = W.sum(axis=0)
-  sorted_edges = np.hstack((edge_ii[:,None], edge_jj[:,None])
-                           )[np.argsort(F[mask])]
+  sorted_edges = np.column_stack((edge_ii, edge_jj))[edge_order]
   for e in sorted_edges:
     if degree[e].max() < max_degree:
       W[e[0],e[1]] = True
