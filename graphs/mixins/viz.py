@@ -1,4 +1,6 @@
+from __future__ import print_function
 import numpy as np
+from itertools import izip_longest
 from matplotlib import pyplot
 from matplotlib.axes import mlines, mcolors
 from matplotlib.collections import LineCollection
@@ -55,6 +57,88 @@ class VizMixin(object):
     if title:
       ax.set_title(title)
     return pyplot.show
+
+  def to_html(self, html_file, directed=None, weighted=None, vertex_ids=None,
+              vertex_colors=None, vertex_labels=None, width=900, height=600,
+              title=None, svg_border='1px solid black'):
+    # input validation
+    if weighted is None:
+      weighted = self.is_weighted()
+    if directed is None:
+      directed = self.is_directed()
+    if directed:
+      raise NotImplementedError('Directed graphs are NYI for HTML output.')
+    if (vertex_colors is not None) and (vertex_labels is not None):
+      raise ValueError('Supply only one of vertex_colors, vertex_labels')
+
+    # set up vertices
+    if vertex_ids is None:
+      vertex_ids = np.arange(self.num_vertices())
+    elif len(vertex_ids) != self.num_vertices():
+      raise ValueError('len(vertex_ids) != num vertices.')
+
+    if vertex_labels is not None:
+      vlabels, vcolors = np.unique(vertex_labels, return_inverse=True)
+      if len(vcolors) != len(vertex_ids):
+        raise ValueError('len(vertex_labels) != num vertices.')
+    elif vertex_colors is not None:
+      vcolors = np.array(vertex_colors, dtype=float, copy=False)
+      if len(vcolors) != len(vertex_ids):
+        raise ValueError('len(vertex_colors) != num vertices.')
+      vcolors -= vcolors.min()
+      vcolors /= vcolors.max()
+    else:
+      vcolors = []
+
+    node_json = []
+    for name, c in izip_longest(vertex_ids, vcolors):
+      if c is not None:
+        node_json.append('{"id": "%s", "color": %s}' % (name, c))
+      else:
+        node_json.append('{"id": "%s"}' % name)
+
+    # set up edges
+    pairs = self.pairs(directed=directed)
+    if weighted:
+      weights = self.edge_weights(directed=directed, copy=True)
+      weights -= weights.min()
+      weights /= weights.max()
+    else:
+      weights = np.zeros(len(pairs)) + 0.5
+
+    edge_json = []
+    for (i,j), w in zip(pairs, weights):
+      edge_json.append('{"source": "%s", "target": "%s", "weight": %f}' % (
+          vertex_ids[i], vertex_ids[j], w))
+
+    # emit self-contained HTML
+    if not hasattr(html_file, 'write'):
+      fh = open(html_file, 'w')
+    else:
+      fh = html_file
+    print('<!DOCTYPE html><meta charset="utf-8"><style>', file=fh)
+    print('svg { border: ', svg_border, '; }', sep='', file=fh)
+    if weighted:
+      print('.links line { stroke-width: 2px; }', file=fh)
+    else:
+      print('.links line { stroke: #000; stroke-width: 2px; }', file=fh)
+    print('.nodes circle { stroke: #fff; stroke-width: 1px; }', file=fh)
+    print('</style>', file=fh)
+    if title:
+      print('<h1>', title, '</h1>', sep='', file=fh)
+    print('<svg width="%d" height="%d"></svg>' % (width, height), file=fh)
+    print('<script src="https://d3js.org/d3.v4.min.js"></script>', file=fh)
+    print('<script>', LAYOUT_JS, sep='\n', file=fh)
+    if vertex_colors is not None:
+      print('var vcolor=d3.scaleSequential(d3.interpolateViridis);', file=fh)
+    elif vertex_labels is not None:
+      scale = 'd3.schemeCategory%d' % (10 if len(vlabels) <= 10 else 20)
+      print('var vcolor = d3.scaleOrdinal(%s);' % scale, file=fh)
+    else:
+      print('function vcolor(){ return "#1776b6"; }', file=fh)
+    print('var sim=layout_graph({"nodes": [%s], "links": [%s]});</script>' % (
+        ',\n'.join(node_json), ',\n'.join(edge_json)), file=fh)
+    fh.flush()
 
 
 def _parse_fmt(fmt, color_key='colors', ls_key='linestyles',
@@ -141,3 +225,72 @@ def _get_axis(is_3d, fig):
     from mpl_toolkits.mplot3d import Axes3D
     return Axes3D(fig)
   return fig.gca()
+
+
+LAYOUT_JS = '''
+function layout_graph(graph) {
+  var svg = d3.select("svg"),
+      width = +svg.attr("width"),
+      height = +svg.attr("height");
+
+  var simulation = d3.forceSimulation()
+    .force("charge", d3.forceManyBody())
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("link", d3.forceLink()
+                     .id(function(d) { return d.id; })
+                     .distance(function(d) { return d.weight*20 + 20; })
+                     .strength(1));
+
+  function dragstarted(d) {
+    if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+    d.fx = d.x;
+    d.fy = d.y;
+  }
+
+  function dragged(d) {
+    d.fx = d3.event.x;
+    d.fy = d3.event.y;
+  }
+
+  function dragended(d) {
+    if (!d3.event.active) simulation.alphaTarget(0);
+    d.fx = null;
+    d.fy = null;
+  }
+
+  var ecolor = d3.scaleSequential(d3.interpolateViridis);
+  var container = svg.append("g");
+  var link = container.append("g").attr("class", "links")
+    .selectAll("line").data(graph.links)
+    .enter().append("line")
+      .attr("stroke", function(d) { return ecolor(d.weight); });
+
+  var node = container.append("g").attr("class", "nodes")
+    .selectAll("circle").data(graph.nodes)
+    .enter().append("circle")
+      .attr("r", 5)
+      .attr("fill", function(d) { return vcolor(d.color); })
+      .call(d3.drag().on("start", dragstarted)
+                     .on("drag", dragged)
+                     .on("end", dragended));
+  node.append("title").text(function(d) { return d.id; });
+
+  function zoomed() {
+    container.attr("transform", d3.event.transform);
+    container.selectAll("circle").attr("r", 5/d3.event.transform.k)
+  }
+  svg.call(d3.zoom().on("zoom", zoomed));
+
+  function ticked() {
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+    node.attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+  }
+  simulation.nodes(graph.nodes).on("tick", ticked);
+  simulation.force("link").links(graph.links);
+  return simulation;
+}
+'''

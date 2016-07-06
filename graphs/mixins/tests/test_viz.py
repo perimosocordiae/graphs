@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from io import BytesIO
 from scipy.sparse import csr_matrix
 from matplotlib import pyplot
 pyplot.switch_backend('template')
@@ -65,6 +66,34 @@ class TestPlot(unittest.TestCase):
         G.plot(x, edge_style='oo')
       with self.assertRaises(ValueError):
         G.plot(x, edge_style='kk')
+
+  def test_plot_fig(self):
+    for G in self.graphs:
+      G.plot(self.coords[:,:2], fig='new')
+      G.plot(self.coords[:,:2], fig='current')
+
+  def test_to_html(self):
+    for G in self.graphs:
+      buf = BytesIO()
+      # just make sure no exceptions are thrown
+      G.to_html(buf, directed=False)
+      buf.truncate(0)
+
+    c = np.arange(5)
+    G.to_html(buf, vertex_ids=c, directed=False, title='Test Page')
+    buf.truncate(0)
+    G.to_html(buf, vertex_colors=c, directed=False)
+    buf.truncate(0)
+    G.to_html(buf, vertex_labels=c, directed=False)
+    buf.truncate(0)
+    with self.assertRaises(ValueError):
+      G.to_html(buf, vertex_colors=c, vertex_labels=c, directed=False)
+    with self.assertRaises(ValueError):
+      G.to_html(buf, vertex_ids=c[:2], directed=False)
+    with self.assertRaises(ValueError):
+      G.to_html(buf, vertex_colors=c[:2], directed=False)
+    with self.assertRaises(ValueError):
+      G.to_html(buf, vertex_labels=c[:2], directed=False)
 
 
 if __name__ == '__main__':
