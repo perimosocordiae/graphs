@@ -1,9 +1,11 @@
 import numpy as np
 import unittest
 from numpy.testing import assert_array_equal, assert_array_almost_equal
+from sklearn.metrics import pairwise_distances
 
 from graphs.construction import (
     delaunay_graph, gabriel_graph, relative_neighborhood_graph)
+from graphs.construction.geometric import _find_relative_neighbors
 
 
 class TestGeometric(unittest.TestCase):
@@ -58,10 +60,19 @@ class TestGeometric(unittest.TestCase):
     assert_array_almost_equal(G.edge_weights(), expected)
 
   def test_relative_neighborhood(self):
+    dist = pairwise_distances(self.pts)
     expected = np.array([
         [0,3], [0,7], [1,3], [1,6], [1,7], [2,6], [2,8], [4,9], [5,7], [6,9]])
+
+    pairs = np.asarray(_find_relative_neighbors(dist))
+    assert_array_equal(pairs, expected)
+
     expected = np.vstack((expected, expected[:,::-1]))
     G = relative_neighborhood_graph(self.pts)
+    assert_array_equal(G.pairs(), expected)
+
+    # with metric='precomputed'
+    G = relative_neighborhood_graph(dist, metric='precomputed')
     assert_array_equal(G.pairs(), expected)
 
     # with edge weights
