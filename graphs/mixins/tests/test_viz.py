@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from io import BytesIO
+from io import StringIO
 from scipy.sparse import csr_matrix
 from matplotlib import pyplot
 pyplot.switch_backend('template')
@@ -74,7 +74,7 @@ class TestPlot(unittest.TestCase):
 
   def test_to_html(self):
     for G in self.graphs:
-      buf = BytesIO()
+      buf = StringIO()
       # just make sure no exceptions are thrown
       G.to_html(buf, directed=False)
       buf.truncate(0)

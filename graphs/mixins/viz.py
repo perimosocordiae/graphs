@@ -1,4 +1,4 @@
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, division
 import numpy as np
 from matplotlib import pyplot
 from matplotlib.axes import mlines, mcolors
@@ -101,7 +101,7 @@ class VizMixin(object):
     # set up edges
     pairs = self.pairs(directed=directed)
     if weighted:
-      weights = self.edge_weights(directed=directed, copy=True)
+      weights = self.edge_weights(directed=directed, copy=True).astype(float)
       weights -= weights.min()
       weights /= weights.max()
     else:
@@ -117,27 +117,27 @@ class VizMixin(object):
       fh = open(html_file, 'w')
     else:
       fh = html_file
-    print('<!DOCTYPE html><meta charset="utf-8"><style>', file=fh)
-    print('svg { border: ', svg_border, '; }', sep='', file=fh)
+    print(u'<!DOCTYPE html><meta charset="utf-8"><style>', file=fh)
+    print(u'svg { border: %s; }' % svg_border, file=fh)
     if weighted:
-      print('.links line { stroke-width: 2px; }', file=fh)
+      print(u'.links line { stroke-width: 2px; }', file=fh)
     else:
-      print('.links line { stroke: #000; stroke-width: 2px; }', file=fh)
-    print('.nodes circle { stroke: #fff; stroke-width: 1px; }', file=fh)
-    print('</style>', file=fh)
+      print(u'.links line { stroke: #000; stroke-width: 2px; }', file=fh)
+    print(u'.nodes circle { stroke: #fff; stroke-width: 1px; }', file=fh)
+    print(u'</style>', file=fh)
     if title:
-      print('<h1>', title, '</h1>', sep='', file=fh)
-    print('<svg width="%d" height="%d"></svg>' % (width, height), file=fh)
-    print('<script src="https://d3js.org/d3.v4.min.js"></script>', file=fh)
-    print('<script>', LAYOUT_JS, sep='\n', file=fh)
+      print(u'<h1>%s</h1>' % title, file=fh)
+    print(u'<svg width="%d" height="%d"></svg>' % (width, height), file=fh)
+    print(u'<script src="https://d3js.org/d3.v4.min.js"></script>', file=fh)
+    print(u'<script>', LAYOUT_JS, sep=u'\n', file=fh)
     if vertex_colors is not None:
-      print('var vcolor=d3.scaleSequential(d3.interpolateViridis);', file=fh)
+      print(u'var vcolor=d3.scaleSequential(d3.interpolateViridis);', file=fh)
     elif vertex_labels is not None:
       scale = 'd3.schemeCategory%d' % (10 if len(vlabels) <= 10 else 20)
-      print('var vcolor = d3.scaleOrdinal(%s);' % scale, file=fh)
+      print(u'var vcolor = d3.scaleOrdinal(%s);' % scale, file=fh)
     else:
-      print('function vcolor(){ return "#1776b6"; }', file=fh)
-    print('var sim=layout_graph({"nodes": [%s], "links": [%s]});</script>' % (
+      print(u'function vcolor(){ return "#1776b6"; }', file=fh)
+    print(u'var sim=layout_graph({"nodes": [%s], "links": [%s]});</script>' % (
         ',\n'.join(node_json), ',\n'.join(edge_json)), file=fh)
     fh.flush()
 
@@ -228,7 +228,7 @@ def _get_axis(is_3d, fig):
   return fig.gca()
 
 
-LAYOUT_JS = '''
+LAYOUT_JS = u'''
 function layout_graph(graph) {
   var svg = d3.select("svg"),
       width = +svg.attr("width"),
