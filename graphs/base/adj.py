@@ -166,7 +166,7 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     adj = self._weightable_adj(weight, copy)
     try:
       adj.setdiag(weight)
-    except TypeError:
+    except TypeError:  # pragma: no cover
       # Older scipy doesn't support setdiag on everything.
       adj = adj.tocsr()
       adj.setdiag(weight)
@@ -231,7 +231,7 @@ def _symmetrize(A, method):
 def _eliminate_zeros(A):
   if hasattr(A, 'eliminate_zeros'):
     A.eliminate_zeros()
-  elif A.format == 'coo':
+  elif A.format == 'coo':  # pragma: no cover
     # old scipy doesn't provide coo_matrix.eliminate_zeros
     nz_mask = A.data != 0
     A.data = A.data[nz_mask]

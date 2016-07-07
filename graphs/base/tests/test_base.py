@@ -41,7 +41,8 @@ class TestGenericMembers(unittest.TestCase):
     self.graphs = [
         EdgePairGraph(PAIRS),
         DenseAdjacencyMatrixGraph(ADJ),
-        SparseAdjacencyMatrixGraph(spadj)
+        SparseAdjacencyMatrixGraph(spadj),
+        SparseAdjacencyMatrixGraph(spadj.tocoo())
     ]
     self.weighted = DenseAdjacencyMatrixGraph(np.array(ADJ)*np.arange(4)[None])
     self.sym = SymmEdgePairGraph(PAIRS.copy(), num_vertices=4)
@@ -147,10 +148,13 @@ class TestGenericMembers(unittest.TestCase):
     expected[from_idx,to_idx] = 1
     for G in self.graphs:
       msg = 'unweighted (%s)' % type(G)
-      gg = G.add_edges(from_idx, to_idx)
-      self.assertIs(gg, G)
+      g1 = G.add_edges(from_idx, to_idx, copy=True)
+      self.assertIsNot(g1, G)
+      g2 = G.add_edges(from_idx, to_idx)
+      self.assertIs(g2, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
       assert_array_equal(G.matrix(dense=True), expected, msg)
+      assert_array_equal(g1.matrix(dense=True), expected, msg)
     # symmetric version
     expected[to_idx,from_idx] = 1
     for G in self.graphs:
@@ -297,6 +301,11 @@ class TestGenericMembers(unittest.TestCase):
       assert_array_equal(gg.pairs(), [[0,1],[1,1],[3,3]])
       # make sure we didn't modify G
       assert_array_equal(G.pairs(), PAIRS)
+      # now actually modify G
+      gg = G.remove_edges(0, 2)
+      self.assertIs(gg, G)
+      assert_array_equal(G.pairs(), [[0,1],[1,1],[2,1],[3,3]])
+
     gg = self.sym.remove_edges([0,1], [2,2], copy=True)
     assert_array_equal(gg.pairs(), [[0,1],[1,0],[1,1],[3,3]])
 
