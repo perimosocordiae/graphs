@@ -1,10 +1,11 @@
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 import numpy as np
-from itertools import izip_longest
 from matplotlib import pyplot
 from matplotlib.axes import mlines, mcolors
 from matplotlib.collections import LineCollection
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
+
+from ..mini_six import zip, zip_longest
 
 
 class VizMixin(object):
@@ -91,7 +92,7 @@ class VizMixin(object):
       vcolors = []
 
     node_json = []
-    for name, c in izip_longest(vertex_ids, vcolors):
+    for name, c in zip_longest(vertex_ids, vcolors):
       if c is not None:
         node_json.append('{"id": "%s", "color": %s}' % (name, c))
       else:

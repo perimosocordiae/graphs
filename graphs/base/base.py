@@ -1,8 +1,11 @@
+from __future__ import absolute_import
 import numpy as np
 import scipy.sparse as ss
 import warnings
 from sklearn.metrics.pairwise import paired_distances
-from graphs.mixins import (
+
+from ..mini_six import zip
+from ..mixins import (
     AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin)
 
 
