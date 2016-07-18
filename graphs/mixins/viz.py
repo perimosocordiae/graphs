@@ -10,18 +10,17 @@ from ..mini_six import zip, zip_longest
 
 class VizMixin(object):
 
-  def plot(self, coordinates, directed=None, weighted=None, fig='current',
+  def plot(self, coordinates, directed=False, weighted=False, fig='current',
            ax=None, edge_style=None, vertex_style=None, title=None, cmap=None):
     '''Plot the graph using matplotlib in 2 or 3 dimensions.
+
     coordinates : (n,2) or (n,3) array of vertex coordinates
-    directed : if True, edges have arrows indicating direction. Defaults to
-                the result of self.is_directed()
-    weighted : if True, edges are colored by their weight. Defaults to the
-                result of self.is_weighted()
-    fig : a matplotlib Figure to use, or one of {new,current}. Defaults to
+    directed : if True, edges have arrows indicating direction.
+    weighted : if True, edges are colored by their weight.
+    fig : a matplotlib Figure to use, or one of {'new','current'}. Defaults to
           'current', which will call gcf(). Only used when ax=None.
     ax : a matplotlib Axes to use. Defaults to gca()
-    edge_style : string or dict of styles for edges. Defaults to 'b-'
+    edge_style : string or dict of styles for edges. Defaults to 'k-'
     vertex_style : string or dict of styles for vertices. Defaults to 'ko'
     title : string to display as the plot title
     cmap : a matplotlib Colormap to use for edge weight coloring
@@ -30,14 +29,10 @@ class VizMixin(object):
     assert 0 < X.shape[1] <= 3, 'too many dimensions to plot'
     if X.shape[1] == 1:
       X = np.column_stack((np.arange(X.shape[0]), X))
-    if weighted is None:
-      weighted = self.is_weighted()
-    if directed is None:
-      directed = self.is_directed()
     is_3d = (X.shape[1] == 3)
     if ax is None:
       ax = _get_axis(is_3d, fig)
-    edge_kwargs = dict(colors='b', linestyles='-', zorder=1)
+    edge_kwargs = dict(colors='k', linestyles='-', zorder=1)
     vertex_kwargs = dict(marker='o', c='k', s=20, edgecolor='none', zorder=2)
     if edge_style is not None:
       if not isinstance(edge_style, dict):
@@ -59,14 +54,18 @@ class VizMixin(object):
       ax.set_title(title)
     return pyplot.show
 
-  def to_html(self, html_file, directed=None, weighted=None, vertex_ids=None,
+  def to_html(self, html_file, directed=False, weighted=False, vertex_ids=None,
               vertex_colors=None, vertex_labels=None, width=900, height=600,
               title=None, svg_border='1px solid black'):
-    # input validation
-    if weighted is None:
-      weighted = self.is_weighted()
-    if directed is None:
-      directed = self.is_directed()
+    '''Write the graph as a d3 force-directed layout SVG to an HTML file.
+
+    html_file : str|file-like, writeable destination for the output HTML.
+    vertex_ids : unique IDs for each vertex, defaults to arange(num_vertices).
+    vertex_colors : numeric color mapping for vertices, optional.
+    vertex_labels : class labels for vertices, optional.
+    title : str, written above the SVG as an h1, optional.
+    svg_border : str, CSS for the 'border' attribute of the SVG element.
+    '''
     if directed:
       raise NotImplementedError('Directed graphs are NYI for HTML output.')
     if (vertex_colors is not None) and (vertex_labels is not None):

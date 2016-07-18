@@ -33,13 +33,11 @@ def main():
   fig2, axes2 = plt.subplots(nrows=3, ncols=3)
   fig1.suptitle('Original Coordinates')
   fig2.suptitle('Isomap Embeddings')
-  plot_kwargs = dict(directed=False, weighted=False, edge_style='k-')
 
   for ax1, ax2, info in zip(axes1.flat, axes2.flat, graph_info):
     label, G, gg, emb, mask = info
-    G.plot(X, ax=ax1, title=label, vertex_style=dict(c=theta), **plot_kwargs)
-    gg.plot(emb, ax=ax2, title=label, vertex_style=dict(c=theta[mask]),
-            **plot_kwargs)
+    G.plot(X, ax=ax1, title=label, vertex_style=dict(c=theta))
+    gg.plot(emb, ax=ax2, title=label, vertex_style=dict(c=theta[mask]))
     ax1.view_init(elev=5, azim=70)
     ax1.set_axis_off()
     ax2.set_axis_off()
