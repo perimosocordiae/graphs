@@ -109,6 +109,24 @@ class TestTransformation(unittest.TestCase):
     self.assertEqual(g.num_vertices(), 7)
     self.assertEqual(g.num_edges(), 23)
 
+  def test_isograph(self):
+    # make roughly U-shaped data
+    theta = np.linspace(0, 2*np.pi, 10)[1:]
+    data = np.column_stack((np.sin(theta)*2, np.cos(theta)))
+    G = neighbor_graph(data, k=2)
+
+    g = G.isograph()
+    self.assertIsNot(g, G)
+    diff = G.matrix(dense=True) - g.matrix(dense=True)
+    ii, jj = np.nonzero(diff)
+    assert_array_equal(ii, [3, 4])
+    assert_array_equal(jj, [4, 3])
+
+    # test case with large epsilon
+    g = G.isograph(min_weight=999)
+    self.assertIsNot(g, G)
+    assert_array_equal(g.matrix(dense=True), G.matrix(dense=True))
+
   def test_circle_tear(self):
     G = neighbor_graph(X, k=4).symmetrize(method='max', copy=False)
 
