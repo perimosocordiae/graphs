@@ -117,7 +117,7 @@ class TransformMixin(object):
     W = self.matrix(dense=True)
     # get candidate edges: all edges - MST edges
     tree = self.minimum_spanning_subtree()
-    candidates = np.argwhere((W - tree.matrix()) > 0)
+    candidates = np.argwhere((W - tree.matrix(dense=True)) > 0)
     cand_weights = W[candidates[:,0], candidates[:,1]]
     # order by increasing edge weight
     order = np.argsort(cand_weights)
