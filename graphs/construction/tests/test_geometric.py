@@ -15,7 +15,7 @@ class TestGeometric(unittest.TestCase):
         [0.358,0.501],[0.683,0.713],[0.370,0.561],[0.503,0.014],[0.773,0.883]])
 
   def test_delaunay(self):
-    expected = [
+    expected = np.array([
         [0, 0, 0, 1, 0, 1, 0, 1, 1, 0],
         [0, 0, 0, 1, 0, 0, 1, 1, 0, 1],
         [0, 0, 0, 0, 1, 1, 1, 0, 1, 0],
@@ -25,13 +25,13 @@ class TestGeometric(unittest.TestCase):
         [0, 1, 1, 0, 1, 1, 0, 1, 0, 1],
         [1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
         [1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-        [0, 1, 0, 1, 1, 0, 1, 0, 0, 0]]
+        [0, 1, 0, 1, 1, 0, 1, 0, 0, 0]], dtype=float)
     G = delaunay_graph(self.pts)
     assert_array_equal(G.matrix('dense'), expected)
 
     # with edge weights
     G = delaunay_graph(self.pts, weighted=True)
-    expected = [
+    expected[expected!=0] = [
         0.198635, 0.205419, 0.188162, 0.682924, 0.16289, 0.255361,
         0.234094, 0.34904, 0.628723, 0.479654, 0.450565, 0.379223,
         0.198635, 0.16289, 0.258683, 0.503557, 0.628723, 0.319678,
@@ -39,7 +39,7 @@ class TestGeometric(unittest.TestCase):
         0.255361, 0.450565, 0.319678, 0.388032, 0.347955, 0.192354,
         0.188162, 0.234094, 0.258683, 0.061188, 0.347955, 0.682924,
         0.379223, 0.508128, 0.34904, 0.503557, 0.185132, 0.192354]
-    assert_array_almost_equal(G.edge_weights(), expected)
+    assert_array_almost_equal(G.matrix('dense'), expected)
 
   def test_gabriel(self):
     expected = np.array([
@@ -51,13 +51,16 @@ class TestGeometric(unittest.TestCase):
 
     # with edge weights
     G = gabriel_graph(self.pts, weighted=True)
-    expected = [
+    adj = np.zeros((10,10))
+    idx = [3,7,13,16,17,25,26,28,30,31,37,49,52,57,58,
+           61,62,69,70,71,73,75,82,85,94,96]
+    adj.flat[idx] = [
         0.198635, 0.188162, 0.16289, 0.255361, 0.234094, 0.479654,
         0.450565, 0.379223, 0.198635, 0.16289, 0.258683, 0.185132,
         0.479654, 0.061188, 0.508128, 0.255361, 0.450565, 0.192354,
         0.188162, 0.234094, 0.258683, 0.061188, 0.379223, 0.508128,
         0.185132, 0.192354]
-    assert_array_almost_equal(G.edge_weights(), expected)
+    assert_array_almost_equal(G.matrix('dense'), adj)
 
   def test_relative_neighborhood(self):
     dist = pairwise_distances(self.pts)
@@ -77,12 +80,14 @@ class TestGeometric(unittest.TestCase):
 
     # with edge weights
     G = relative_neighborhood_graph(self.pts, weighted=True)
-    expected = [
+    adj = np.zeros((10,10))
+    idx = [3,7,13,16,17,26,28,30,31,49,57,61,62,69,70,71,75,82,94,96]
+    adj.flat[idx] = [
         0.198635, 0.188162, 0.16289, 0.255361, 0.234094, 0.450565,
         0.379223, 0.198635, 0.16289, 0.185132, 0.061188, 0.255361,
         0.450565, 0.192354, 0.188162, 0.234094, 0.061188, 0.379223,
         0.185132, 0.192354]
-    assert_array_almost_equal(G.edge_weights(), expected)
+    assert_array_almost_equal(G.matrix('dense'), adj)
 
 if __name__ == '__main__':
   unittest.main()
