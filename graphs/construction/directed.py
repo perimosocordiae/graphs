@@ -25,7 +25,7 @@ def directed_graph(trajectories, k=5, verbose=False, pruning_thresh=0,
 
 def _prune_edges(G, X, traj_lengths, pruning_thresh=0.1, verbose=False):
   '''Prune edges in graph G via cosine distance with trajectory edges.'''
-  W = G.matrix(dense=True).copy()
+  W = G.matrix('dense', copy=True)
   degree = G.degree(kind='out', weighted=False)
   i = 0
   num_bad = 0

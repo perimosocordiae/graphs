@@ -56,7 +56,7 @@ class TestGenericMembers(unittest.TestCase):
     for G in self.graphs:
       gg = G.copy()
       self.assertIsNot(gg, G)
-      assert_array_equal(gg.matrix(dense=True), G.matrix(dense=True))
+      assert_array_equal(gg.matrix('dense'), G.matrix('dense'))
       assert_array_equal(gg.pairs(), G.pairs())
 
   def test_degree(self):
@@ -85,7 +85,7 @@ class TestGenericMembers(unittest.TestCase):
       gg = G.add_self_edges()
       self.assertIs(gg, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected))
-      assert_array_equal(G.matrix(dense=True), expected,
+      assert_array_equal(G.matrix('dense'), expected,
                          'unweighted (%s)' % type(G))
     with warnings.catch_warnings(record=True) as w:
       self.graphs[0].add_self_edges(weight=3)
@@ -99,14 +99,14 @@ class TestGenericMembers(unittest.TestCase):
     for G in wg:
       G.add_self_edges(weight=0.5)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected))
-      assert_array_equal(G.matrix(dense=True), expected,
+      assert_array_equal(G.matrix('dense'), expected,
                          'weighted (%s)' % type(G))
     # zeros case
     np.fill_diagonal(expected, 0)
     for G in wg:
       G.add_self_edges(weight=0)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected))
-      assert_array_equal(G.matrix(dense=True), expected,
+      assert_array_equal(G.matrix('dense'), expected,
                          'weighted (%s)' % type(G))
 
   def test_symmetrize(self):
@@ -124,7 +124,7 @@ class TestGenericMembers(unittest.TestCase):
 
   def _help_test_symmetrize(self, expected, bool_expected, method):
     for G in self.graphs:
-      sym = G.symmetrize(method=method, copy=True).matrix(dense=True)
+      sym = G.symmetrize(method=method, copy=True).matrix('dense')
       msg = '%s symmetrize (%s)' % (method, type(G))
       if G.is_weighted():
         assert_array_equal(sym, expected, msg)
@@ -138,8 +138,12 @@ class TestGenericMembers(unittest.TestCase):
         ew = G.edge_weights()
         assert_array_equal(ew, expected, 'edge weights (%s)' % type(G))
         self.assertIsNot(G.edge_weights(copy=True), ew)
+        G = G.symmetrize('max', copy=True)
+        assert_array_equal(G.edge_weights(directed=False), expected)
     expected = [1,2,1,1,3]
     assert_array_equal(self.weighted.edge_weights(), expected)
+    G = self.weighted.symmetrize('max', copy=True)
+    assert_array_equal(G.edge_weights(directed=False), expected)
 
   def test_add_edges_unweighted(self):
     expected = np.array(ADJ)
@@ -153,8 +157,8 @@ class TestGenericMembers(unittest.TestCase):
       g2 = G.add_edges(from_idx, to_idx)
       self.assertIs(g2, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
-      assert_array_equal(G.matrix(dense=True), expected, msg)
-      assert_array_equal(g1.matrix(dense=True), expected, msg)
+      assert_array_equal(G.matrix('dense'), expected, msg)
+      assert_array_equal(g1.matrix('dense'), expected, msg)
     # symmetric version
     expected[to_idx,from_idx] = 1
     for G in self.graphs:
@@ -162,7 +166,7 @@ class TestGenericMembers(unittest.TestCase):
       gg = G.add_edges(from_idx, to_idx, symmetric=True)
       self.assertIs(gg, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected))
-      assert_array_equal(G.matrix(dense=True), expected)
+      assert_array_equal(G.matrix('dense'), expected)
 
   def test_add_edges_weighted(self):
     wg = [G for G in self.graphs if G.is_weighted()]
@@ -175,7 +179,7 @@ class TestGenericMembers(unittest.TestCase):
       gg = G.add_edges(from_idx, to_idx, weight=1)
       self.assertIs(gg, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
-      assert_array_equal(G.matrix(dense=True), expected, msg)
+      assert_array_equal(G.matrix('dense'), expected, msg)
     # symmetric version
     expected[to_idx,from_idx] = 1
     for G in wg:
@@ -183,7 +187,7 @@ class TestGenericMembers(unittest.TestCase):
       gg = G.add_edges(from_idx, to_idx, weight=1, symmetric=True)
       self.assertIs(gg, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
-      assert_array_equal(G.matrix(dense=True), expected, msg)
+      assert_array_equal(G.matrix('dense'), expected, msg)
 
   def test_add_edges_zeros(self):
     wg = [G for G in self.graphs if G.is_weighted()]
@@ -196,7 +200,7 @@ class TestGenericMembers(unittest.TestCase):
       gg = G.add_edges(from_idx, to_idx, weight=0)
       self.assertIs(gg, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
-      assert_array_equal(G.matrix(dense=True), expected, msg)
+      assert_array_equal(G.matrix('dense'), expected, msg)
 
   def test_add_edges_array_weighted(self):
     wg = [G for G in self.graphs if G.is_weighted()]
@@ -210,7 +214,7 @@ class TestGenericMembers(unittest.TestCase):
       gg = G.add_edges(from_idx, to_idx, weight=weights)
       self.assertIs(gg, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
-      assert_array_equal(G.matrix(dense=True), expected, msg)
+      assert_array_equal(G.matrix('dense'), expected, msg)
     # symmetric version
     expected[to_idx,from_idx] = weights
     for G in wg:
@@ -218,7 +222,7 @@ class TestGenericMembers(unittest.TestCase):
       gg = G.add_edges(from_idx, to_idx, weight=weights, symmetric=True)
       self.assertIs(gg, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
-      assert_array_equal(G.matrix(dense=True), expected, msg)
+      assert_array_equal(G.matrix('dense'), expected, msg)
 
   @unittest.skipUnless(HAS_IGRAPH, 'requires igraph dependency')
   def test_to_igraph(self):
@@ -228,7 +232,7 @@ class TestGenericMembers(unittest.TestCase):
         adj = ig.get_adjacency(attribute='weight')
       else:
         adj = ig.get_adjacency()
-      assert_array_equal(G.matrix(dense=True), adj.data)
+      assert_array_equal(G.matrix('dense'), adj.data)
 
   @unittest.skipUnless(HAS_GRAPHTOOL, 'requires graph_tool dependency')
   def test_to_graph_tool(self):
@@ -239,14 +243,14 @@ class TestGenericMembers(unittest.TestCase):
         adj = adjacency(gt, weight=gt.ep['weight']).A.T
       else:
         adj = adjacency(gt).A.T
-      assert_array_equal(G.matrix(dense=True), adj)
+      assert_array_equal(G.matrix('dense'), adj)
 
   @unittest.skipUnless(HAS_NETWORKX, 'requires networkx dependency')
   def test_to_networkx(self):
     for G in self.graphs + [self.weighted]:
       nx = G.to_networkx()
       adj = networkx.to_numpy_matrix(nx)
-      assert_array_equal(G.matrix(dense=True), adj)
+      assert_array_equal(G.matrix('dense'), adj)
 
   def test_reweight(self):
     expected = np.array(ADJ, dtype=float)
@@ -259,7 +263,7 @@ class TestGenericMembers(unittest.TestCase):
         gg = G.reweight(new_weights)
         self.assertIs(gg, G)
         self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
-        assert_array_equal(G.matrix(dense=True), expected, msg)
+        assert_array_equal(G.matrix('dense'), expected, msg)
       else:
         with warnings.catch_warnings(record=True) as w:
           G.reweight(new_weights)
@@ -278,7 +282,7 @@ class TestGenericMembers(unittest.TestCase):
       gg = G.reweight(new_weights, new_weight_inds)
       self.assertIs(gg, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
-      assert_array_equal(G.matrix(dense=True), expected, msg)
+      assert_array_equal(G.matrix('dense'), expected, msg)
 
   def test_reweight_by_distance(self):
     wg = [G for G in self.graphs if G.is_weighted()]
@@ -291,7 +295,7 @@ class TestGenericMembers(unittest.TestCase):
       gg = G.reweight_by_distance(coords, metric='l2')
       self.assertIs(gg, G)
       self.assertEqual(G.num_edges(), np.count_nonzero(expected), msg)
-      assert_array_equal(G.matrix(dense=True), expected, msg)
+      assert_array_equal(G.matrix('dense'), expected, msg)
 
   def test_remove_edges(self):
     for G in self.graphs:
@@ -315,18 +319,18 @@ class TestGenericMembers(unittest.TestCase):
       # entire graph in the subgraph
       gg = G.subgraph(Ellipsis)
       self.assertEqual(type(gg), type(G))
-      assert_array_equal(gg.matrix(dense=True), adj)
+      assert_array_equal(gg.matrix('dense'), adj)
 
       # half the graph
       mask = slice(0, 2)
       gg = G.subgraph(mask)
       self.assertEqual(type(gg), type(G))
-      assert_array_equal(gg.matrix(dense=True), adj[mask][:,mask])
+      assert_array_equal(gg.matrix('dense'), adj[mask][:,mask])
 
       mask = np.array([False, True, True, False])
       gg = G.subgraph(mask)
       self.assertEqual(type(gg), type(G))
-      assert_array_equal(gg.matrix(dense=True), adj[mask][:,mask])
+      assert_array_equal(gg.matrix('dense'), adj[mask][:,mask])
 
 
 if __name__ == '__main__':

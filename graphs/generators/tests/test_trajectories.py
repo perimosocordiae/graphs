@@ -10,7 +10,7 @@ class TestTrajectories(unittest.TestCase):
   def test_concat_trajectories(self):
     expected = [[0,1,0,0,0],[1,0,0,0,0],[0,0,0,1,0],[0,0,1,0,1],[0,0,0,1,0]]
     G = traj.concat_trajectories([2, 3], directed=False)
-    assert_array_equal(G.matrix(dense=True), expected)
+    assert_array_equal(G.matrix('dense'), expected)
 
   def test_chunk_up(self):
     T = [np.zeros(4), np.zeros(4)]
@@ -23,7 +23,7 @@ class TestTrajectories(unittest.TestCase):
                 [0,0,0,0,0,1,0,1],
                 [0,0,0,0,0,0,1,0]]
     G = traj.chunk_up(T, directed=False)
-    assert_array_equal(G.matrix(dense=True), expected)
+    assert_array_equal(G.matrix('dense'), expected)
     expected = [[0,1,0,0,0,0,0,0],
                 [1,0,0,0,0,0,0,0],
                 [0,0,0,1,0,0,0,0],
@@ -33,7 +33,7 @@ class TestTrajectories(unittest.TestCase):
                 [0,0,0,0,0,0,0,1],
                 [0,0,0,0,0,0,1,0]]
     G = traj.chunk_up(T, chunk_size=2, directed=False)
-    assert_array_equal(G.matrix(dense=True), expected)
+    assert_array_equal(G.matrix('dense'), expected)
     # test case where chunk overflows
     T = [np.zeros(3), np.zeros(2)]
     expected = [[0,1,0,0,0],
@@ -42,7 +42,7 @@ class TestTrajectories(unittest.TestCase):
                 [0,0,0,0,1],
                 [0,0,0,1,0]]
     G = traj.chunk_up(T, chunk_size=3, directed=False)
-    assert_array_equal(G.matrix(dense=True), expected)
+    assert_array_equal(G.matrix('dense'), expected)
 
 
 if __name__ == '__main__':

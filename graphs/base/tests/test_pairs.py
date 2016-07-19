@@ -27,9 +27,9 @@ class TestEdgePairGraph(unittest.TestCase):
   def test_matrix(self):
     M = self.epg.matrix()
     assert_array_equal(M.toarray(), ADJ)
-    M = self.epg.matrix(dense=True)
+    M = self.epg.matrix('dense')
     assert_array_equal(M, ADJ)
-    M = self.epg.matrix(csr=True)
+    M = self.epg.matrix('csr')
     self.assertEqual(M.format, 'csr')
     assert_array_equal(M.toarray(), ADJ)
 
@@ -43,7 +43,7 @@ class TestEdgePairGraph(unittest.TestCase):
   def test_symmetrize(self):
     # Check that copy=True doesn't change anything
     self.epg.symmetrize(copy=True)
-    assert_array_equal(self.epg.matrix(dense=True), ADJ)
+    assert_array_equal(self.epg.matrix('dense'), ADJ)
 
 
 class TestSymmEdgePairGraph(unittest.TestCase):
@@ -53,7 +53,7 @@ class TestSymmEdgePairGraph(unittest.TestCase):
   def test_copy(self):
     gg = self.G.copy()
     self.assertIsNot(gg, self.G)
-    assert_array_equal(gg.matrix(dense=True), self.G.matrix(dense=True))
+    assert_array_equal(gg.matrix('dense'), self.G.matrix('dense'))
     assert_array_equal(gg.pairs(), self.G.pairs())
 
   def test_pairs(self):
@@ -68,7 +68,7 @@ class TestSymmEdgePairGraph(unittest.TestCase):
     self.assertIs(self.G.symmetrize(copy=False), self.G)
     S = self.G.symmetrize(copy=True)
     self.assertIsNot(S, self.G)
-    assert_array_equal(S.matrix(dense=True), self.G.matrix(dense=True))
+    assert_array_equal(S.matrix('dense'), self.G.matrix('dense'))
 
 if __name__ == '__main__':
   unittest.main()

@@ -22,7 +22,7 @@ def manifold_spanning_graph(X, embed_dim, num_ccs=1, verbose=False):
   CC_labels, angle_thresh = join_CCs(X, G, embed_dim, num_ccs=num_ccs,
                                      verbose=verbose)
 
-  adj = G.matrix(dense=True)
+  adj = G.matrix('dense')
   if num_ccs == 1:
     G = flesh_out(X, adj, embed_dim, CC_labels, angle_thresh=angle_thresh,
                   min_shortcircuit=embed_dim+1, verbose=verbose)
@@ -168,7 +168,7 @@ def _connect_meta_edges(X, G, CC_planes, CC_labels, CC_ninds,
   # For each "meta-edge" (from cluster P to Q)
   min_F = 1.0
   min_D = np.inf
-  W = G.matrix(dense=True, coo=True)
+  W = G.matrix('dense', 'coo')
   # COO format only supports sum_duplicates since August 2014.
   if issparse(W) and not hasattr(W, 'sum_duplicates'):
     W = W.toarray()

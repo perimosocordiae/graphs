@@ -25,7 +25,7 @@ class TestAdjacencyMatrixGraphs(unittest.TestCase):
   def test_matrix(self):
     M = self.G.matrix()
     assert_array_equal(M, ADJ)
-    M = self.G.matrix(csr=True)
+    M = self.G.matrix('csr')
     self.assertEqual(M.format, 'csr')
     assert_array_equal(M.toarray(), ADJ)
     M = self.S.matrix()
@@ -33,15 +33,15 @@ class TestAdjacencyMatrixGraphs(unittest.TestCase):
     assert_array_equal(M.toarray(), ADJ)
 
   def test_matrix_copy(self):
-    M = self.G.matrix(dense=True, copy=False)
+    M = self.G.matrix('dense', copy=False)
     assert_array_equal(M, ADJ)
-    M2 = self.G.matrix(dense=True, copy=True)
+    M2 = self.G.matrix('dense', copy=True)
     assert_array_equal(M, M2)
     self.assertIsNot(M, M2)
     # Sparse case
-    M = self.S.matrix(csr=True, copy=False)
+    M = self.S.matrix('csr', copy=False)
     assert_array_equal(M.toarray(), ADJ)
-    M2 = self.S.matrix(csr=True, copy=True)
+    M2 = self.S.matrix('csr', copy=True)
     assert_array_equal(M.toarray(), M2.toarray())
     self.assertIsNot(M, M2)
 

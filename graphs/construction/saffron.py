@@ -37,7 +37,7 @@ def saffron(X, q=32, k=4, tangent_dim=1, curv_thresh=0.95, decay_rate=0.9,
   r = np.median(dist[np.arange(n), idx])
 
   # make candidate graph + weights
-  W = neighbor_graph(dist, precomputed=True, epsilon=r).matrix(csr=True)
+  W = neighbor_graph(dist, precomputed=True, epsilon=r).matrix('csr')
   # NOTE: this differs from the paper, where W.data[:] = 1 initially
   W.data[:] = 1 / W.data
   # row normalize

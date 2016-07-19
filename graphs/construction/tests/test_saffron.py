@@ -26,7 +26,7 @@ class TestSaffron(unittest.TestCase):
     exp = np.zeros((n, n), dtype=float)
     exp[expected_ii, expected_jj] = expected_w
 
-    assert_array_almost_equal(G.matrix(dense=True), exp, decimal=3)
+    assert_array_almost_equal(G.matrix('dense'), exp, decimal=3)
 
   def test_intersecting_planes(self):
     n1 = np.array([-0.25, -1, 1])

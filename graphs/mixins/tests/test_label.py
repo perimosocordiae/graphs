@@ -28,7 +28,7 @@ class TestLabel(unittest.TestCase):
     labels = np.zeros(20)
     labels[10:] = 1
     G_sparse = neighbor_graph(pts, k=k).symmetrize()
-    G_dense = Graph.from_adj_matrix(G_sparse.matrix(dense=True))
+    G_dense = Graph.from_adj_matrix(G_sparse.matrix('dense'))
     return (G_sparse, G_dense), labels
 
   def test_greedy_coloring(self):
@@ -92,7 +92,7 @@ class TestLabel(unittest.TestCase):
     self.assertLess(np.linalg.norm(t - x), 0.15)
 
     # test no kernel + dense laplacian case
-    dG = Graph.from_adj_matrix(G.matrix(dense=True))
+    dG = Graph.from_adj_matrix(G.matrix('dense'))
     x = dG.regression(t[y_mask], y_mask, kernel='none')
     self.assertLess(np.linalg.norm(t - x), 0.25)
     x = dG.regression(t[y_mask], y_mask, smoothness_penalty=1e-4, kernel='none')

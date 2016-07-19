@@ -7,7 +7,7 @@ from graphs.construction import neighbors
 
 
 def ngraph(*a, **k):
-    return neighbors.neighbor_graph(*a,**k).matrix(dense=True)
+    return neighbors.neighbor_graph(*a,**k).matrix('dense')
 
 
 class TestNeighbors(unittest.TestCase):

@@ -117,7 +117,7 @@ class EmbedMixin(object):
     if spring_constant is None:
       # default to sqrt(area_of_viewport / num_vertices)
       spring_constant = X.shape[0] ** -0.5
-    S = self.matrix(csr=True, csc=True, coo=True)
+    S = self.matrix('csr', 'csc', 'coo', copy=True)
     S.data[:] = 1. / S.data  # Convert to similarity
     ii,jj = S.nonzero()  # cache nonzero indices
     # simple cooling scheme, linearly steps down

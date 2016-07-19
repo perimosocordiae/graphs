@@ -120,9 +120,9 @@ class TestEmbeddings(unittest.TestCase):
     X = np.arange(10).reshape((5,2))
     expected = np.array([
         [1.837091, 2.837091],
-        [2.691855, 3.691855],
-        [3.396880, 4.396880],
-        [5.307083, 6.307083],
+        [2.996882, 3.996882],
+        [4.472791, 5.472791],
+        [5.014210, 6.014210],
         [6.162909, 7.162909]])
     assert_array_almost_equal(G.layout_spring(initial_layout=X), expected)
 

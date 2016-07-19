@@ -18,7 +18,7 @@ class AdjacencyMatrixGraph(Graph):
     return True
 
   def subgraph(self, mask):
-    adj = self.matrix(dense=True, csr=True, csc=True)
+    adj = self.matrix('dense', 'csr', 'csc')
     sub_adj = adj[mask][:,mask]
     return Graph.from_adj_matrix(sub_adj)
 
@@ -34,15 +34,21 @@ class DenseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     adj = self._adj if directed else np.triu(self._adj)
     return np.transpose(np.nonzero(adj))
 
-  def matrix(self, copy=False, **kwargs):
-    if not kwargs or 'dense' in kwargs:
+  def matrix(self, *formats, **kwargs):
+    copy = kwargs.pop('copy', False)
+    if kwargs:
+      raise ValueError('Unexpected kwargs for matrix(): %s' % kwargs)
+    if not formats or 'dense' in formats:
       if copy:
         return self._adj.copy()
       return self._adj
-    if 'csr' in kwargs:
+    if 'csr' in formats:
       return ss.csr_matrix(self._adj)
-    raise NotImplementedError('Unknown matrix type(s): %s' % (
-                              tuple(kwargs.keys()),))
+    if 'csc' in formats:
+      return ss.csc_matrix(self._adj)
+    if 'coo' in formats:
+      return ss.coo_matrix(self._adj)
+    raise NotImplementedError('Unknown matrix format(s): %s' % (formats,))
 
   def edge_weights(self, copy=False, directed=True):
     ii,jj = self.pairs(directed=directed).T
@@ -113,18 +119,20 @@ class SparseAdjacencyMatrixGraph(AdjacencyMatrixGraph):
     adj = self._adj if directed else ss.triu(self._adj)
     return np.transpose(adj.nonzero())
 
-  def matrix(self, copy=False, **kwargs):
-    if not kwargs or self._adj.format in kwargs:
+  def matrix(self, *formats, **kwargs):
+    copy = kwargs.pop('copy', False)
+    if kwargs:
+      raise ValueError('Unexpected kwargs for matrix(): %s' % kwargs)
+    if not formats or self._adj.format in formats:
       if copy:
         return self._adj.copy()
       return self._adj
-    for fmt in kwargs:
-      if fmt != 'dense' and hasattr(self._adj, 'to'+fmt):
-        return getattr(self._adj, 'to'+fmt)()
-    if 'dense' in kwargs:
+    for fmt in formats:
+      if fmt != 'dense':
+        return self._adj.asformat(fmt)
+    if 'dense' in formats:
       return self._adj.toarray()
-    raise NotImplementedError('Unknown matrix type(s): %s' % (
-                              tuple(kwargs.keys()),))
+    raise NotImplementedError('Unknown matrix format(s): %s' % (formats,))
 
   def edge_weights(self, copy=False, directed=True):
     if not directed:

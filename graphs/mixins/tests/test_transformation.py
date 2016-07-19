@@ -33,7 +33,7 @@ class TestTransformation(unittest.TestCase):
     for G in graphs:
       for kernel in ('none', 'binary'):
         K = G.kernelize(kernel)
-        assert_array_equal(K.matrix(dense=True), ADJ)
+        assert_array_equal(K.matrix('dense'), ADJ)
       self.assertRaises(ValueError, G.kernelize, 'foobar')
 
   def test_connected_subgraphs(self):
@@ -58,7 +58,7 @@ class TestTransformation(unittest.TestCase):
     expected[e_row, e_col] = e_data
 
     spt = G.shortest_path_subtree(0, directed=True)
-    assert_array_almost_equal(spt.matrix(dense=True), expected, decimal=3)
+    assert_array_almost_equal(spt.matrix('dense'), expected, decimal=3)
 
     # test undirected case
     G.symmetrize(method='max', copy=False)
@@ -74,7 +74,7 @@ class TestTransformation(unittest.TestCase):
     expected[e_row, e_col] = e_data
 
     spt = G.shortest_path_subtree(0, directed=False)
-    assert_array_almost_equal(spt.matrix(dense=True), expected, decimal=3)
+    assert_array_almost_equal(spt.matrix('dense'), expected, decimal=3)
 
   def test_minimum_spanning_subtree(self):
     n = X.shape[0]
@@ -91,7 +91,7 @@ class TestTransformation(unittest.TestCase):
     expected[e_row, e_col] = e_data
 
     mst = G.minimum_spanning_subtree()
-    assert_array_almost_equal(mst.matrix(dense=True), expected, decimal=3)
+    assert_array_almost_equal(mst.matrix('dense'), expected, decimal=3)
 
   def test_neighborhood_subgraph(self):
     G = neighbor_graph(X, k=4)
@@ -117,7 +117,7 @@ class TestTransformation(unittest.TestCase):
 
     g = G.isograph()
     self.assertIsNot(g, G)
-    diff = G.matrix(dense=True) - g.matrix(dense=True)
+    diff = G.matrix('dense') - g.matrix('dense')
     ii, jj = np.nonzero(diff)
     assert_array_equal(ii, [3, 4])
     assert_array_equal(jj, [4, 3])
@@ -125,21 +125,21 @@ class TestTransformation(unittest.TestCase):
     # test case with large epsilon
     g = G.isograph(min_weight=999)
     self.assertIsNot(g, G)
-    assert_array_equal(g.matrix(dense=True), G.matrix(dense=True))
+    assert_array_equal(g.matrix('dense'), G.matrix('dense'))
 
   def test_circle_tear(self):
     G = neighbor_graph(X, k=4).symmetrize(method='max', copy=False)
 
     # test MST start
     res = G.circle_tear(spanning_tree='mst', cycle_len_thresh=5)
-    diff = G.matrix(dense=True) - res.matrix(dense=True)
+    diff = G.matrix('dense') - res.matrix('dense')
     ii, jj = np.nonzero(diff)
     assert_array_equal(ii, [5,8,8,11])
     assert_array_equal(jj, [8,5,11,8])
 
     # test SPT start with a fixed starting vertex
     res = G.circle_tear(spanning_tree='spt', cycle_len_thresh=5, spt_idx=8)
-    diff = G.matrix(dense=True) - res.matrix(dense=True)
+    diff = G.matrix('dense') - res.matrix('dense')
     ii, jj = np.nonzero(diff)
     assert_array_equal(ii, [1,1,6,17])
     assert_array_equal(jj, [6,17,1,1])
@@ -150,7 +150,7 @@ class TestTransformation(unittest.TestCase):
     # hack: the atomic cycle finder chooses a random vertex to start from
     np.random.seed(1234)
     res = G.cycle_cut(cycle_len_thresh=5, directed=False)
-    diff = G.matrix(dense=True) - res.matrix(dense=True)
+    diff = G.matrix('dense') - res.matrix('dense')
     ii, jj = np.nonzero(diff)
     assert_array_equal(ii, [1,1,6,17])
     assert_array_equal(jj, [6,17,1,1])

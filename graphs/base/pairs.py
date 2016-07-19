@@ -37,19 +37,22 @@ class EdgePairGraph(Graph):
       return self._pairs.copy()
     return self._pairs
 
-  def matrix(self, copy=False, **kwargs):
+  def matrix(self, *formats, **kwargs):
+    kwargs.pop('copy', False)
+    if kwargs:
+      raise ValueError('Unexpected kwargs for matrix(): %s' % kwargs)
     n = self._num_vertices
-    row,col = self.pairs().T
+    row, col = self.pairs().T
     data = np.ones(len(row), dtype=np.intp)
-    M = ss.coo_matrix((data, (row,col)), shape=(n,n))
-    if not kwargs:
-      return M
-    if 'csr' in kwargs:
-      return M.tocsr()
-    if 'dense' in kwargs:
-      return M.toarray()
-    raise NotImplementedError('Unknown matrix type(s): %s' % (
-                              tuple(kwargs.keys()),))
+    adj = ss.coo_matrix((data, (row,col)), shape=(n,n))
+    if not formats or 'coo' in formats:
+      return adj
+    for fmt in formats:
+      if fmt != 'dense':
+        return adj.asformat(fmt)
+    if 'dense' in formats:
+      return adj.toarray()
+    raise NotImplementedError('Unknown matrix format(s): %s' % (formats,))
 
   def copy(self):
     return EdgePairGraph(self._pairs.copy(), num_vertices=self._num_vertices)

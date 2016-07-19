@@ -28,7 +28,7 @@ class TestBMatching(unittest.TestCase):
         [0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
         [0, 0, 0, 0, 1, 0, 1, 0, 0, 0]]).T
     G = b_matching(self.dists, 2, damping=0.5)
-    assert_array_equal(G.matrix(dense=True).astype(int), expected)
+    assert_array_equal(G.matrix('dense').astype(int), expected)
 
   def test_warn_nonconvergence(self):
     with warnings.catch_warnings(record=True) as w:
@@ -51,7 +51,7 @@ class TestBMatching(unittest.TestCase):
         [0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
         [0, 0, 0, 0, 1, 0, 1, 0, 0, 0]])
     G = b_matching(self.dists, 2, damping=1)
-    assert_array_equal(G.matrix(dense=True).astype(int), expected)
+    assert_array_equal(G.matrix('dense').astype(int), expected)
 
   def test_array_b(self):
     b = np.zeros(10, dtype=int)
@@ -59,7 +59,7 @@ class TestBMatching(unittest.TestCase):
     expected = 1 - np.eye(10, dtype=int)
     expected[:5] = 0
     G = b_matching(self.dists, b)
-    assert_array_equal(G.matrix(dense=True).astype(int), expected)
+    assert_array_equal(G.matrix('dense').astype(int), expected)
 
 if __name__ == '__main__':
   unittest.main()

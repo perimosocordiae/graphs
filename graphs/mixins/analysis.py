@@ -28,13 +28,13 @@ class AnalysisMixin(object):
                   unweighted=False, overwrite=False)
     '''
     # ssc.shortest_path requires one of these formats:
-    adj = self.matrix(dense=True, csr=True, csc=True)
+    adj = self.matrix('dense', 'csr', 'csc')
     return ssc.shortest_path(adj, **kwargs)
 
   def ave_laplacian(self):
     '''Another kind of laplacian normalization, used in the matlab PVF code.
     Uses the formula: L = I - D^{-1} * W'''
-    W = self.matrix(dense=True)
+    W = self.matrix('dense')
     # calculate -inv(D)
     Dinv = W.sum(axis=0)
     mask = Dinv!=0
@@ -54,7 +54,7 @@ class AnalysisMixin(object):
     eta: probability of not teleporting (see the paper)
     tol, max_iter: convergence params for Perron vector calculation
     '''
-    W = self.matrix(dense=True)
+    W = self.matrix('dense')
     n = W.shape[0]
     if D is None:
       D = W.sum(axis=1)
@@ -81,7 +81,7 @@ class AnalysisMixin(object):
 
   def profile(self):
     """Measure of bandedness, also known as 'envelope size'."""
-    leftmost_idx = np.argmax(self.matrix(dense=True).astype(bool), axis=0)
+    leftmost_idx = np.argmax(self.matrix('dense').astype(bool), axis=0)
     return (np.arange(self.num_vertices()) - leftmost_idx).sum()
 
   def betweenness(self, kind='vertex', directed=None, weighted=None):
@@ -93,7 +93,7 @@ class AnalysisMixin(object):
     assert kind in ('vertex', 'edge'), 'Invalid kind argument: ' + kind
     weighted = weighted is not False and self.is_weighted()
     directed = directed if directed is not None else self.is_directed()
-    adj = self.matrix(csr=True)
+    adj = self.matrix('csr')
     btw = betweenness(adj, weighted, kind=='vertex')
     # normalize if undirected
     if not directed:

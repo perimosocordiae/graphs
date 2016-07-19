@@ -25,7 +25,7 @@ def permute_graph(G, order):
   '''Reorder the graph's vertices, returning a copy of the input graph.
   order : integer array-like, some permutation of range(G.num_vertices()).
   '''
-  adj = G.matrix(dense=True)
+  adj = G.matrix('dense')
   adj = adj[np.ix_(order, order)]
   return Graph.from_adj_matrix(adj)
 
@@ -36,7 +36,7 @@ def _cuthill_mckee(G):
   result = []
   degree = G.degree()
   remaining = dict(enumerate(degree))
-  adj = G.matrix(dense=True, csr=True)
+  adj = G.matrix('dense', 'csr')
   while len(result) != n:
     queue.append(min(remaining, key=remaining.get))
     while queue:
@@ -52,7 +52,7 @@ def _cuthill_mckee(G):
 
 if hasattr(ssc, 'reverse_cuthill_mckee'):  # pragma: no cover
   def cuthill_mckee(G):
-    sG = G.matrix(csr=True)
+    sG = G.matrix('csr')
     order = ssc.reverse_cuthill_mckee(sG, symmetric_mode=True)
     return permute_graph(G, order)
 else:  # pragma: no cover
@@ -90,7 +90,7 @@ def node_centroid_hill_climbing(G, relax=1, num_centerings=20, verbose=False):
 
 def _breadth_first_order(G):
   inds = np.arange(G.num_vertices())
-  adj = G.matrix(dense=True, csr=True)
+  adj = G.matrix('dense', 'csr')
   total_order = []
   while len(inds) > 0:
     order = ssc.breadth_first_order(adj, np.random.choice(inds),
@@ -104,7 +104,7 @@ def _critical_vertices(G, order, relax=1, bw=None):
   go = permute_graph(G, order)
   if bw is None:
     bw = go.bandwidth()
-  adj = go.matrix(dense=True)
+  adj = go.matrix('dense')
   if relax == 1:
     for i in np.where(np.diag(adj, -bw))[0]:
       yield bw + i, i

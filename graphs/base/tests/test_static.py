@@ -50,12 +50,15 @@ class TestStaticConstructors(unittest.TestCase):
     p = [[0,1],[1,2],[2,3],[3,4],[1,0],[2,1],[3,2],[4,3]]
     expected = [[0,1,0,0,0],[1,0,1,0,0],[0,2,0,0.1,0],[0,0,3.1,0,2],[0,0,0,4,0]]
     G = Graph.from_edge_pairs(p, weights=w, num_vertices=5)
-    assert_array_almost_equal(G.matrix(dense=True), expected)
+    assert_array_almost_equal(G.matrix('dense'), expected)
 
     # weighted + symmetric
+    w = np.arange(1, 6)
     expected = [[0,1,2,0],[1,3,4,0],[2,4,0,0],[0,0,0,5]]
-    G = Graph.from_edge_pairs(PAIRS, symmetric=True, weights=np.arange(1,6))
-    assert_array_equal(G.matrix(dense=True), expected)
+    G = Graph.from_edge_pairs(PAIRS, symmetric=True, weights=w)
+    assert_array_equal(G.matrix('dense'), expected)
+    G = Graph.from_edge_pairs(PAIRS[::-1], symmetric=True, weights=w[::-1])
+    assert_array_equal(G.matrix('dense'), expected)
 
   def test_from_adj(self):
     m = Graph.from_adj_matrix(ADJ)

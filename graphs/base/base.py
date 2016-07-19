@@ -19,11 +19,12 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin):
     When directed=False, only pairs with s <= t are returned.'''
     raise NotImplementedError()
 
-  def matrix(self, copy=False, **kwargs):
+  def matrix(self, *formats, **kwargs):
     '''Returns a (num_vertices,num_vertices) array or sparse matrix, M,
     where M[s,t] is the weight of edge (s,t).
 
-    TODO: explain the kwargs situation.
+    formats: sequence of {'dense','csr','csc','coo'}
+    copy (kwarg): may share memory if copy=False
     '''
     raise NotImplementedError()
 
@@ -107,7 +108,7 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin):
   def adj_list(self):
     '''Generates a sequence of lists of neighbor indices:
         an adjacency list representation.'''
-    adj = self.matrix(dense=True, csr=True)
+    adj = self.matrix('dense', 'csr')
     for row in adj:
       yield row.nonzero()[-1]
 
@@ -116,8 +117,13 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin):
     kind : either 'in' or 'out', useful for directed graphs
     weighted : controls whether to count edges or sum their weights
     '''
-    axis = 1 if kind == 'out' else 0
-    adj = self.matrix(dense=True, csr=1-axis, csc=axis)
+    if kind == 'out':
+      axis = 1
+      adj = self.matrix('dense', 'csc')
+    else:
+      axis = 0
+      adj = self.matrix('dense', 'csr')
+
     if not weighted and self.is_weighted():
       # With recent numpy and a dense matrix, could do:
       # d = np.count_nonzero(adj, axis=axis)

@@ -63,7 +63,7 @@ class TransformMixin(object):
       order = range(num_ccs)
 
     # don't use self.subgraph() here, because we can reuse adj
-    adj = self.matrix(dense=True, csr=True, csc=True)
+    adj = self.matrix('dense', 'csr', 'csc')
     for c in order:
       mask = labels == c
       sub_adj = adj[mask][:,mask]
@@ -83,7 +83,7 @@ class TransformMixin(object):
 
   def minimum_spanning_subtree(self):
     '''Returns the (undirected) minimum spanning tree subgraph.'''
-    dist = self.matrix(dense=True, copy=True)
+    dist = self.matrix('dense', copy=True)
     dist[dist==0] = np.inf
     np.fill_diagonal(dist, 0)
     mst = ssc.minimum_spanning_tree(dist)
@@ -93,7 +93,7 @@ class TransformMixin(object):
                             directed=True, return_mask=False):
     '''Returns a subgraph containing only vertices within a given
        geodesic radius of start_idx.'''
-    adj = self.matrix(dense=True, csr=True, csc=True)
+    adj = self.matrix('dense', 'csr', 'csc')
     dist = ssc.dijkstra(adj, directed=directed, indices=start_idx,
                         unweighted=(not weighted), limit=radius)
     mask = np.isfinite(dist)
@@ -114,10 +114,10 @@ class TransformMixin(object):
     Note: This uses the non-iterative algorithm which removes edges
         rather than reweighting them.
     '''
-    W = self.matrix(dense=True)
+    W = self.matrix('dense')
     # get candidate edges: all edges - MST edges
     tree = self.minimum_spanning_subtree()
-    candidates = np.argwhere((W - tree.matrix(dense=True)) > 0)
+    candidates = np.argwhere((W - tree.matrix('dense')) > 0)
     cand_weights = W[candidates[:,0], candidates[:,1]]
     # order by increasing edge weight
     order = np.argsort(cand_weights)
@@ -171,7 +171,7 @@ class TransformMixin(object):
     Paper DOI: 10.1.1.225.5335
     '''
     symmetric = not directed
-    adj = self.kernelize('binary').matrix(csr=True, dense=True, copy=True)
+    adj = self.kernelize('binary').matrix('csr', 'dense', copy=True)
     if symmetric:
       adj = adj + adj.T
 

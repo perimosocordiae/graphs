@@ -11,7 +11,7 @@ def main():
   X, theta = swiss_roll(8, 300, return_theta=True, radius=0.5)
   GT = np.column_stack((theta, X[:,1]))
   g = neighbor_graph(X, k=6)
-  g = g.from_adj_matrix(g.matrix(dense=True))
+  g = g.from_adj_matrix(g.matrix('dense'))
   ct = 12
 
   _, axes = plt.subplots(nrows=4, figsize=(8, 10))

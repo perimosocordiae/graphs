@@ -27,7 +27,7 @@ class TestGeometric(unittest.TestCase):
         [1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
         [0, 1, 0, 1, 1, 0, 1, 0, 0, 0]]
     G = delaunay_graph(self.pts)
-    assert_array_equal(G.matrix(dense=True), expected)
+    assert_array_equal(G.matrix('dense'), expected)
 
     # with edge weights
     G = delaunay_graph(self.pts, weighted=True)
