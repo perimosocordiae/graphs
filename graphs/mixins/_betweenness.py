@@ -103,9 +103,13 @@ def _sssp_weighted(adj, s):
   S = sorted(S, key=lambda v: dist[v])
   return S, pred, sigma
 
+
 try:
-  import pyximport
-  pyximport.install(setup_args={'include_dirs': np.get_include()})
   from ._betweenness_helper import betweenness
 except ImportError:
-  betweenness = _betweenness
+  try:
+    import pyximport
+    pyximport.install(setup_args={'include_dirs': np.get_include()})
+    from ._betweenness_helper import betweenness
+  except ImportError:
+    betweenness = _betweenness

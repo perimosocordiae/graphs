@@ -58,8 +58,11 @@ def _find_relative_neighbors(D):
 
 
 try:
-  import pyximport
-  pyximport.install(setup_args={'include_dirs': np.get_include()})
   from ._fast_paths import find_relative_neighbors
 except ImportError:
-  find_relative_neighbors = _find_relative_neighbors
+  try:
+    import pyximport
+    pyximport.install(setup_args={'include_dirs': np.get_include()})
+    from ._fast_paths import find_relative_neighbors
+  except ImportError:
+    find_relative_neighbors = _find_relative_neighbors

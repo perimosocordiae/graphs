@@ -272,9 +272,13 @@ def _inter_cluster_distance(X, num_clusters, cluster_labels):
       Dc[j,i] = min_val
   return Dc, edges
 
+
 try:
-  import pyximport
-  pyximport.install(setup_args={'include_dirs': np.get_include()})
   from ._fast_paths import inter_cluster_distance
 except ImportError:
-  inter_cluster_distance = _inter_cluster_distance
+  try:
+    import pyximport
+    pyximport.install(setup_args={'include_dirs': np.get_include()})
+    from ._fast_paths import inter_cluster_distance
+  except ImportError:
+    inter_cluster_distance = _inter_cluster_distance

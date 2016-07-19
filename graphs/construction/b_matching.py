@@ -146,10 +146,13 @@ def _updateB(oldB, B, W, degrees, damping, inds, backinds):  # pragma: no cover
 
 
 try:
-  import pyximport
-  pyximport.install(setup_args={'include_dirs': np.get_include()})
   from ._fast_paths import quickselect, update_belief, diff_belief
 except ImportError:
-  quickselect = _quickselect
-  update_belief = _updateB
-  diff_belief = _update_change
+  try:
+    import pyximport
+    pyximport.install(setup_args={'include_dirs': np.get_include()})
+    from ._fast_paths import quickselect, update_belief, diff_belief
+  except ImportError:
+    quickselect = _quickselect
+    update_belief = _updateB
+    diff_belief = _update_change
