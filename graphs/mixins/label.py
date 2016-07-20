@@ -4,6 +4,7 @@ import scipy.linalg as sl
 import scipy.sparse as ss
 import warnings
 from itertools import count
+from scipy.sparse.linalg import eigs
 from sklearn.cluster import spectral_clustering
 
 from ..mini_six import range
@@ -12,7 +13,7 @@ from ..mini_six import range
 class LabelMixin(object):
 
   def color_greedy(self):
-    '''Returns a greedy vertex coloring, as an array of ints.'''
+    '''Returns a greedy vertex coloring as an array of ints.'''
     n = self.num_vertices()
     coloring = np.zeros(n, dtype=int)
     for i, nbrs in enumerate(self.adj_list()):
@@ -22,6 +23,17 @@ class LabelMixin(object):
           coloring[i] = c
           break
     return coloring
+
+  def bicolor_spectral(self):
+    '''Returns an approximate 2-coloring as an array of booleans.
+
+    From "A Multiscale Pyramid Transform for Graph Signals" by Shuman et al.
+    Note: Assumes a single connected component, and may fail otherwise.
+    '''
+    lap = self.laplacian().astype(float)
+    vals, vecs = eigs(lap, k=1, which='LM')
+    vec = vecs[:,0].real
+    return vec > 0 if vec[0] > 0 else vec < 0
 
   def cluster_spectral(self, num_clusters, kernel='rbf'):
     aff = self.kernelize(kernel).matrix()

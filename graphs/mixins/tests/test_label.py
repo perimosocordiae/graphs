@@ -6,21 +6,8 @@ from sklearn.metrics.cluster import adjusted_rand_score
 from graphs import Graph
 from graphs.construction import neighbor_graph
 
-PAIRS = np.array([[0,1],[0,2],[1,0],[1,2],[2,0],[2,1],[3,4],[4,3]])
-ADJ = [[0,1,1,0,0],
-       [1,0,1,0,0],
-       [1,1,0,0,0],
-       [0,0,0,0,1],
-       [0,0,0,1,0]]
-
 
 class TestLabel(unittest.TestCase):
-  def setUp(self):
-    self.graphs = [
-        Graph.from_edge_pairs(PAIRS),
-        Graph.from_adj_matrix(ADJ),
-        Graph.from_adj_matrix(coo_matrix(ADJ)),
-    ]
 
   def _make_blob_graphs(self, k=11):
     pts = np.random.random(size=(20, 2))
@@ -32,8 +19,34 @@ class TestLabel(unittest.TestCase):
     return (G_sparse, G_dense), labels
 
   def test_greedy_coloring(self):
-    for G in self.graphs:
+    pairs = np.array([[0,1],[0,2],[1,0],[1,2],[2,0],[2,1],[3,4],[4,3]])
+    adj = [[0,1,1,0,0],
+           [1,0,1,0,0],
+           [1,1,0,0,0],
+           [0,0,0,0,1],
+           [0,0,0,1,0]]
+    test_cases = [
+        Graph.from_edge_pairs(pairs),
+        Graph.from_adj_matrix(adj),
+        Graph.from_adj_matrix(coo_matrix(adj)),
+    ]
+    for G in test_cases:
       assert_array_equal([1,2,3,1,2], G.color_greedy())
+
+  def test_bicolor_spectral(self):
+    pairs = np.array([[0,1],[0,2],[1,0],[1,2],[2,0],[2,1],[2,3],[3,2]])
+    adj = [[0,1,1,0],
+           [1,0,1,0],
+           [1,1,0,1],
+           [0,0,1,0]]
+    test_cases = [
+        Graph.from_edge_pairs(pairs),
+        Graph.from_adj_matrix(adj),
+        Graph.from_adj_matrix(coo_matrix(adj)),
+    ]
+    expected = np.array([1,1,0,1], dtype=bool)
+    for G in test_cases:
+      assert_array_equal(expected, G.bicolor_spectral())
 
   def test_spectral_clustering(self):
     blob_graphs, expected = self._make_blob_graphs(k=11)
