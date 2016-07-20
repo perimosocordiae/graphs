@@ -19,11 +19,12 @@ def chain_graph(num_vertices, wraparound=False, directed=False, weights=None):
 
 
 def lattice_graph(dims, wraparound=False):
-  if not dims or len(dims) == 0:
-    raise ValueError('Must supply at least 1 dimension')
+  dims = [d for d in dims if d > 1]
+  if len(dims) == 0:
+    raise ValueError('Must supply at least one dimension >= 2')
   if len(dims) == 1:
     return chain_graph(dims[0], wraparound=wraparound)
-  if len(dims) > 2:
+  if len(dims) > 2:  # pragma: no cover
     raise NotImplementedError('NYI: len(dims) > 2')
 
   # 2d case
@@ -37,7 +38,7 @@ def lattice_graph(dims, wraparound=False):
     data[3, m-1::m] = 0
     data[4, ::m] = 0
     data[5, m-1::m] = 1
-    # handle edge cases where m-1 == 1, etc
+    # handle edge cases where offsets are duplicated
     offsets, idx = np.unique(offsets, return_index=True)
     data = data[idx]
   else:

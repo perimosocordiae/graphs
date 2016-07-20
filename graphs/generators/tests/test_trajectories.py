@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import numpy as np
 import unittest
 from numpy.testing import assert_array_equal
 
-from graphs.generators import trajectories as traj
+from .. import trajectories as traj
 
 
 class TestTrajectories(unittest.TestCase):
