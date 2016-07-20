@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import numpy as np
 import unittest
 from numpy.testing import assert_array_equal
 
-from graphs.generators.swiss_roll import swiss_roll, error_ratio
-from graphs.construction import manifold_spanning_graph
+from ...datasets.swiss_roll import swiss_roll, error_ratio
+from ..msg import manifold_spanning_graph
 
 
 class TestMSG(unittest.TestCase):

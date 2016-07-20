@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import numpy as np
 import unittest
 from numpy.testing import assert_array_equal
 
-from graphs.generators.shapes import SCurve
-from graphs.construction import downsample as d
+from ...datasets.shapes import SCurve
+from .. import downsample as d
 
 
 class TestDownsample(unittest.TestCase):

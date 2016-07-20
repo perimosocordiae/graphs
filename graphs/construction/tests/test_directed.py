@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import numpy as np
 import unittest
 
-from graphs.generators.shapes import SCurve
-from graphs.construction import directed_graph
+from ...datasets.shapes import SCurve
+from .. import directed_graph
 
 
 class TestDirected(unittest.TestCase):
