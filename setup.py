@@ -9,9 +9,11 @@ except ImportError:
 else:
   use_cython = True
 
+version = open('graphs/_version.py').read().strip().split('=', 1)[1].strip(" '")
+
 setup_kwargs = dict(
     name='graphs',
-    version='0.0.4',
+    version=version,
     author='CJ Carey',
     author_email='perimosocordiae@gmail.com',
     description='A library for graph-based machine learning.',

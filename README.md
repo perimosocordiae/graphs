@@ -34,10 +34,10 @@ Requires recent versions of:
   * scipy
   * scikit-learn
   * matplotlib
+  * Cython
 
 Optional dependencies:
 
-  * Cython
   * python-igraph
   * graphtool
   * networkx
