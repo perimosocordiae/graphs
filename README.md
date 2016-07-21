@@ -4,10 +4,27 @@
 [![Build Status](https://travis-ci.org/all-umass/graphs.svg?branch=master)](https://travis-ci.org/all-umass/graphs)
 [![Coverage Status](https://coveralls.io/repos/all-umass/graphs/badge.svg?branch=master&service=github)](https://coveralls.io/github/all-umass/graphs?branch=master)
 
-A library for Graph-Based Learning in Python.
+A library for graph-based learning in Python.
 
-Provides several types of graphs container objects,
-with associated visualization, analysis, and embedding functions.
+Provides several types of graph container objects,
+with a unified API for visualization, analysis, transformation,
+and embedding.
+
+## Usage example
+
+```python
+from graphs.generators import random_graph
+
+G = random_graph([2,3,1,3,2,1,2])
+
+print G.num_vertices()  # 7
+print G.num_edges()     # 14
+
+G.symmetrize(method='max')
+X = G.isomap(num_vecs=2)
+
+G.plot(X, title='isomap embedding')()
+```
 
 ## Requirements
 
@@ -20,6 +37,7 @@ Requires recent versions of:
 
 Optional dependencies:
 
+  * Cython
   * python-igraph
   * graphtool
   * networkx
@@ -29,18 +47,8 @@ Testing requires:
   * nose
   * nose-cov
 
-## Usage example
+Run the test suite:
 
-```python
-from graphs.construction import random_graph
-
-G = random_graph([2,3,1,3,2,1,2])
-
-print G.num_vertices()  # 7
-print G.num_edges()     # 14
-
-G.symmetrize(method='max')
-X = G.isomap(num_vecs=2)
-
-G.plot(X, directed=False, weighted=False, title='isomap embedding')()
+```
+./run_tests.sh
 ```
