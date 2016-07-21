@@ -8,7 +8,6 @@
  - Manifold Spanning graphs
  - Sparse Regularized graphs
  - traditional, perturbed, and disjoint Minimum Spanning Trees
- - random graphs
 
 Each construction function returns a Graph object.
 '''
@@ -24,7 +23,6 @@ from .neighbors import *
 from .regularized import *
 from .saffron import *
 from .spanning_tree import *
-from .rand import *
 
 __all__ = [
     # b_matching
@@ -47,6 +45,4 @@ __all__ = [
     'saffron',
     # spanning_tree
     'mst', 'perturbed_mst', 'disjoint_mst',
-    # rand
-    'random_graph'
 ]

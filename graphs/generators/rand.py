@@ -1,6 +1,8 @@
+from __future__ import absolute_import
 import numpy as np
 from scipy.sparse import coo_matrix
-from graphs import Graph
+
+from .. import Graph
 
 __all__ = ['random_graph']
 

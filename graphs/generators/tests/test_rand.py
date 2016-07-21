@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import numpy as np
 import unittest
 from numpy.testing import assert_array_equal
 
-from graphs.construction import random_graph
+from ..rand import random_graph
 
 
 class TestRandomGraph(unittest.TestCase):
