@@ -19,8 +19,10 @@ class TestSpanningTree(unittest.TestCase):
     assert_array_almost_equal(G.matrix('dense'), expected, decimal=3)
     # Check precomputed metric.
     D = pairwise_distances(self.pts)
+    D_copy = D.copy()
     G = mst(D, metric='precomputed')
     assert_array_almost_equal(G.matrix('dense'), expected, decimal=3)
+    assert_array_almost_equal(D, D_copy)
 
   def test_perturbed_mst(self):
     np.random.seed(1234)
@@ -38,6 +40,13 @@ class TestSpanningTree(unittest.TestCase):
                 [1,2.82842712,4.47213595,0]]
     G = disjoint_mst(self.pts)
     assert_array_almost_equal(G.matrix('dense'), expected)
+
+    # check precomputed case, especially that we don't overwrite D
+    D = pairwise_distances(self.pts)
+    D_copy = D.copy()
+    G = disjoint_mst(D, metric='precomputed')
+    assert_array_almost_equal(G.matrix('dense'), expected)
+    assert_array_almost_equal(D, D_copy)
 
 if __name__ == '__main__':
   unittest.main()
