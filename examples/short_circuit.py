@@ -2,7 +2,7 @@ from __future__ import print_function
 import numpy as np
 from matplotlib import pyplot as plt
 
-from graphs.generators.swiss_roll import swiss_roll
+from graphs.datasets import swiss_roll
 from graphs.construction import neighbor_graph
 
 
