@@ -5,7 +5,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from sklearn.metrics import pairwise_distances
 from time import time
 
-from graphs.generators.swiss_roll import swiss_roll
+from graphs.datasets.swiss_roll import swiss_roll
 from graphs.construction import (
     neighbor_graph, b_matching, gabriel_graph,
     relative_neighborhood_graph, manifold_spanning_graph,
