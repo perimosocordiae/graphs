@@ -21,7 +21,7 @@ print G.num_vertices()  # 7
 print G.num_edges()     # 14
 
 G.symmetrize(method='max')
-X = G.isomap(num_vecs=2)
+X = G.isomap(num_dims=2)
 
 G.plot(X, title='isomap embedding')()
 ```
