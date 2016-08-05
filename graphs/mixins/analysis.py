@@ -1,5 +1,6 @@
 from __future__ import division, absolute_import, print_function
 import numpy as np
+import scipy.sparse as ss
 import scipy.sparse.csgraph as ssc
 import warnings
 from ..mini_six import range
@@ -29,6 +30,8 @@ class AnalysisMixin(object):
     '''
     # ssc.shortest_path requires one of these formats:
     adj = self.matrix('dense', 'csr', 'csc')
+    if not ss.issparse(adj):
+      adj = np.ascontiguousarray(adj)
     return ssc.shortest_path(adj, **kwargs)
 
   def ave_laplacian(self):
