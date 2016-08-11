@@ -8,9 +8,8 @@ from sklearn.decomposition import KernelPCA
 
 class EmbedMixin(object):
 
-  def isomap(self, num_dims=None, directed=True):
+  def isomap(self, num_dims=None, directed=None):
     '''Isomap embedding.'''
-    directed = directed and self.is_directed()
     W = -0.5 * self.shortest_path(directed=directed) ** 2
     kpca = KernelPCA(n_components=num_dims, kernel='precomputed')
     return kpca.fit_transform(W)

@@ -23,16 +23,25 @@ class AnalysisMixin(object):
     '''
     return ssc.laplacian(self.matrix(), **kwargs)
 
-  def shortest_path(self, **kwargs):
-    '''Mirrors the scipy.sparse.csgraph function of the same name:
-    shortest_path(G, method='auto', directed=True, return_predecessors=False,
-                  unweighted=False, overwrite=False)
-    '''
-    # ssc.shortest_path requires one of these formats:
+  def shortest_path(self, directed=None, weighted=None, method='auto',
+                    return_predecessors=False, limit=np.inf, indices=None):
+    '''Mirrors the scipy.sparse.csgraph function of the same name.'''
+    d = directed if directed is not None else self.is_directed()
+    w = weighted if weighted is not None else self.is_weighted()
+
     adj = self.matrix('dense', 'csr', 'csc')
     if not ss.issparse(adj):
       adj = np.ascontiguousarray(adj)
-    return ssc.shortest_path(adj, **kwargs)
+
+    # dispatch based on presence of limit and/or indices
+    if np.isinf(limit) and indices is None:
+      overwrite = not (hasattr(self, '_adj') and self._adj is adj)
+      return ssc.shortest_path(adj, method=method, directed=d,
+                               return_predecessors=return_predecessors,
+                               unweighted=(not w), overwrite=overwrite)
+    return ssc.dijkstra(adj, directed=d, indices=indices,
+                        return_predecessors=return_predecessors,
+                        unweighted=(not w), limit=limit)
 
   def ave_laplacian(self):
     '''Another kind of laplacian normalization, used in the matlab PVF code.
@@ -105,9 +114,7 @@ class AnalysisMixin(object):
 
   def eccentricity(self, directed=None, weighted=None):
     '''Maximum distance from each vertex to any other vertex.'''
-    d = directed if directed is not None else self.is_directed()
-    w = weighted if weighted is not None else self.is_weighted()
-    sp = self.shortest_path(directed=d, unweighted=(not w))
+    sp = self.shortest_path(directed=directed, weighted=weighted)
     return sp.max(axis=0)
 
   def diameter(self, directed=None, weighted=None):

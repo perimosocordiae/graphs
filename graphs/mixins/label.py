@@ -48,7 +48,7 @@ class LabelMixin(object):
     labels = np.array(partial_labels, copy=True)
     unlabeled = labels == -1
     # compute geodesic distances from unlabeled vertices
-    D_unlabeled = self.shortest_path()[unlabeled]
+    D_unlabeled = self.shortest_path(weighted=True)[unlabeled]
     # set distances to other unlabeled vertices to infinity
     D_unlabeled[:,unlabeled] = np.inf
     # find shortest distances to labeled vertices
