@@ -102,7 +102,11 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin):
       return self
     # TODO: take advantage of symmetry of metric function
     ii, jj = self.pairs().T
-    d = paired_distances(coords[ii], coords[jj], metric=metric)
+    if metric == 'precomputed':
+      assert coords.ndim == 2 and coords.shape[0] == coords.shape[1]
+      d = coords[ii,jj]
+    else:
+      d = paired_distances(coords[ii], coords[jj], metric=metric)
     return self._update_edges(d, copy=copy)
 
   def adj_list(self):
