@@ -8,7 +8,7 @@ __all__ = ['b_matching']
 
 
 def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
-               verbose=False):
+               weighted=False, verbose=False):
   '''
   "Belief-Propagation for Weighted b-Matchings on Arbitrary Graphs
   and its Relation to Linear Programs with Integer Solutions"
@@ -90,7 +90,8 @@ def b_matching(D, k, max_iter=1000, damping=1, conv_thresh=1e-4,
 
   ii,jj = np.where(B >= thresholds[:,None])
   pairs = np.column_stack((ii, inds[ii,jj]))
-  return Graph.from_edge_pairs(pairs, num_vertices=N)
+  w = D[ii, pairs[:,1]] if weighted else None
+  return Graph.from_edge_pairs(pairs, num_vertices=N, weights=w)
 
 
 def _update_change(B, oldB):  # pragma: no cover
