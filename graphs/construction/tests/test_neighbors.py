@@ -17,7 +17,7 @@ class TestNeighbors(unittest.TestCase):
     self.l2_adj = np.sqrt([[0,5,0,1],[5,0,4,0],[13,4,0,0],[1,8,0,0]])
 
   def test_neighbor_graph(self):
-    self.assertRaises(AssertionError, ngraph, self.pts)
+    self.assertRaises(ValueError, ngraph, self.pts)
 
   def test_binary_weighting(self):
     assert_array_equal(ngraph(self.pts, weighting='binary', k=2), self.bin_adj)
@@ -38,15 +38,15 @@ class TestNeighbors(unittest.TestCase):
 
   def test_precomputed(self):
     D = pairwise_distances(self.pts, metric='l2')
-    actual = ngraph(D, precomputed=True, k=2)
+    actual = ngraph(D, metric='precomputed', k=2)
     assert_array_almost_equal(actual, self.l2_adj, decimal=4)
-    actual = ngraph(D, precomputed=True, k=2, weighting='binary')
+    actual = ngraph(D, metric='precomputed', k=2, weighting='binary')
     assert_array_almost_equal(actual, self.bin_adj, decimal=4)
 
   def test_nearest_neighbors(self):
     nns = neighbors.nearest_neighbors
     pt = np.zeros(2)
-    self.assertRaises(AssertionError, nns, pt, self.pts)
+    self.assertRaises(ValueError, nns, pt, self.pts)
     assert_array_equal(nns(pt, self.pts, k=2), [[0,3]])
     assert_array_equal(nns(pt, self.pts, epsilon=2), [[0,3]])
     assert_array_equal(nns(pt, self.pts, k=2, epsilon=10), [[0,3]])
@@ -59,8 +59,8 @@ class TestNeighbors(unittest.TestCase):
     assert_array_almost_equal(dists, [[0, 1]])
     # Check precomputed
     D = pairwise_distances(pt[None], self.pts, metric='l1')
-    self.assertRaises(AssertionError, nns, pt, self.pts, precomputed=True, k=2)
-    assert_array_equal(nns(D, precomputed=True, k=2), [[0,3]])
+    self.assertRaises(ValueError, nns, pt, self.pts, metric='precomputed', k=2)
+    assert_array_equal(nns(D, metric='precomputed', k=2), [[0,3]])
     # Check 2d query shape
     pt = [[0,0]]
     assert_array_equal(nns(pt, self.pts, k=2), [[0,3]])
