@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function
 
 import numpy as np
 import scipy.sparse as ss
+import warnings
 from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.preprocessing import normalize
 
@@ -81,7 +82,7 @@ def saffron(X, q=32, k=4, tangent_dim=1, curv_thresh=0.95, decay_rate=0.9,
       break
     prev_goodness = goodness
   else:
-    print('Failed to converge after %d iterations' % max_iter)
+    warnings.warn('Failed to converge after %d iterations.' % max_iter)
 
   # use the largest k weights for each row of W, weighted by original distance
   indptr, indices, data = [0], [], []
