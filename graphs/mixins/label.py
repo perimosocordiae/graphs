@@ -98,7 +98,7 @@ class LabelMixin(object):
       if np.abs(label_dists - old_label_dists).sum() <= tol:
         break
     else:
-      warnings.warn("spread_labels didn't converge in %d iterations" % max_iter)
+      warnings.warn("classify_lgc didn't converge in %d iterations" % max_iter)
 
     return classes[label_dists.argmax(axis=1)]
 
