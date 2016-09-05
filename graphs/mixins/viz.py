@@ -32,7 +32,7 @@ class VizMixin(object):
     is_3d = (X.shape[1] == 3)
     if ax is None:
       ax = _get_axis(is_3d, fig)
-    edge_kwargs = dict(colors='k', linestyles='-', zorder=1)
+    edge_kwargs = dict(colors='k', linestyles='-', linewidths=1, zorder=1)
     vertex_kwargs = dict(marker='o', c='k', s=20, edgecolor='none', zorder=2)
     if edge_style is not None:
       if not isinstance(edge_style, dict):
