@@ -42,7 +42,7 @@ class Graph(AnalysisMixin, EmbedMixin, LabelMixin, TransformMixin, VizMixin):
 
   def symmetrize(self, method='sum', copy=False):
     '''Symmetrizes with the given method. {sum,max,avg}
-    Returns a copy if overwrite=False.'''
+    Returns a copy if copy=True.'''
     raise NotImplementedError()
 
   def add_edges(self, from_idx, to_idx, weight=1, symmetric=False, copy=False):
