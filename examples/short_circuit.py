@@ -14,19 +14,20 @@ def main():
   g = g.from_adj_matrix(g.matrix('dense'))
   ct = 12
 
-  _, axes = plt.subplots(nrows=4, figsize=(8, 10))
-  _plot_diff(axes[0], GT, g, g.minimum_spanning_subtree(), title='MST')
-  _plot_diff(axes[1], GT, g, g.circle_tear(cycle_len_thresh=ct),
+  _, axes = plt.subplots(nrows=2, ncols=2, figsize=(8, 8),
+                         sharex=True, sharey=True)
+  _plot_diff(axes[0,0], GT, g, g.minimum_spanning_subtree(), title='MST')
+  _plot_diff(axes[0,1], GT, g, g.circle_tear(cycle_len_thresh=ct),
              title='Circle Tear (%d)' % ct)
-  _plot_diff(axes[2], GT, g, g.cycle_cut(cycle_len_thresh=ct),
+  _plot_diff(axes[1,0], GT, g, g.cycle_cut(cycle_len_thresh=ct),
              title='Cycle Cut (%d)' % ct)
-  _plot_diff(axes[3], GT, g, g.isograph(), title='Isograph')
+  _plot_diff(axes[1,1], GT, g, g.isograph(), title='Isograph')
   plt.show()
 
 
 def _plot_diff(ax, x, g1, g2, title=''):
-  g1.plot(x, ax=ax, edge_style='y-')
-  g2.plot(x, ax=ax, edge_style='b-')
+  g1.plot(x, ax=ax, edge_style='y-', vertex_style='k.')
+  g2.plot(x, ax=ax, edge_style='b-', vertex_style='k.')
   ax.set_title(title)
 
 
