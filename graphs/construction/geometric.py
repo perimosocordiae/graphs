@@ -7,17 +7,35 @@ from sklearn.metrics.pairwise import (
 from graphs import Graph
 from ..mini_six import range
 
-__all__ = ['delaunay_graph', 'gabriel_graph', 'relative_neighborhood_graph']
+__all__ = [
+    'delaunay_graph', 'urquhart_graph', 'gabriel_graph',
+    'relative_neighborhood_graph'
+]
 
 
 def delaunay_graph(X, weighted=False):
-  tri = Delaunay(X)
-  n = X.shape[0]
-  e1 = tri.simplices.ravel()
-  e2 = np.roll(tri.simplices, 1, axis=1).ravel()
+  '''Delaunay triangulation graph.
+  '''
+  e1, e2 = _delaunay_edges(X)
   pairs = np.column_stack((e1, e2))
   w = paired_distances(X[e1], X[e2]) if weighted else None
-  return Graph.from_edge_pairs(pairs, num_vertices=n, symmetric=True, weights=w)
+  return Graph.from_edge_pairs(pairs, num_vertices=X.shape[0], symmetric=True,
+                               weights=w)
+
+
+def urquhart_graph(X, weighted=False):
+  '''Urquhart graph: made from the 2 shortest edges of each Delaunay triangle.
+  '''
+  e1, e2 = _delaunay_edges(X)
+  w = paired_distances(X[e1], X[e2])
+  mask = np.ones_like(w, dtype=bool)
+  bad_inds = w.reshape((-1, 3)).argmax(axis=1) + np.arange(0, len(e1), 3)
+  mask[bad_inds] = False
+
+  weights = w[mask] if weighted else None
+  pairs = np.column_stack((e1[mask], e2[mask]))
+  return Graph.from_edge_pairs(pairs, num_vertices=X.shape[0], symmetric=True,
+                               weights=weights)
 
 
 def gabriel_graph(X, metric='euclidean', weighted=False):
@@ -38,6 +56,13 @@ def relative_neighborhood_graph(X, metric='euclidean', weighted=False):
   pairs = np.asarray(find_relative_neighbors(D))
   w = D[pairs[:,0],pairs[:,1]] if weighted else None
   return Graph.from_edge_pairs(pairs, num_vertices=n, symmetric=True, weights=w)
+
+
+def _delaunay_edges(X):
+  tri = Delaunay(X)
+  e1 = tri.simplices.ravel()
+  e2 = np.roll(tri.simplices, 1, axis=1).ravel()
+  return e1, e2
 
 
 def _find_relative_neighbors(D):

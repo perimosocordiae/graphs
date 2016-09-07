@@ -4,7 +4,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from sklearn.metrics import pairwise_distances
 
 from graphs.construction import (
-    delaunay_graph, gabriel_graph, relative_neighborhood_graph)
+    delaunay_graph, urquhart_graph, gabriel_graph, relative_neighborhood_graph)
 from graphs.construction.geometric import _find_relative_neighbors
 
 
@@ -39,6 +39,32 @@ class TestGeometric(unittest.TestCase):
         0.255361, 0.450565, 0.319678, 0.388032, 0.347955, 0.192354,
         0.188162, 0.234094, 0.258683, 0.061188, 0.347955, 0.682924,
         0.379223, 0.508128, 0.34904, 0.503557, 0.185132, 0.192354]
+    assert_array_almost_equal(G.matrix('dense'), expected)
+
+  def test_urquhart(self):
+    expected = np.array([
+        [0, 0, 0, 1, 0, 1, 0, 1, 0, 0],
+        [0, 0, 0, 1, 0, 0, 1, 1, 0, 1],
+        [0, 0, 0, 0, 0, 1, 1, 0, 1, 0],
+        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+        [1, 0, 1, 0, 0, 0, 1, 1, 1, 0],
+        [0, 1, 1, 0, 1, 1, 0, 1, 0, 1],
+        [1, 1, 0, 0, 0, 1, 1, 0, 0, 0],
+        [0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+        [0, 1, 0, 0, 1, 0, 1, 0, 0, 0]], dtype=float)
+    G = urquhart_graph(self.pts)
+    assert_array_equal(G.matrix('dense'), expected)
+
+    # with edge weights
+    G = urquhart_graph(self.pts, weighted=True)
+    expected[expected!=0] = [
+        0.198635, 0.205419, 0.188162, 0.16289, 0.255361, 0.234094,
+        0.34904, 0.479654, 0.450565, 0.379223, 0.198635, 0.16289,
+        0.319678, 0.185132, 0.205419, 0.479654, 0.388032, 0.061188,
+        0.508128, 0.255361, 0.450565, 0.319678, 0.388032, 0.347955,
+        0.192354, 0.188162, 0.234094, 0.061188, 0.347955, 0.379223,
+        0.508128, 0.34904, 0.185132, 0.192354]
     assert_array_almost_equal(G.matrix('dense'), expected)
 
   def test_gabriel(self):
