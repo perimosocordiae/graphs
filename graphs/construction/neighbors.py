@@ -54,7 +54,7 @@ def nearest_neighbors(query_pts, target_pts=None, metric='euclidean',
 
   Returns a list of indices of neighboring points, one list per query.
   If no target_pts are specified, distances are calculated within query_pts.
-  When return_dists is True, returns two lists: (indices,distances)
+  When return_dists is True, returns two lists: (distances, indices)
   '''
   if k is None and epsilon is None:
     raise ValueError('Must provide `k` or `epsilon`.')
