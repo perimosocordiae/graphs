@@ -22,7 +22,7 @@ def main():
     _c('gabriel', gabriel_graph, X),
     _c('rel. neighborhood', relative_neighborhood_graph,D,metric='precomputed'),
     _c('manifold spanning', manifold_spanning_graph, X, 2),
-    _c('L1', sparse_regularized_graph, X, k=10, alpha=0.0005),
+    _c('L1', sparse_regularized_graph, X, kmax=10, sparsity_param=0.0005),
     _c('SAFFRON', saffron, X, q=15, k=5, tangent_dim=2),
     _c('MST', mst, D, metric='precomputed'),
     _c('dMST', disjoint_mst, D, metric='precomputed'),

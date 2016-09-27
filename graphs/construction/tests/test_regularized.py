@@ -26,7 +26,7 @@ class TestRegularized(unittest.TestCase):
         [0,    0,    0,    0,    0,    0.007,0.576,0.278,0,    0.139],
         [0,    0,    0,    0,    0,    0,    0.441,0.395,0.164,0]
     ]
-    G = sparse_regularized_graph(self.pts, alpha=0.005)
+    G = sparse_regularized_graph(self.pts, sparsity_param=0.005)
     assert_array_almost_equal(G.matrix('dense'), expected, decimal=3)
 
   def test_L1_knn_graph(self):
@@ -42,7 +42,7 @@ class TestRegularized(unittest.TestCase):
         [0,    0,    0,    0,    0,    0.138,0.520,0,    0,    0.343],
         [0,    0,    0,    0,    0,    0,    0.441,0.395,0.164,0]
     ]
-    G = sparse_regularized_graph(self.pts, alpha=0.005, k=3)
+    G = sparse_regularized_graph(self.pts, sparsity_param=0.005, kmax=3)
     assert_array_almost_equal(G.matrix('dense'), expected, decimal=3)
 
   def test_L1_graph_cv(self):
@@ -76,7 +76,7 @@ class TestRegularized(unittest.TestCase):
         [0,    0,    0,    0,    0,    0.010,0.599,0.274,0,    0.117],
         [0,    0,    0,    0,    0,    0,    0.440,0.386,0.174,0]
     ]
-    G = sparse_regularized_graph(self.pts, positive=True, alpha=0.002)
+    G = sparse_regularized_graph(self.pts, positive=True, sparsity_param=0.002)
     assert_array_almost_equal(G.matrix('dense'), expected, decimal=3)
 
   def test_SPD_graph_cv(self):
