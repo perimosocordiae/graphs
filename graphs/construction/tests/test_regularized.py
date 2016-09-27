@@ -5,7 +5,7 @@ import warnings
 from numpy.testing import assert_array_almost_equal
 from sklearn.utils import ConvergenceWarning
 
-from graphs.construction import sparse_regularized_graph
+from graphs.construction import sparse_regularized_graph, smce_graph
 
 
 class TestRegularized(unittest.TestCase):
@@ -93,6 +93,38 @@ class TestRegularized(unittest.TestCase):
         [0,    0,    0,    0,    0,    0,    0.458,0.408,0.134,0]
     ]
     G = sparse_regularized_graph(self.pts, positive=True)
+    assert_array_almost_equal(G.matrix('dense'), expected, decimal=3)
+
+  def test_smce_graph(self):
+    expected = [
+        [0,    0.318,0.323,0.359,0,    0,    0,    0,    0,    0],
+        [0.68, 0,    0.13, 0,    0.191,0,    0,    0,    0,    0],
+        [0.537,0.047,0,    0,    0.417,0,    0,    0,    0,    0],
+        [0.492,0,    0,    0,    0.508,0,    0,    0,    0,    0],
+        [0.063,0.055,0.382,0.5,  0,    0,    0,    0,    0,    0],
+        [0,    0,    0,    0,    0,    0,    0.768,0,    0.232,0],
+        [0,    0,    0,    0,    0,    0.667,0,    0,    0.01, 0.323],
+        [0,    0,    0,    0,    0,    0.031,0.125,0,    0.215,0.629],
+        [0,    0,    0,    0,    0,    0.386,0.155,0.049,0,    0.41],
+        [0,    0,    0,    0,    0,    0,    0.391,0.343,0.266,0]
+    ]
+    G = smce_graph(self.pts, keep_ratio=1)
+    assert_array_almost_equal(G.matrix('dense'), expected, decimal=3)
+
+    # use keep_ratio = 0.9
+    expected = [
+        [0,    0.326,0.302,0.348,0,    0,    0,    0,    0,    0],
+        [0.478,0,    0.222,0,    0.243,0,    0,    0,    0,    0],
+        [0.376,0.197,0,    0,    0.376,0,    0,    0,    0,    0],
+        [0.447,0,    0,    0,    0.474,0,    0,    0,    0,    0],
+        [0,    0.188,0.348,0.443,0,    0,    0,    0,    0,    0],
+        [0,    0,    0,    0,    0,    0,    0.604,0,    0.305,0],
+        [0,    0,    0,    0,    0,    0.539,0,    0,    0.097,0.32],
+        [0,    0,    0,    0,    0,    0.176,0.1,  0,    0.227,0.496],
+        [0,    0,    0,    0,    0,    0.374,0.111,0.179,0,    0.335],
+        [0,    0,    0,    0,    0,    0,    0.353,0.364,0.283,0]
+    ]
+    G = smce_graph(self.pts, kmax=8, keep_ratio=0.9)
     assert_array_almost_equal(G.matrix('dense'), expected, decimal=3)
 
 

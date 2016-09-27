@@ -9,7 +9,7 @@ from graphs.datasets.swiss_roll import swiss_roll
 from graphs.construction import (
     neighbor_graph, b_matching, gabriel_graph,
     relative_neighborhood_graph, manifold_spanning_graph,
-    sparse_regularized_graph, saffron, mst, disjoint_mst
+    sparse_regularized_graph, smce_graph, saffron, mst, disjoint_mst
 )
 
 
@@ -23,6 +23,7 @@ def main():
     _c('rel. neighborhood', relative_neighborhood_graph,D,metric='precomputed'),
     _c('manifold spanning', manifold_spanning_graph, X, 2),
     _c('L1', sparse_regularized_graph, X, kmax=10, sparsity_param=0.0005),
+    _c('SMCE', _smce_symm_dist, X, kmax=25, sparsity_param=5),
     _c('SAFFRON', saffron, X, q=15, k=5, tangent_dim=2),
     _c('MST', mst, D, metric='precomputed'),
     _c('dMST', disjoint_mst, D, metric='precomputed'),
@@ -42,6 +43,12 @@ def main():
     ax1.set_axis_off()
     ax2.set_axis_off()
   plt.show()
+
+
+def _smce_symm_dist(X, **kwargs):
+  g = smce_graph(X, **kwargs)
+  # SMCE produces asymmetric similarity weights, so we have to convert it.
+  return g.symmetrize('max').reweight_by_distance(X)
 
 
 def _c(label, fn, *args, **kwargs):
