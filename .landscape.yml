@@ -1,4 +1,4 @@
-strictness: high
+strictness: medium
 pep8:
   disable:
     - E111
@@ -7,3 +7,7 @@ pep8:
     - E225
     - E402
     - W503
+pylint:
+  disable:
+    - bad-indentation
+    - invalid-name
