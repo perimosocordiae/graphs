@@ -36,9 +36,9 @@ class EmbedMixin(object):
     Fplus = np.linalg.pinv(u * np.sqrt(s))  # d x d
     n, d = X.shape
     if n >= d:  # optimized order: F(X'LX)F'
-      T = Fplus.dot(X.T.dot(L).dot(X)).dot(Fplus.T)
+      T = Fplus.dot(X.T.dot(L.dot(X))).dot(Fplus.T)
     else:  # optimized order: (FX')L(XF')
-      T = Fplus.dot(X.T).dot(L).dot(X.dot(Fplus.T))
+      T = Fplus.dot(X.T).dot(L.dot(X.dot(Fplus.T)))
     L = 0.5*(T+T.T)
     return _null_space(L, num_vecs=num_dims, overwrite=True)
 
