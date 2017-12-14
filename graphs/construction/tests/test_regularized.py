@@ -3,7 +3,10 @@ np.set_printoptions(suppress=True, precision=3)
 import unittest
 import warnings
 from numpy.testing import assert_array_almost_equal
-from sklearn.utils import ConvergenceWarning
+try:
+  from sklearn.exceptions import ConvergenceWarning
+except ImportError:
+  from sklearn.utils import ConvergenceWarning
 
 from graphs.construction import sparse_regularized_graph, smce_graph
 
